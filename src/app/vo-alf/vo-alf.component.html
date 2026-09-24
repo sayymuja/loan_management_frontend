@@ -1,0 +1,115 @@
+<div class="page-header">
+  <div>
+    <h2>VO / ALF Management</h2>
+    <p>CMRC wise VO / ALF details</p>
+  </div>
+</div>
+
+<!-- CMRC Selection -->
+<div class="card mb-4">
+  <div class="card-body">
+
+    <div class="row align-items-end">
+
+      <div class="col-md-5">
+        <label class="form-label">
+          Select CMRC
+        </label>
+
+        <select
+          class="form-select"
+          [(ngModel)]="selectedCmrcId"
+          (change)="loadVoAlfByCmrc()">
+
+          <option [ngValue]="null">
+            -- Select CMRC --
+          </option>
+
+          <option
+            *ngFor="let cmrc of cmrcList"
+            [ngValue]="cmrc.id">
+
+            {{ cmrc.cmrcName }}
+          </option>
+
+        </select>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- VO / ALF Table -->
+<div class="card">
+
+  <div class="card-header">
+    <h5 class="mb-0">
+      VO / ALF Details
+    </h5>
+  </div>
+
+  <div class="card-body">
+
+    <div class="table-responsive">
+
+      <table class="table table-hover align-middle">
+
+        <thead>
+          <tr>
+            <th>Sr. No.</th>
+            <th>Village</th>
+            <th>VO / ALF Name</th>
+            <th>Account No.</th>
+            <th>Received Fund</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr *ngFor="let voAlf of voAlfList">
+
+            <td>
+              {{ voAlf.serialNo }}
+            </td>
+
+            <td>
+              {{ voAlf.villageName }}
+            </td>
+
+            <td>
+              {{ voAlf.voAlfName }}
+            </td>
+
+            <td>
+              {{ voAlf.accountNo }}
+            </td>
+
+            <td>
+              ₹ {{ voAlf.receivedFund | number:'1.2-2' }}
+            </td>
+
+          </tr>
+
+          <tr *ngIf="voAlfList.length === 0">
+
+            <td
+              colspan="5"
+              class="text-center text-muted py-4">
+
+              No VO / ALF records found
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>

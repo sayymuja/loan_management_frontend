@@ -1,0 +1,443 @@
+<div class="dashboard">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h2>Dashboard</h2>
+      <p>Overview of CMRC, VO / ALF and Loan Management</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-card">
+
+    <div class="filter-group">
+      <label>CMRC</label>
+
+      <select class="form-select">
+        <option selected>Pune CMRC</option>
+        <option>Nashik CMRC</option>
+        <option>Mumbai CMRC</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>VO / ALF</label>
+
+      <select class="form-select">
+        <option selected>Select VO / ALF</option>
+        <option>Swaraj Mahila Mandal</option>
+        <option>Sangharsh VO</option>
+        <option>Shakti Mahila Mandal</option>
+      </select>
+    </div>
+
+    <button class="btn search-btn">
+      <i class="bi bi-search"></i>
+      Search
+    </button>
+
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+
+    <div class="summary-card blue">
+      <div class="card-icon">
+        <i class="bi bi-building"></i>
+      </div>
+
+      <div>
+        <span>Total CMRC</span>
+        <h3>12</h3>
+      </div>
+    </div>
+
+    <div class="summary-card green">
+      <div class="card-icon">
+        <i class="bi bi-people-fill"></i>
+      </div>
+
+      <div>
+        <span>Total VO / ALF</span>
+        <h3>48</h3>
+      </div>
+    </div>
+
+    <div class="summary-card purple">
+      <div class="card-icon">
+        <i class="bi bi-diagram-3-fill"></i>
+      </div>
+
+      <div>
+        <span>Total Groups</span>
+        <h3>256</h3>
+      </div>
+    </div>
+
+    <div class="summary-card orange">
+      <div class="card-icon">
+        <i class="bi bi-person-fill"></i>
+      </div>
+
+      <div>
+        <span>Total Women</span>
+        <h3>3,872</h3>
+      </div>
+    </div>
+
+    <div class="summary-card cyan">
+      <div class="card-icon">
+        <i class="bi bi-currency-rupee"></i>
+      </div>
+
+      <div>
+        <span>Total Loan Amount</span>
+        <h3>₹1,25,45,000</h3>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Main Dashboard Grid -->
+  <div class="main-grid">
+
+    <!-- Left -->
+    <div>
+
+      <!-- VO / ALF Details -->
+      <div class="dashboard-card">
+
+        <div class="card-header">
+          <h5>
+            <i class="bi bi-people"></i>
+            VO / ALF Details
+          </h5>
+        </div>
+
+        <div class="tabs">
+
+          <button class="tab active">
+            Fund Details
+          </button>
+
+          <button class="tab">
+            Bank Balance
+          </button>
+
+          <button class="tab">
+            Loans
+          </button>
+
+          <button class="tab">
+            Repayment Summary
+          </button>
+
+        </div>
+
+        <div class="table-responsive">
+
+          <table class="table dashboard-table">
+
+            <thead>
+              <tr>
+                <th>Sr. No.</th>
+                <th>Particulars</th>
+                <th>Ultra Poor</th>
+                <th>Debt Trapped Women</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              <tr>
+                <td>1</td>
+                <td>Received Fund</td>
+                <td>₹2,50,000</td>
+                <td>₹1,75,000</td>
+                <td>₹4,25,000</td>
+              </tr>
+
+              <tr>
+                <td>2</td>
+                <td>Allocation (Group Count)</td>
+                <td>12</td>
+                <td>8</td>
+                <td>20</td>
+              </tr>
+
+              <tr>
+                <td>3</td>
+                <td>Allocation (Women Count)</td>
+                <td>120</td>
+                <td>80</td>
+                <td>200</td>
+              </tr>
+
+              <tr>
+                <td>4</td>
+                <td>Allocation (Group Amount)</td>
+                <td>₹1,20,000</td>
+                <td>₹80,000</td>
+                <td>₹2,00,000</td>
+              </tr>
+
+              <tr>
+                <td>5</td>
+                <td>Allocation (Women Amount)</td>
+                <td>₹1,50,000</td>
+                <td>₹1,00,000</td>
+                <td>₹2,50,000</td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+
+      <!-- Loans -->
+      <div class="dashboard-card">
+
+        <div class="card-header">
+
+          <h5>
+            <i class="bi bi-cash-stack"></i>
+            Loans
+          </h5>
+
+          <button class="btn add-btn">
+            <i class="bi bi-plus-lg"></i>
+            Add Loan
+          </button>
+
+        </div>
+
+        <div class="table-responsive">
+
+          <table class="table dashboard-table">
+
+            <thead>
+              <tr>
+                <th>Sr. No.</th>
+                <th>Group Name</th>
+                <th>Woman Name</th>
+                <th>Loan Amount</th>
+                <th>Purpose</th>
+                <th>Loan Date</th>
+                <th>Period</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              <tr>
+                <td>1</td>
+                <td>ABC Group</td>
+                <td>Sunita Kamble</td>
+                <td>₹50,000</td>
+                <td>Dairy Business</td>
+                <td>01-09-2025</td>
+                <td>18</td>
+                <td>
+                  <button class="view-btn">View</button>
+                </td>
+              </tr>
+
+              <tr>
+                <td>2</td>
+                <td>XYZ Group</td>
+                <td>Rekha Patil</td>
+                <td>₹75,000</td>
+                <td>Tailoring</td>
+                <td>12-08-2025</td>
+                <td>24</td>
+                <td>
+                  <button class="view-btn">View</button>
+                </td>
+              </tr>
+
+              <tr>
+                <td>3</td>
+                <td>Shakti Group</td>
+                <td>Lata More</td>
+                <td>₹40,000</td>
+                <td>Goat Rearing</td>
+                <td>20-07-2025</td>
+                <td>12</td>
+                <td>
+                  <button class="view-btn">View</button>
+                </td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- Right -->
+    <div>
+
+      <!-- Selected VO -->
+      <div class="dashboard-card selected-card">
+
+        <div class="selected-header">
+          <h5>Selected VO / ALF</h5>
+        </div>
+
+        <div class="details">
+
+          <div>
+            <span>VO / ALF Name</span>
+            <strong>Swaraj Mahila Mandal</strong>
+          </div>
+
+          <div>
+            <span>Village</span>
+            <strong>Pune</strong>
+          </div>
+
+          <div>
+            <span>CMRC</span>
+            <strong>Pune CMRC</strong>
+          </div>
+
+          <div>
+            <span>Account No.</span>
+            <strong>1234567890</strong>
+          </div>
+
+          <div>
+            <span>Received Fund</span>
+            <strong>₹4,25,000</strong>
+          </div>
+
+        </div>
+
+        <div class="interest-box">
+
+          <h6>Current Interest Received (VO / ALF)</h6>
+
+          <div>
+            <span>Ultra Poor</span>
+            <strong>₹15,000</strong>
+          </div>
+
+          <div>
+            <span>Debt Trapped Women</span>
+            <strong>₹10,000</strong>
+          </div>
+
+          <div>
+            <span>Total</span>
+            <strong>₹25,000</strong>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- Quick Links -->
+      <div class="dashboard-card">
+
+        <div class="card-header">
+          <h5>
+            <i class="bi bi-lightning-charge"></i>
+            Quick Links
+          </h5>
+        </div>
+
+        <div class="quick-grid">
+
+          <button>
+            <i class="bi bi-cash-coin"></i>
+            <span>Add Loan</span>
+          </button>
+
+          <button>
+            <i class="bi bi-file-earmark-text"></i>
+            <span>Generate CL</span>
+          </button>
+
+          <button>
+            <i class="bi bi-wallet2"></i>
+            <span>Add Repayment</span>
+          </button>
+
+          <button>
+            <i class="bi bi-bank"></i>
+            <span>Update Bank Balance</span>
+          </button>
+
+          <button>
+            <i class="bi bi-percent"></i>
+            <span>Add Interest</span>
+          </button>
+
+          <button>
+            <i class="bi bi-file-earmark-bar-graph"></i>
+            <span>Reports</span>
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- Recent Activity -->
+      <div class="dashboard-card">
+
+        <div class="card-header">
+          <h5>
+            <i class="bi bi-clock-history"></i>
+            Recent Activity
+          </h5>
+        </div>
+
+        <div class="activity">
+
+          <div class="activity-item">
+            <i class="bi bi-person-plus"></i>
+            <span>Loan added for Sunita Kamble</span>
+            <small>2 hours ago</small>
+          </div>
+
+          <div class="activity-item">
+            <i class="bi bi-cash"></i>
+            <span>Repayment received (₹2,833)</span>
+            <small>4 hours ago</small>
+          </div>
+
+          <div class="activity-item">
+            <i class="bi bi-bank"></i>
+            <span>Bank balance updated</span>
+            <small>5 hours ago</small>
+          </div>
+
+          <div class="activity-item">
+            <i class="bi bi-people"></i>
+            <span>New VO / ALF registered</span>
+            <small>1 day ago</small>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

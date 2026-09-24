@@ -1,0 +1,712 @@
+<div class="cmrc-page">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+
+    <div>
+      <h4>CMRC Management</h4>
+      <p>Manage CMRC and Tejshree fund information</p>
+    </div>
+
+    <button
+      class="btn btn-primary"
+      (click)="openAddForm()">
+
+      <i class="bi bi-plus-lg"></i>
+      Add CMRC
+
+    </button>
+
+  </div>
+<!-- SUMMARY CARDS -->
+
+<div class="row g-3 mb-4">
+
+  <!-- Total CMRC -->
+  <div class="col-xl col-md-6">
+    <div class="summary-card">
+      <div class="summary-icon blue">
+        <i class="bi bi-building"></i>
+      </div>
+
+      <div>
+        <span>Total CMRC</span>
+        <h3>{{ totalCmrc }}</h3>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Total Fund -->
+  <div class="col-xl col-md-6">
+    <div class="summary-card">
+      <div class="summary-icon green">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+
+      <div>
+        <span>Total Fund</span>
+        <h3>
+          ₹ {{ totalFund | number:'1.2-2' }}
+        </h3>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Service Fee -->
+  <div class="col-xl col-md-6">
+    <div class="summary-card">
+      <div class="summary-icon orange">
+        <i class="bi bi-percent"></i>
+      </div>
+
+      <div>
+        <span>Service Fee</span>
+        <h3>
+          ₹ {{ totalServiceFee | number:'1.2-2' }}
+        </h3>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Records Printed -->
+  <div class="col-xl col-md-6">
+    <div class="summary-card">
+      <div class="summary-icon purple">
+        <i class="bi bi-file-earmark-text"></i>
+      </div>
+
+      <div>
+        <span>Records Printed</span>
+        <h3>{{ totalRecordsPrinted }}</h3>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Records Distributed -->
+  <div class="col-xl col-md-6">
+    <div class="summary-card">
+      <div class="summary-icon teal">
+        <i class="bi bi-diagram-3"></i>
+      </div>
+
+      <div>
+        <span>Records Distributed</span>
+        <h3>{{ totalRecordsDistributed }}</h3>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+  <!-- ADD / EDIT FORM -->
+  <div class="card form-card" *ngIf="showForm">
+
+    <div class="card-header">
+
+      <div>
+        <h5>
+          {{ isEditMode ? 'Edit CMRC' : 'Add CMRC' }}
+        </h5>
+
+        <small>
+          Enter CMRC information
+        </small>
+      </div>
+
+      <button
+        class="btn-close"
+        (click)="closeForm()">
+      </button>
+
+    </div>
+
+
+    <div class="card-body">
+
+      <!-- BASIC INFORMATION -->
+
+      <h6 class="section-title">
+        <i class="bi bi-building"></i>
+        Basic Information
+      </h6>
+
+      <div class="row g-3">
+
+        <div class="col-md-3">
+          <label>Serial No</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.serialNo">
+        </div>
+
+
+        <div class="col-md-5">
+          <label>CMRC Name</label>
+
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newCmrc.cmrcName">
+        </div>
+
+
+        <div class="col-md-4">
+          <label>Tejshree Account No</label>
+
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newCmrc.accountNo">
+        </div>
+
+
+        <div class="col-md-4">
+          <label>Account Opening Date</label>
+
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="newCmrc.accountOpeningDate">
+        </div>
+
+      </div>
+      </div>
+
+
+      <!-- RECORD INFORMATION -->
+
+      <h6 class="section-title mt-4">
+        <i class="bi bi-file-earmark-text"></i>
+        Tejshree Record Information
+      </h6>
+
+      <div class="row g-3">
+
+        <div class="col-md-4">
+          <label>Records Printed</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.recordsPrinted">
+        </div>
+
+
+        <div class="col-md-4">
+          <label>Printed Records Amount</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.printedRecordsAmount">
+        </div>
+
+
+        <div class="col-md-4">
+          <label>Records Distributed Villages</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.recordsDistributedVillages">
+        </div>
+
+
+        <div class="col-md-6">
+          <label>Expected Record Amount</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.expectedRecordAmount">
+        </div>
+
+
+        <div class="col-md-6">
+          <label>Actual Record Amount Received</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.actualRecordAmountReceived">
+        </div>
+
+
+        <div class="col-md-6">
+          <label>Service Fee Received</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.serviceFeeReceived">
+        </div>
+
+      </div>
+
+
+      <!-- TEJSHREE FUND RECEIVED -->
+
+      <h6 class="section-title mt-4">
+        <i class="bi bi-wallet2"></i>
+        Tejshree Fund Received
+      </h6>
+
+      <div class="row g-3">
+
+        <div class="col-md-4">
+          <label>Ultra Poor</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.tezshreeFundReceivedUltraPoor">
+        </div>
+
+
+        <div class="col-md-4">
+          <label>Debt Trapped Women</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.tezshreeFundReceivedDebtTrappedWomen">
+        </div>
+
+
+        <div class="col-md-4">
+          <label>Total Fund Received</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.tezshreeFundReceivedTotal">
+        </div>
+
+      </div>
+
+
+      <!-- FUND DISTRIBUTION -->
+
+      <h6 class="section-title mt-4">
+        <i class="bi bi-diagram-3"></i>
+        Fund Distribution
+      </h6>
+
+      <div class="row g-3">
+
+        <div class="col-md-4">
+          <label>Village Count</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.fundDistributedVillageCount">
+        </div>
+
+
+        <div class="col-md-4">
+          <label>Ultra Poor Women Count</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.distributedUltraPoorWomenCount">
+        </div>
+
+
+        <div class="col-md-4">
+          <label>Ultra Poor Fund</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.distributedUltraPoorFund">
+        </div>
+
+
+        <div class="col-md-4">
+          <label>Debt Trapped Women Count</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.distributedDebtTrappedWomenCount">
+        </div>
+
+
+        <div class="col-md-4">
+          <label>Debt Trapped Fund</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.distributedDebtTrappedFund">
+        </div>
+
+
+        <div class="col-md-4">
+          <label>Total Distributed Fund</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.distributedTotalFund">
+        </div>
+
+      </div>
+
+
+      <!-- TOTAL FUND -->
+
+      <h6 class="section-title mt-4">
+        <i class="bi bi-bank"></i>
+        Overall Fund
+      </h6>
+
+      <div class="row g-3">
+
+        <div class="col-md-6">
+
+          <label>Total Fund</label>
+
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="newCmrc.totalFund">
+
+        </div>
+
+      </div>
+
+
+      <!-- FORM BUTTONS -->
+
+      <div class="form-actions mt-4">
+
+        <button
+          class="btn btn-primary"
+          (click)="saveCmrc()">
+
+          <i class="bi bi-check-lg"></i>
+
+          {{ isEditMode ? 'Update CMRC' : 'Save CMRC' }}
+
+        </button>
+
+
+        <button
+          class="btn btn-light"
+          (click)="closeForm()">
+
+          Cancel
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- CMRC TABLE -->
+
+  <div class="card table-card">
+
+    <div class="card-header">
+
+      <div>
+        <h5>CMRC List</h5>
+
+        <small>
+          Registered CMRC records
+        </small>
+      </div>
+        <div class="search-section">
+
+  <div class="input-group">
+
+    <span class="input-group-text">
+      <i class="bi bi-search"></i>
+    </span>
+
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Search CMRC name or account number..."
+      [(ngModel)]="searchText">
+
+  </div>
+
+</div>
+      <span class="record-count">
+        {{ cmrcList.length }} Records
+      </span>
+
+    </div>
+
+
+    <div class="card-body p-0">
+
+      <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+          <thead>
+
+            <tr>
+
+              <th>Sr No</th>
+              <th>CMRC Name</th>
+              <th>Account No</th>
+              <th>Opening Date</th>
+              <th>Total Fund</th>
+              <th>Service Fee</th>
+              <th>Records Printed</th>
+              <th>Records Distributed</th>
+              <th>Actions</th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            <tr *ngFor="let cmrc of filteredCmrcList">
+
+              <td>
+                {{ cmrc.serialNo }}
+              </td>
+
+
+              <td>
+                <strong>
+                  {{ cmrc.cmrcName }}
+                </strong>
+              </td>
+
+
+              <td>
+                {{ cmrc.accountNo }}
+              </td>
+
+
+              <td>
+                {{ cmrc.accountOpeningDate }}
+              </td>
+
+
+              <td>
+                ₹ {{ cmrc.totalFund | number:'1.2-2' }}
+              </td>
+
+
+              <td>
+                ₹ {{ cmrc.serviceFeeReceived | number:'1.2-2' }}
+              </td>
+
+
+              <td>
+                {{ cmrc.recordsPrinted }}
+              </td>
+
+
+              <td>
+                {{ cmrc.recordsDistributedVillages }}
+              </td>
+
+
+              <td>
+
+                <button
+                  class="btn btn-sm btn-outline-primary me-1"
+                  title="Edit"
+                  (click)="openEditForm(cmrc)">
+
+                  <i class="bi bi-pencil"></i>
+
+                </button>
+
+
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  title="Delete"
+                  (click)="deleteCmrc(cmrc.id!)">
+
+                  <i class="bi bi-trash"></i>
+
+                </button>
+                <button
+  class="btn btn-sm btn-outline-info me-1"
+  title="Balance"
+  (click)="openBalance(cmrc)">
+
+  <i class="bi bi-wallet2"></i>
+
+</button>
+
+              </td>
+
+            </tr>
+
+
+           <tr *ngIf="filteredCmrcList.length === 0">
+
+              <td
+                colspan="9"
+                class="text-center py-5">
+
+                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+
+                No CMRC records found
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+        <!-- BALANCE SECTION -->
+
+<!-- DYNAMIC BALANCE SECTION -->
+
+<div class="card balance-card" *ngIf="showBalance && selectedCmrc">
+
+  <div class="card-header">
+
+    <div>
+      <h5>
+        {{ selectedCmrc.cmrcName }} - Balance History
+      </h5>
+
+      <small>
+        Account No: {{ selectedCmrc.accountNo }}
+      </small>
+    </div>
+
+    <button
+      class="btn-close"
+      (click)="closeBalance()">
+    </button>
+
+  </div>
+
+  <div class="card-body">
+
+    <!-- ADD BALANCE -->
+
+    <div class="row g-3">
+
+      <div class="col-md-5">
+
+        <label>Balance Date</label>
+
+        <input
+          type="date"
+          class="form-control"
+          [(ngModel)]="balanceDate">
+
+      </div>
+
+      <div class="col-md-5">
+
+        <label>Balance Amount</label>
+
+        <input
+          type="number"
+          class="form-control"
+          [(ngModel)]="balanceAmount"
+          placeholder="Enter balance amount">
+
+      </div>
+
+      <div class="col-md-2 d-flex align-items-end">
+
+        <button
+          class="btn btn-primary w-100"
+          (click)="saveBalance()">
+
+          <i class="bi bi-plus-lg"></i>
+          Add
+
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <hr class="my-4">
+
+
+    <!-- BALANCE HISTORY -->
+
+    <h6 class="section-title">
+      <i class="bi bi-clock-history"></i>
+      Balance History
+    </h6>
+
+    <div class="table-responsive">
+
+      <table class="table table-hover">
+
+        <thead>
+
+          <tr>
+            <th>Date</th>
+            <th>Balance Amount</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr *ngFor="let balance of balanceList">
+
+            <td>
+              {{ balance.balanceDate | date:'dd-MM-yyyy' }}
+            </td>
+
+            <td>
+              ₹ {{ balance.balanceAmount | number:'1.2-2' }}
+            </td>
+
+          </tr>
+
+          <tr *ngIf="balanceList.length === 0">
+
+            <td
+              colspan="2"
+              class="text-center py-4">
+
+              No balance records found
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>
+        
+
+      </div>
+
+    </div>
+
+  </div>
+

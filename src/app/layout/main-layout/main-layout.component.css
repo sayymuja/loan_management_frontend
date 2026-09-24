@@ -1,0 +1,10 @@
+.main-wrapper {
+  margin-left: 240px;
+  min-height: 100vh;
+  background: #f5f7fb;
+}
+
+.content {
+  padding: 24px;
+  min-height: calc(100vh - 64px);
+}
