@@ -287,4 +287,12 @@ numberToWords(amount: number): string {
 
   return result.trim() + ' Rupees Only';
 }
+ getSelectedVoAlfRecievedFund(): number | string {
+
+    const voAlf = this.voAlfList.find(
+      v => v.id === this.selectedVoAlfId
+    );
+
+    return voAlf?.receivedFund || '';
+  }
 }

@@ -89,13 +89,14 @@
 
     <div>
       <small>VO / ALF</small>
-      <strong>{{ getSelectedVoAlfName() }}</strong>
+      <strong>{{ getSelectedVoAlfName() }} (₹ {{ getSelectedVoAlfRecievedFund() | number:'1.2-2' }})</strong>
     </div>
 
     <div>
       <small>Total Loans</small>
       <strong>{{ loanList.length }}</strong>
     </div>
+    
 
   </div>
 

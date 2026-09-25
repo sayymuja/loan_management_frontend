@@ -122,6 +122,14 @@ newFund: VoAlfFund = {
 
     return voAlf?.voAlfName || '';
   }
+   getSelectedVoAlfRecievedFund(): number | string {
+
+    const voAlf = this.voAlfList.find(
+      v => v.id === this.selectedVoAlfId
+    );
+
+    return voAlf?.receivedFund || '';
+  }
 openAddForm(): void {
   if (!this.selectedVoAlfId) {
     alert('Please select VO / ALF first');

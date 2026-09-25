@@ -20,6 +20,7 @@ import { VoAlfComponent } from './vo-alf/vo-alf.component';
 import { FundManagementComponent } from './fund-management/fund-management.component';
 import { LoanManagementComponent } from './loan-management/loan-management.component';
 import { RepaymentManagementComponent } from './repayment-management/repayment-management.component';
+import { ClScheduleComponent } from './cl-schedule/cl-schedule.component';
 
 @NgModule({
   declarations: [
@@ -35,7 +36,8 @@ import { RepaymentManagementComponent } from './repayment-management/repayment-m
     VoAlfComponent,
     FundManagementComponent,
     LoanManagementComponent,
-    RepaymentManagementComponent
+    RepaymentManagementComponent,
+    ClScheduleComponent
   ],
   imports: [
     BrowserModule,

@@ -103,6 +103,9 @@
       <small class="text-muted">
         {{ getSelectedVoAlfName() }}
       </small>
+      <h3 class="text-muted">
+        ₹ {{ getSelectedVoAlfRecievedFund() | number:'1.2-2' }}
+      </h3>
     </div>
 
     <button
@@ -342,7 +345,7 @@
 
       <div class="col-md-6">
         <small class="text-muted">VO / ALF</small>
-        <h5>{{ getSelectedVoAlfName() }}</h5>
+        <h5>{{ getSelectedVoAlfName() }} (₹ {{ getSelectedVoAlfRecievedFund() | number:'1.2-2' }})</h5>
       </div>
 
     </div>

@@ -10,6 +10,7 @@ import { VoAlfComponent } from './vo-alf/vo-alf.component';
 import { FundManagementComponent } from './fund-management/fund-management.component';
 import { LoanManagementComponent } from './loan-management/loan-management.component';
 import { RepaymentManagementComponent } from './repayment-management/repayment-management.component';
+import { ClScheduleComponent } from './cl-schedule/cl-schedule.component';
 
 const routes: Routes = [
   {
@@ -53,6 +54,11 @@ const routes: Routes = [
   {
     path: 'repayment',
     component: RepaymentManagementComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'cl-schedule',
+    component: ClScheduleComponent,
     canActivate: [AuthGuard]
   }
 ];
