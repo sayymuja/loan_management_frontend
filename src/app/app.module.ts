@@ -17,6 +17,9 @@ import { TopbarComponent } from './layout/topbar/topbar.component';
 import { CmrcComponent } from './cmrc/cmrc.component';
 import { CmrcBalanceComponent } from './cmrc-balance/cmrc-balance.component';
 import { VoAlfComponent } from './vo-alf/vo-alf.component';
+import { FundManagementComponent } from './fund-management/fund-management.component';
+import { LoanManagementComponent } from './loan-management/loan-management.component';
+import { RepaymentManagementComponent } from './repayment-management/repayment-management.component';
 
 @NgModule({
   declarations: [
@@ -29,13 +32,17 @@ import { VoAlfComponent } from './vo-alf/vo-alf.component';
     TopbarComponent,
     CmrcComponent,
     CmrcBalanceComponent,
-    VoAlfComponent
+    VoAlfComponent,
+    FundManagementComponent,
+    LoanManagementComponent,
+    RepaymentManagementComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    FormsModule
+    FormsModule,
+    
   ],
   providers: [{
     provide: HTTP_INTERCEPTORS,

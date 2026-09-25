@@ -14,6 +14,13 @@ export class VoAlfComponent implements OnInit {
 
   cmrcList: Cmrc[] = [];
   voAlfList: VoAlf[] = [];
+  showForm = false;
+  isEditMode = false;
+  selectedCmrcName: any;
+
+newVoAlf: VoAlf = {
+  cmrcId: 0
+};
 
   selectedCmrcId: number | null = null;
 
@@ -54,4 +61,91 @@ export class VoAlfComponent implements OnInit {
       }
     });
   }
+  openAddForm(): void {
+
+  if (!this.selectedCmrcId) {
+    alert('Please select CMRC first');
+    return;
+  }
+
+  this.newVoAlf = {
+    cmrcId: this.selectedCmrcId
+  };
+
+  this.isEditMode = false;
+  this.showForm = true;
+}
+
+closeForm(): void {
+  this.showForm = false;
+
+  this.newVoAlf = {
+    cmrcId: this.selectedCmrcId ?? 0
+  };
+}
+
+saveVoAlf(): void {
+
+  if (!this.newVoAlf.voAlfName) {
+    alert('Please enter VO / ALF name');
+    return;
+  }
+
+  if (this.isEditMode && this.newVoAlf.id) {
+
+    this.voAlfService.update(
+      this.newVoAlf.id,
+      this.newVoAlf
+    ).subscribe({
+      next: () => {
+        this.closeForm();
+        this.loadVoAlfByCmrc();
+      },
+      error: (error) => {
+        console.error('Update VO/ALF Error:', error);
+      }
+    });
+
+  } else {
+
+    this.voAlfService.create(this.newVoAlf).subscribe({
+      next: () => {
+        this.closeForm();
+        this.loadVoAlfByCmrc();
+      },
+      error: (error) => {
+        console.error('Create VO/ALF Error:', error);
+      }
+    });
+
+  }
+}
+getSelectedCmrcName(): string {
+  const cmrc = this.cmrcList.find(
+    c => c.id === this.selectedCmrcId
+  );
+
+  return cmrc?.cmrcName || '';
+}
+openEditForm(voAlf: VoAlf): void {
+  this.newVoAlf = { ...voAlf };
+  this.isEditMode = true;
+  this.showForm = true;
+}
+
+deleteVoAlf(id: number): void {
+
+  if (!confirm('Are you sure you want to delete this VO / ALF?')) {
+    return;
+  }
+
+  this.voAlfService.delete(id).subscribe({
+    next: () => {
+      this.loadVoAlfByCmrc();
+    },
+    error: (error) => {
+      console.error('Delete VO/ALF Error:', error);
+    }
+  });
+}
 }

@@ -1,0 +1,483 @@
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h2>Fund Management</h2>
+    <p>CMRC wise VO / ALF fund details</p>
+  </div>
+
+  <button
+    class="btn btn-primary"
+    (click)="openAddForm()"
+    [disabled]="!selectedVoAlfId">
+
+    <i class="bi bi-plus-lg"></i>
+    Add Fund
+
+  </button>
+</div>
+
+<!-- Selection -->
+<div class="card mb-4">
+  <div class="card-header">
+    <h5 class="mb-0">Select VO / ALF</h5>
+  </div>
+
+  <div class="card-body">
+
+    <div class="row g-3">
+
+      <!-- CMRC -->
+      <div class="col-md-6">
+
+        <label class="form-label">
+          CMRC
+        </label>
+
+        <select
+          class="form-select"
+          [(ngModel)]="selectedCmrcId"
+          (change)="loadVoAlfByCmrc()">
+
+          <option [ngValue]="null">
+            -- Select CMRC --
+          </option>
+
+          <option
+            *ngFor="let cmrc of cmrcList"
+            [ngValue]="cmrc.id">
+
+            {{ cmrc.cmrcName }}
+
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- VO / ALF -->
+      <div class="col-md-6">
+
+        <label class="form-label">
+          VO / ALF
+        </label>
+
+        <select
+          class="form-select"
+          [(ngModel)]="selectedVoAlfId"
+          (change)="loadFund()"
+          [disabled]="voAlfList.length === 0">
+
+          <option [ngValue]="null">
+            -- Select VO / ALF --
+          </option>
+
+          <option
+            *ngFor="let voAlf of voAlfList"
+            [ngValue]="voAlf.id">
+
+            {{ voAlf.voAlfName }}
+
+          </option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- Selected Information -->
+ <!-- Fund Form -->
+<div class="card mb-4" *ngIf="showForm">
+
+  <div class="card-header d-flex justify-content-between align-items-center">
+
+    <div>
+      <h5 class="mb-0">
+        {{ isEditMode ? 'Edit Fund' : 'Add Fund' }}
+      </h5>
+
+      <small class="text-muted">
+        {{ getSelectedVoAlfName() }}
+      </small>
+    </div>
+
+    <button
+      type="button"
+      class="btn-close"
+      (click)="closeForm()">
+    </button>
+
+  </div>
+
+  <div class="card-body">
+
+    <!-- Allocation Fund -->
+    <h6 class="section-title mb-3">
+      <i class="bi bi-cash-stack"></i>
+      Allocation Fund
+    </h6>
+
+    <div class="row g-3 mb-4">
+
+      <div class="col-md-3">
+        <label class="form-label">Group Count</label>
+        <input
+          type="number"
+          class="form-control"
+          [(ngModel)]="newFund.allocationGroupCount">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Women Count</label>
+        <input
+          type="number"
+          class="form-control"
+          [(ngModel)]="newFund.allocationWomenCount">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Group Amount</label>
+        <input
+          type="number"
+          class="form-control"
+          [(ngModel)]="newFund.allocationGroupAmount">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Women Amount</label>
+        <input
+          type="number"
+          class="form-control"
+          [(ngModel)]="newFund.allocationWomenAmount">
+      </div>
+
+    </div>
+
+
+    <!-- Repayment -->
+    <h6 class="section-title mb-3">
+      <i class="bi bi-wallet2"></i>
+      Repayment Received Fund
+    </h6>
+
+    <div class="row g-3 mb-4">
+
+      <div class="col-md-3">
+        <label class="form-label">Group Count</label>
+        <input
+          type="number"
+          class="form-control"
+          [(ngModel)]="newFund.repaymentGroupCount">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Women Count</label>
+        <input
+          type="number"
+          class="form-control"
+          [(ngModel)]="newFund.repaymentWomenCount">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Group Amount</label>
+        <input
+          type="number"
+          class="form-control"
+          [(ngModel)]="newFund.repaymentGroupAmount">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Women Amount</label>
+        <input
+          type="number"
+          class="form-control"
+          [(ngModel)]="newFund.repaymentWomenAmount">
+      </div>
+
+    </div>
+
+
+    <!-- Loan Distributed -->
+    <!-- Loan Distributed -->
+<h6 class="section-title mb-3">
+  <i class="bi bi-currency-rupee"></i>
+  Loan Distributed
+</h6>
+
+<div class="row g-3 mb-4">
+
+  <!-- Financial Year -->
+  <div class="col-md-3">
+    <label class="form-label">Financial Year</label>
+
+    <input
+      type="text"
+      class="form-control"
+      [(ngModel)]="newFund.loanFinancialYear"
+      placeholder="e.g. 2025-26">
+  </div>
+
+  <!-- Group Count -->
+  <div class="col-md-3">
+    <label class="form-label">Group Count</label>
+
+    <input
+      type="number"
+      class="form-control"
+      [(ngModel)]="newFund.loanGroupCount">
+  </div>
+
+  <!-- Women Count -->
+  <div class="col-md-3">
+    <label class="form-label">Women Count</label>
+
+    <input
+      type="number"
+      class="form-control"
+      [(ngModel)]="newFund.loanWomenCount">
+  </div>
+
+  <!-- Group Amount -->
+  <div class="col-md-3">
+    <label class="form-label">Group Amount</label>
+
+    <input
+      type="number"
+      class="form-control"
+      [(ngModel)]="newFund.loanGroupAmount">
+  </div>
+
+  <!-- Women Amount -->
+  <div class="col-md-3">
+    <label class="form-label">Women Amount</label>
+
+    <input
+      type="number"
+      class="form-control"
+      [(ngModel)]="newFund.loanWomenAmount">
+  </div>
+
+</div>
+
+
+    <!-- Current Interest -->
+    <h6 class="section-title mb-3">
+      <i class="bi bi-percent"></i>
+      Current Interest Received
+    </h6>
+
+    <div class="row g-3 mb-4">
+
+      <div class="col-md-4">
+        <label class="form-label">Ultra Poor</label>
+        <input
+          type="number"
+          class="form-control"
+          [(ngModel)]="newFund.currentInterestUltraPoor">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">
+          Debt Trapped Women
+        </label>
+        <input
+          type="number"
+          class="form-control"
+          [(ngModel)]="newFund.currentInterestDebtTrappedWomen">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Total Interest</label>
+        <input
+          type="number"
+          class="form-control"
+          [(ngModel)]="newFund.currentInterestTotal">
+      </div>
+
+    </div>
+
+
+    <!-- Buttons -->
+    <div class="mt-3">
+
+      <button
+        class="btn btn-primary me-2"
+        (click)="saveFund()">
+
+        <i class="bi bi-check-lg"></i>
+
+        {{ isEditMode ? 'Update' : 'Save' }}
+
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        (click)="closeForm()">
+
+        Cancel
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+<div
+  class="card mb-4"
+  *ngIf="selectedVoAlfId">
+
+  <div class="card-body">
+
+    <div class="row">
+
+      <div class="col-md-6">
+        <small class="text-muted">CMRC</small>
+        <h5>{{ getSelectedCmrcName() }}</h5>
+      </div>
+
+      <div class="col-md-6">
+        <small class="text-muted">VO / ALF</small>
+        <h5>{{ getSelectedVoAlfName() }}</h5>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- Fund Data -->
+<div class="card">
+
+  <div class="card-header">
+    <h5 class="mb-0">
+      Fund Details
+    </h5>
+  </div>
+
+  <div class="card-body">
+
+    <div
+      *ngIf="fundList.length === 0"
+      class="text-center text-muted py-4">
+
+      No fund record found for this VO / ALF.
+
+    </div>
+
+
+    <div
+      class="table-responsive"
+      *ngIf="fundList.length > 0">
+
+      <table class="table table-hover align-middle">
+
+        <thead>
+
+          <tr>
+            <th>Fund Type</th>
+            <th>Group Count</th>
+            <th>Women Count</th>
+            <th>Group Amount</th>
+            <th>Women Amount</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <!-- Allocation -->
+
+          <tr>
+
+            <td>
+              <strong>Allocation Fund</strong>
+            </td>
+
+            <td>
+              {{ fundList[0].allocationGroupCount || 0 }}
+            </td>
+
+            <td>
+              {{ fundList[0].allocationWomenCount || 0 }}
+            </td>
+
+            <td>
+              ₹ {{ fundList[0].allocationGroupAmount || 0 | number:'1.2-2' }}
+            </td>
+
+            <td>
+              ₹ {{ fundList[0].allocationWomenAmount || 0 | number:'1.2-2' }}
+            </td>
+
+          </tr>
+
+
+          <!-- Repayment -->
+
+          <tr>
+
+            <td>
+              <strong>Repayment Received</strong>
+            </td>
+
+            <td>
+              {{ fundList[0].repaymentGroupCount || 0 }}
+            </td>
+
+            <td>
+              {{ fundList[0].repaymentWomenCount || 0 }}
+            </td>
+
+            <td>
+              ₹ {{ fundList[0].repaymentGroupAmount || 0 | number:'1.2-2' }}
+            </td>
+
+            <td>
+              ₹ {{ fundList[0].repaymentWomenAmount || 0 | number:'1.2-2' }}
+            </td>
+
+          </tr>
+
+
+          <!-- Loan Distributed -->
+
+          <tr>
+
+            <td>
+              <strong>Loan Distributed</strong>
+            </td>
+
+            <td>
+              {{ fundList[0].loanGroupCount || 0 }}
+            </td>
+
+            <td>
+              {{ fundList[0].loanWomenCount || 0 }}
+            </td>
+
+            <td>
+              ₹ {{ fundList[0].loanGroupAmount || 0 | number:'1.2-2' }}
+            </td>
+
+            <td>
+              ₹ {{ fundList[0].loanWomenAmount || 0 | number:'1.2-2' }}
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>

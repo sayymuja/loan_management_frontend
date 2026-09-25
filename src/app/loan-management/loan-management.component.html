@@ -1,0 +1,479 @@
+<div class="loan-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h2>Loan Management</h2>
+      <p>Manage loans distributed by VO / ALF</p>
+    </div>
+
+    <button
+      class="btn btn-primary"
+      (click)="openAddForm()"
+      [disabled]="!selectedVoAlfId">
+      <i class="bi bi-plus-lg"></i>
+      Add Loan
+    </button>
+  </div>
+
+
+  <!-- Filters -->
+  <div class="card filter-card">
+
+    <div class="row g-3">
+
+      <!-- CMRC -->
+      <div class="col-md-6">
+        <label class="form-label">CMRC</label>
+
+        <select
+          class="form-select"
+          [(ngModel)]="selectedCmrcId"
+          (change)="loadVoAlfByCmrc()">
+
+          <option [ngValue]="null">
+            Select CMRC
+          </option>
+
+          <option
+            *ngFor="let cmrc of cmrcList"
+            [ngValue]="cmrc.id">
+
+            {{ cmrc.cmrcName }}
+
+          </option>
+
+        </select>
+      </div>
+
+
+      <!-- VO / ALF -->
+      <div class="col-md-6">
+        <label class="form-label">VO / ALF</label>
+
+        <select
+          class="form-select"
+          [(ngModel)]="selectedVoAlfId"
+          (change)="loadLoans()"
+          [disabled]="!selectedCmrcId">
+
+          <option [ngValue]="null">
+            Select VO / ALF
+          </option>
+
+          <option
+            *ngFor="let voAlf of voAlfList"
+            [ngValue]="voAlf.id">
+
+            {{ voAlf.voAlfName }}
+
+          </option>
+
+        </select>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- Selected Information -->
+  <div
+    class="selected-info"
+    *ngIf="selectedVoAlfId">
+
+    <div>
+      <small>CMRC</small>
+      <strong>{{ getSelectedCmrcName() }}</strong>
+    </div>
+
+    <div>
+      <small>VO / ALF</small>
+      <strong>{{ getSelectedVoAlfName() }}</strong>
+    </div>
+
+    <div>
+      <small>Total Loans</small>
+      <strong>{{ loanList.length }}</strong>
+    </div>
+
+  </div>
+
+
+  <!-- Loan Table -->
+  <div class="card table-card">
+
+    <div class="card-header">
+      <div>
+        <h5>Loan Records</h5>
+        <span *ngIf="selectedVoAlfId">
+          {{ getSelectedVoAlfName() }}
+        </span>
+      </div>
+    </div>
+
+
+    <div class="table-responsive">
+
+      <table class="table table-hover align-middle">
+
+        <thead>
+          <tr>
+            <th>Sr. No.</th>
+            <th>Group Name</th>
+            <th>Woman Name</th>
+            <th>Loan Amount</th>
+            <th>Loan Purpose</th>
+            <th>Loan Date</th>
+            <th>Repayment Period</th>
+            <th>Interest Rate</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+
+        <tbody>
+
+          <!-- No VO/ALF selected -->
+          <tr *ngIf="!selectedVoAlfId">
+            <td colspan="9" class="text-center empty-state">
+              <i class="bi bi-arrow-up-circle"></i>
+              <p>Select CMRC and VO / ALF to view loans</p>
+            </td>
+          </tr>
+
+
+          <!-- No loans -->
+          <tr
+            *ngIf="selectedVoAlfId && loanList.length === 0">
+
+            <td colspan="9" class="text-center empty-state">
+
+              <i class="bi bi-inbox"></i>
+
+              <p>No loan records found</p>
+
+              <button
+                class="btn btn-sm btn-primary"
+                (click)="openAddForm()">
+
+                <i class="bi bi-plus-lg"></i>
+                Add First Loan
+
+              </button>
+
+            </td>
+          </tr>
+
+
+          <!-- Loan records -->
+          <tr *ngFor="let loan of loanList">
+
+            <td>
+              {{ loan.serialNo || loan.id }}
+            </td>
+
+            <td>
+              {{ loan.groupName || '-' }}
+            </td>
+
+            <td>
+              {{ loan.womanName || '-' }}
+            </td>
+
+            <td>
+              ₹ {{ loan.loanAmount || 0 | number:'1.2-2' }}
+            </td>
+
+            <td>
+              {{ loan.loanPurpose || '-' }}
+            </td>
+
+            <td>
+              {{ loan.loanGivenDate || '-' }}
+            </td>
+
+            <td>
+              {{ loan.repaymentPeriodMonths || 0 }} months
+            </td>
+
+            <td>
+              {{ loan.interestRate || 0 }}%
+            </td>
+
+            <td>
+
+              <button
+                class="btn btn-sm btn-outline-primary me-2"
+                (click)="openEditForm(loan)"
+                title="Edit">
+
+                <i class="bi bi-pencil"></i>
+
+              </button>
+
+              <button
+                class="btn btn-sm btn-outline-danger"
+                (click)="deleteLoan(loan.id!)"
+                title="Delete">
+
+                <i class="bi bi-trash"></i>
+
+              </button>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+
+  <!-- Add/Edit Loan Form -->
+  <div
+    class="form-overlay"
+    *ngIf="showForm">
+
+    <div class="form-modal">
+
+      <div class="form-header">
+
+        <div>
+          <h4>
+            {{ isEditMode ? 'Edit Loan' : 'Add Loan' }}
+          </h4>
+
+          <small>
+            {{ getSelectedVoAlfName() }}
+          </small>
+        </div>
+
+        <button
+          type="button"
+          class="btn-close"
+          (click)="closeForm()">
+        </button>
+
+      </div>
+
+
+      <div class="form-body">
+
+        <div class="row g-3">
+
+          <!-- Group Name -->
+          <div class="col-md-6">
+
+            <label class="form-label">
+              Group Name
+            </label>
+
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="newLoan.groupName"
+              placeholder="Enter group name">
+
+          </div>
+
+
+          <!-- Woman Name -->
+          <div class="col-md-6">
+
+            <label class="form-label">
+              Woman Name
+            </label>
+
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="newLoan.womanName"
+              placeholder="Enter woman name">
+
+          </div>
+
+
+          <!-- Loan Amount -->
+<div class="col-md-6">
+
+  <label class="form-label">
+    Loan Amount
+    <span
+      *ngIf="newLoan.loanAmount"
+      class="text-muted">
+      ({{ numberToWords(newLoan.loanAmount) }})
+    </span>
+  </label>
+
+  <input
+    type="number"
+    class="form-control"
+    [(ngModel)]="newLoan.loanAmount"
+    (ngModelChange)="calculateEmi()"
+    placeholder="Enter loan amount">
+
+</div>
+
+
+          <!-- Loan Purpose -->
+          <div class="col-md-6">
+
+            <label class="form-label">
+              Loan Purpose
+            </label>
+
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="newLoan.loanPurpose"
+              placeholder="Enter loan purpose">
+
+          </div>
+
+
+          <!-- Loan Given Date -->
+          <div class="col-md-4">
+
+            <label class="form-label">
+              Loan Given Date
+            </label>
+
+            <input
+              type="date"
+              class="form-control"
+              [(ngModel)]="newLoan.loanGivenDate">
+
+          </div>
+
+
+          <!-- Repayment Period -->
+          <div class="col-md-4">
+
+            <label class="form-label">
+              Repayment Period
+            </label>
+
+            <div class="input-group">
+
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="newLoan.repaymentPeriodMonths" (ngModelChange)="calculateEmi()"
+                placeholder="Months">
+
+              <span class="input-group-text">
+                Months
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <!-- Interest Rate -->
+          <div class="col-md-4">
+
+            <label class="form-label">
+              Interest Rate
+            </label>
+
+            <div class="input-group">
+
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="newLoan.interestRate" (ngModelChange)="calculateEmi()"
+                placeholder="Rate">
+
+              <span class="input-group-text">
+                %
+              </span>
+
+            </div>
+
+          </div>
+          <!-- Interest Type -->
+<div class="col-md-4">
+
+  <label class="form-label">
+    Interest Type
+  </label>
+
+  <select
+    class="form-select"
+    [(ngModel)]="newLoan.interestType"
+    (ngModelChange)="calculateEmi()">
+
+    <option [ngValue]="undefined">Select Type</option>
+    <option value="FLAT">Flat</option>
+    <option value="REDUCING">Reducing Balance</option>
+
+  </select>
+
+</div>
+
+
+<!-- Monthly EMI -->
+<div class="col-md-4">
+
+  <label class="form-label">
+    Monthly EMI
+  </label>
+
+  <div class="input-group">
+
+    <span class="input-group-text">₹</span>
+
+    <input
+  type="number"
+  class="form-control"
+  [(ngModel)]="newLoan.monthlyEmi"
+  readonly>
+
+  </div>
+
+</div>
+
+        </div>
+
+      </div>
+
+
+      <div class="form-footer">
+
+        <button
+          type="button"
+          class="btn btn-light"
+          (click)="closeForm()">
+
+          Cancel
+
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="saveLoan()">
+
+          <i
+            class="bi"
+            [class.bi-check-lg]="isEditMode"
+            [class.bi-plus-lg]="!isEditMode">
+          </i>
+
+          {{ isEditMode ? 'Update Loan' : 'Save Loan' }}
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

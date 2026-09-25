@@ -1,0 +1,19 @@
+{
+  "dashboard": "डॅशबोर्ड",
+  "loan": "कर्ज",
+  "loanAmount": "कर्जाची रक्कम",
+  "loanPurpose": "कर्जाचा उद्देश",
+  "repayment": "परतफेड",
+  "monthlyEmi": "मासिक हप्ता",
+  "principal": "मुद्दल",
+  "interest": "व्याज",
+  "total": "एकूण",
+  "remark": "शेरा",
+  "regularRepayment": "नियमित परतफेड",
+  "penaltyAmount": "दंडाची रक्कम",
+  "save": "जतन करा",
+  "update": "अद्ययावत करा",
+  "delete": "हटवा",
+  "logout": "बाहेर पडा",
+  "cmrcList": "CMRC यादी"
+}

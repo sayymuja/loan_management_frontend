@@ -1,8 +1,17 @@
-<div class="page-header">
+<div class="page-header d-flex justify-content-between align-items-center">
   <div>
     <h2>VO / ALF Management</h2>
     <p>CMRC wise VO / ALF details</p>
   </div>
+
+  <button
+    class="btn btn-primary"
+    (click)="openAddForm()">
+
+    <i class="bi bi-plus-lg"></i>
+    Add VO / ALF
+
+  </button>
 </div>
 
 <!-- CMRC Selection -->
@@ -39,6 +48,143 @@
 
   </div>
 </div>
+<!-- Add VO / ALF Form -->
+<div class="card mb-4" *ngIf="showForm">
+
+  <div class="card-header d-flex justify-content-between align-items-center">
+
+    <h5 class="mb-0">
+      Add VO / ALF
+    </h5>
+
+    <button
+      type="button"
+      class="btn-close"
+      (click)="closeForm()">
+    </button>
+
+  </div>
+
+  <div class="card-body">
+
+    <div class="row g-3">
+
+      <!-- CMRC -->
+      <div class="col-md-6">
+
+        <label class="form-label">
+          CMRC
+        </label>
+
+        <input
+          type="text"
+          class="form-control"
+          [value]="getSelectedCmrcName()"
+          readonly>
+
+      </div>
+
+      <!-- Serial No -->
+      <div class="col-md-6">
+
+        <label class="form-label">
+          Sr. No.
+        </label>
+
+        <input
+          type="number"
+          class="form-control"
+          [(ngModel)]="newVoAlf.serialNo"
+          placeholder="Enter serial number">
+
+      </div>
+
+      <!-- Village -->
+      <div class="col-md-6">
+
+        <label class="form-label">
+          Village Name
+        </label>
+
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="newVoAlf.villageName"
+          placeholder="Enter village name">
+
+      </div>
+
+      <!-- VO / ALF Name -->
+      <div class="col-md-6">
+
+        <label class="form-label">
+          VO / ALF Name
+        </label>
+
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="newVoAlf.voAlfName"
+          placeholder="Enter VO / ALF name">
+
+      </div>
+
+      <!-- Account No -->
+      <div class="col-md-6">
+
+        <label class="form-label">
+          Account Number
+        </label>
+
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="newVoAlf.accountNo"
+          placeholder="Enter account number">
+
+      </div>
+
+      <!-- Received Fund -->
+      <div class="col-md-6">
+
+        <label class="form-label">
+          Received Fund
+        </label>
+
+        <input
+          type="number"
+          class="form-control"
+          [(ngModel)]="newVoAlf.receivedFund"
+          placeholder="Enter received fund">
+
+      </div>
+
+    </div>
+
+    <div class="mt-4">
+
+      <button
+        class="btn btn-primary me-2"
+        (click)="saveVoAlf()">
+
+        <i class="bi bi-check-lg"></i>
+        Save
+
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        (click)="closeForm()">
+
+        Cancel
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 
 
 <!-- VO / ALF Table -->
@@ -63,6 +209,7 @@
             <th>VO / ALF Name</th>
             <th>Account No.</th>
             <th>Received Fund</th>
+            <th>Actions</th>
           </tr>
         </thead>
 
@@ -89,18 +236,34 @@
             <td>
               ₹ {{ voAlf.receivedFund | number:'1.2-2' }}
             </td>
+            <td>
+
+  <button
+    class="btn btn-sm btn-outline-primary me-2"
+    (click)="openEditForm(voAlf)">
+    <i class="bi bi-pencil"></i>
+  </button>
+
+  <button
+    class="btn btn-sm btn-outline-danger"
+    (click)="deleteVoAlf(voAlf.id!)">
+    <i class="bi bi-trash"></i>
+  </button>
+
+</td>
 
           </tr>
 
           <tr *ngIf="voAlfList.length === 0">
 
             <td
-              colspan="5"
+              colspan="6"
               class="text-center text-muted py-4">
 
               No VO / ALF records found
 
             </td>
+            
 
           </tr>
 

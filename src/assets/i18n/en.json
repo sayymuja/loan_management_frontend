@@ -1,0 +1,19 @@
+{
+  "dashboard": "Dashboard",
+  "loan": "Loan",
+  "loanAmount": "Loan Amount",
+  "loanPurpose": "Loan Purpose",
+  "repayment": "Repayment",
+  "monthlyEmi": "Monthly EMI",
+  "principal": "Principal",
+  "interest": "Interest",
+  "total": "Total",
+  "remark": "Remark",
+  "regularRepayment": "Regular Repayment",
+  "penaltyAmount": "Penalty Amount",
+  "save": "Save",
+  "update": "Update",
+  "delete": "Delete",
+  "logout": "Logout",
+  "cmrcList": "CMRC List"
+}

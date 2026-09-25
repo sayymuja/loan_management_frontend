@@ -1,0 +1,243 @@
+.repayment-page {
+  padding: 24px;
+}
+
+/* Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-weight: 700;
+  color: #172033;
+}
+
+.page-header p {
+  margin: 5px 0 0;
+  color: #7b8496;
+}
+
+/* Cards */
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+}
+
+.filter-card {
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #394150;
+  margin-bottom: 7px;
+}
+
+.form-control,
+.form-select {
+  min-height: 42px;
+  border: 1px solid #dce1e8;
+  border-radius: 8px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #315efb;
+  box-shadow: 0 0 0 3px rgba(49, 94, 251, 0.1);
+}
+
+/* Selected Information */
+.selected-info {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.selected-info > div {
+  background: #ffffff;
+  padding: 18px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+}
+
+.selected-info small {
+  display: block;
+  color: #8a93a5;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.selected-info strong {
+  display: block;
+  color: #172033;
+  font-size: 17px;
+}
+
+/* Table */
+.table-card {
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 18px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.card-header h5 {
+  margin: 0;
+  color: #172033;
+  font-weight: 700;
+}
+
+.card-header span {
+  font-size: 13px;
+  color: #8a93a5;
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+.table thead th {
+  background: #f7f8fa;
+  color: #596273;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 13px 15px;
+  border-bottom: 1px solid #e9edf2;
+}
+
+.table tbody td {
+  padding: 14px 15px;
+  color: #333b4a;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.table tbody tr:hover {
+  background: #fafbfc;
+}
+
+/* Empty State */
+.empty-state {
+  padding: 45px !important;
+  color: #8b94a5;
+}
+
+.empty-state i {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.empty-state p {
+  margin-bottom: 15px;
+}
+
+/* Buttons */
+.btn {
+  border-radius: 7px;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: #315efb;
+  border-color: #315efb;
+}
+
+.btn-primary:hover {
+  background: #244bd3;
+  border-color: #244bd3;
+}
+
+/* Modal */
+.form-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 20px;
+}
+
+.form-modal {
+  width: 100%;
+  max-width: 850px;
+  max-height: 90vh;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.form-header h4 {
+  margin: 0;
+  font-weight: 700;
+  color: #172033;
+}
+
+.form-header small {
+  color: #8a93a5;
+}
+
+.form-body {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid #edf0f4;
+  background: #fafbfc;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .selected-info {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+
+  .repayment-page {
+    padding: 15px;
+  }
+
+  .page-header {
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .selected-info {
+    grid-template-columns: 1fr;
+  }
+
+  .form-modal {
+    max-height: 95vh;
+  }
+}

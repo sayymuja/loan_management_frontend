@@ -32,6 +32,8 @@ export class LoginComponent {
      next: (response) => {
 
   localStorage.setItem('token', response.token);
+    localStorage.setItem('user', JSON.stringify(response));
+
 
   this.router.navigate(['/dashboard']);
 

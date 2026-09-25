@@ -7,6 +7,9 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { AuthGuard } from './auth/auth.guard';
 import { CmrcComponent } from './cmrc/cmrc.component';
 import { VoAlfComponent } from './vo-alf/vo-alf.component';
+import { FundManagementComponent } from './fund-management/fund-management.component';
+import { LoanManagementComponent } from './loan-management/loan-management.component';
+import { RepaymentManagementComponent } from './repayment-management/repayment-management.component';
 
 const routes: Routes = [
   {
@@ -35,6 +38,21 @@ const routes: Routes = [
   {
     path: 'vo-alf',
     component: VoAlfComponent,
+    canActivate: [AuthGuard]
+  },
+   {
+    path: 'fund-management',
+    component: FundManagementComponent,
+    canActivate: [AuthGuard]
+  },
+   {
+    path: 'loan',
+    component: LoanManagementComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'repayment',
+    component: RepaymentManagementComponent,
     canActivate: [AuthGuard]
   }
 ];
