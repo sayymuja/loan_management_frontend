@@ -6,6 +6,7 @@ import { CmrcService, Cmrc } from '../services/cmrc.service';
 import { VoAlfService, VoAlf } from '../services/vo-alf.service';
 import { LoanService, Loan } from '../services/loan.service';
 import { CmrcBalance, CmrcBalanceService } from '../services/cmrc-balance.service';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-loan-management',
@@ -20,6 +21,12 @@ export class LoanManagementComponent implements OnInit {
   cmrcBalance: number = 0;
 totalReceivedFund: number = 0;
 cmrcLeftAmount: number = 0;
+showClSchedule = false;
+selectedLoanId: number | null = null;
+selectedLoan: Loan | null = null;
+showRepayment = false;
+selectedRepaymentLoanId: number | null = null;
+selectedRepaymentLoan: Loan | null = null;
 
   selectedCmrcId: number | null = null;
   selectedVoAlfId: number | null = null;
@@ -378,5 +385,241 @@ getRemainingAmount(): number {
   const totalLoanAmount = this.getTotalLoanAmount();
 
   return receivedFund - totalLoanAmount;
+}
+openClSchedule(loan: Loan): void {
+
+  if (!loan.id) {
+    alert('Loan ID not found');
+    return;
+  }
+
+  // Repayment close
+  this.showRepayment = false;
+  this.selectedRepaymentLoanId = null;
+  this.selectedRepaymentLoan = null;
+
+  // CL Schedule open
+  this.selectedLoanId = loan.id;
+  this.selectedLoan = loan;
+  this.showClSchedule = true;
+
+  setTimeout(() => {
+
+    const element = document.getElementById('clScheduleSection');
+
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+
+  }, 100);
+}
+closeClSchedule(): void {
+
+  this.showClSchedule = false;
+  this.selectedLoanId = null;
+  this.selectedLoan = null;
+
+}
+openRepayment(loan: Loan): void {
+
+  if (!loan.id) {
+    alert('Loan ID not found');
+    return;
+  }
+
+  // CL Schedule close
+  this.showClSchedule = false;
+  this.selectedLoanId = null;
+  this.selectedLoan = null;
+
+  // Repayment open
+  this.selectedRepaymentLoanId = loan.id;
+  this.selectedRepaymentLoan = loan;
+  this.showRepayment = true;
+
+  setTimeout(() => {
+
+    const element = document.getElementById('repaymentSection');
+
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+
+  }, 100);
+}
+closeRepayment(): void {
+  this.showRepayment = false;
+  this.selectedRepaymentLoanId = null;
+  this.selectedRepaymentLoan = null;
+}
+exportToExcel(): void {
+
+  if (!this.selectedVoAlfId) {
+    alert('Please select VO / ALF first');
+    return;
+  }
+
+  if (!this.filteredLoanList || this.filteredLoanList.length === 0) {
+    alert('No loan records available for export');
+    return;
+  }
+
+  const cmrcName = this.getSelectedCmrcName();
+  const voAlfName = this.getSelectedVoAlfName();
+
+  // =========================================
+  // LOAN DATA
+  // =========================================
+
+  const excelData = this.filteredLoanList.map((loan, index) => ({
+    'Sr. No.': index + 1,
+    'CMRC Name': cmrcName,
+    'VO / ALF Name': voAlfName,
+    'Group Name': loan.groupName || '',
+    'Woman Name': loan.womanName || '',
+    'Loan Amount': Number(loan.loanAmount || 0),
+    'Loan Purpose': loan.loanPurpose || '',
+    'Loan Given Date': loan.loanGivenDate || '',
+    'Repayment Period (Months)':
+      Number(loan.repaymentPeriodMonths || 0),
+    'Interest Rate (%)':
+      Number(loan.interestRate || 0),
+    'Interest Type':
+      loan.interestType || '',
+    'Monthly EMI':
+      Number(loan.monthlyEmi || 0)
+  }));
+
+
+  // =========================================
+  // TOTALS
+  // =========================================
+
+  const totalLoanAmount =
+    this.filteredLoanList.reduce(
+      (total, loan) =>
+        total + Number(loan.loanAmount || 0),
+      0
+    );
+
+  const totalMonthlyEmi =
+    this.filteredLoanList.reduce(
+      (total, loan) =>
+        total + Number(loan.monthlyEmi || 0),
+      0
+    );
+
+  const totalInterest =
+    this.filteredLoanList.reduce(
+      (total, loan) => {
+
+        const principal =
+          Number(loan.loanAmount || 0);
+
+        const emi =
+          Number(loan.monthlyEmi || 0);
+
+        const months =
+          Number(loan.repaymentPeriodMonths || 0);
+
+        const totalPayable =
+          emi * months;
+
+        const interest =
+          totalPayable - principal;
+
+        return total + Math.max(interest, 0);
+      },
+      0
+    );
+
+  const totalPayableAmount =
+    totalLoanAmount + totalInterest;
+
+
+  // =========================================
+  // WORKSHEET
+  // =========================================
+
+  const worksheet: XLSX.WorkSheet =
+    XLSX.utils.json_to_sheet(excelData);
+
+
+  // =========================================
+  // SUMMARY
+  // =========================================
+
+  XLSX.utils.sheet_add_aoa(
+    worksheet,
+    [
+      [],
+      ['LOAN SUMMARY'],
+      ['CMRC Name', cmrcName],
+      ['VO / ALF Name', voAlfName],
+      ['Total Loans', this.filteredLoanList.length],
+      ['Total Loan Amount', totalLoanAmount],
+      ['Total Monthly EMI', totalMonthlyEmi],
+      ['Total Interest', totalInterest],
+      ['Total Payable Amount', totalPayableAmount]
+    ],
+    {
+      origin: `A${excelData.length + 3}`
+    }
+  );
+
+
+  // =========================================
+  // COLUMN WIDTH
+  // =========================================
+
+  worksheet['!cols'] = [
+    { wch: 10 },  // Sr No
+    { wch: 20 },  // CMRC
+    { wch: 20 },  // VO / ALF
+    { wch: 18 },  // Group
+    { wch: 22 },  // Woman
+    { wch: 18 },  // Loan Amount
+    { wch: 25 },  // Purpose
+    { wch: 18 },  // Given Date
+    { wch: 24 },  // Period
+    { wch: 18 },  // Interest Rate
+    { wch: 18 },  // Interest Type
+    { wch: 18 }   // EMI
+  ];
+
+
+  // =========================================
+  // WORKBOOK
+  // =========================================
+
+  const workbook: XLSX.WorkBook =
+    XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    'Loan Details'
+  );
+
+
+  // =========================================
+  // FILE NAME
+  // =========================================
+
+  const fileName =
+    `${cmrcName}_${voAlfName}_Loan_Report.xlsx`;
+
+
+  // =========================================
+  // EXPORT
+  // =========================================
+
+  XLSX.writeFile(workbook, fileName);
 }
 }

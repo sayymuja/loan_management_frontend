@@ -6,14 +6,6 @@
       <h2>Loan Management</h2>
       <p>Manage loans distributed by VO / ALF</p>
     </div>
-
-    <button
-      class="btn btn-primary"
-      (click)="openAddForm()"
-      [disabled]="!selectedVoAlfId">
-      <i class="bi bi-plus-lg"></i>
-      Add Loan
-    </button>
   </div>
 
 
@@ -97,18 +89,18 @@
       ₹ {{ getSelectedVoAlfRecievedFund() | number:'1.2-2' }}
     </strong>
   </div>
+   <div>
+    <small>VO / ALF Remaining Amount</small>
+    <strong>
+      ₹ {{ getRemainingAmount() | number:'1.2-2' }}
+    </strong>
+  </div>
   <div>
     <small>Total Loan Amount</small>
     <strong>
       ₹ {{ getTotalLoanAmount() | number:'1.2-2' }}
     </strong>
     
-  </div>
-  <div>
-    <small>VO / ALF Remaining Amount</small>
-    <strong>
-      ₹ {{ getRemainingAmount() | number:'1.2-2' }}
-    </strong>
   </div>
   <div>
     <small>Total Loans</small>
@@ -118,7 +110,7 @@
 
 </div>
 <div class="row mt-3">
-  <div class="col-md-12">
+  <div class="col-md-8">
     <label class="form-label">Global Search</label>
 
     <input
@@ -128,8 +120,36 @@
       placeholder="Search Group Name, Woman Name, Loan Purpose..."
     />
   </div>
+  <div class="col-md-4 d-flex align-items-end gap-2">
+
+  <!-- Add Loan -->
+  <button
+    class="btn btn-primary"
+    (click)="openAddForm()"
+    [disabled]="!selectedVoAlfId">
+
+    <i class="bi bi-plus-lg"></i>
+    Add Loan
+
+  </button>
+
+  <!-- Export Excel -->
+  <button
+    class="btn btn-success"
+    (click)="exportToExcel()"
+    [disabled]="!selectedVoAlfId || filteredLoanList.length === 0">
+
+    <i class="bi bi-file-earmark-excel"></i>
+    Export
+
+  </button>
+
 </div>
-<br>
+</div>
+<br />
+
+
+
 
 
   <!-- Loan Table -->
@@ -142,6 +162,7 @@
           {{ getSelectedVoAlfName() }}
         </span>
       </div>
+      
     </div>
 
 
@@ -169,7 +190,7 @@
 
           <!-- No VO/ALF selected -->
           <tr *ngIf="!selectedVoAlfId">
-            <td colspan="9" class="text-center empty-state">
+           <td colspan="10" class="text-center empty-state">
               <i class="bi bi-arrow-up-circle"></i>
               <p>Select CMRC and VO / ALF to view loans</p>
             </td>
@@ -212,7 +233,7 @@
           <tr *ngFor="let loan of filteredLoanList; let i = index">
 
             <td>
-              {{ loan.serialNo || loan.id }}
+              {{ i + 1 }}
             </td>
 
             <td>
@@ -244,29 +265,42 @@
             <td>
               {{ loan.interestRate || 0 }}%
             </td>
+<td>
 
-            <td>
+  <!-- CL Schedule -->
+  <button
+    class="btn btn-sm btn-outline-success me-2"
+    (click)="openClSchedule(loan)"
+    title="CL Schedule">
+    <i class="bi bi-calendar3"></i>
+  </button>
 
-              <button
-                class="btn btn-sm btn-outline-primary me-2"
-                (click)="openEditForm(loan)"
-                title="Edit">
+  <!-- Repayment -->
+  <button
+    class="btn btn-sm btn-outline-info me-2"
+    (click)="openRepayment(loan)"
+    title="Repayment">
+    <i class="bi bi-cash-stack"></i>
+  </button>
 
-                <i class="bi bi-pencil"></i>
+  <!-- Edit -->
+  <button
+    class="btn btn-sm btn-outline-primary me-2"
+    (click)="openEditForm(loan)"
+    title="Edit">
+    <i class="bi bi-pencil"></i>
+  </button>
 
-              </button>
+  <!-- Delete -->
+  <button
+    class="btn btn-sm btn-outline-danger"
+    (click)="deleteLoan(loan.id!)"
+    title="Delete">
+    <i class="bi bi-trash"></i>
+  </button>
 
-              <button
-                class="btn btn-sm btn-outline-danger"
-                (click)="deleteLoan(loan.id!)"
-                title="Delete">
-
-                <i class="bi bi-trash"></i>
-
-              </button>
-
-            </td>
-
+</td>
+ 
           </tr>
 
         </tbody>
@@ -276,7 +310,195 @@
     </div>
 
   </div>
+<!-- CL Schedule -->
 
+<div
+  *ngIf="showClSchedule" id="clScheduleSection"
+  class="card mt-4">
+<div class="card-header">
+
+  <div class="d-flex justify-content-between align-items-start mb-3">
+
+    <div>
+      <h5 class="mb-1">
+        <i class="bi bi-calendar3 me-2"></i>
+        CL Schedule
+      </h5>
+
+      <small class="text-muted">
+        Loan #{{ selectedLoan?.id }}
+      </small>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-sm btn-outline-secondary"
+      (click)="closeClSchedule()">
+
+      <i class="bi bi-arrow-left me-1"></i>
+      Back to Loans
+    </button>
+
+  </div>
+
+
+  <!-- Loan Summary -->
+  <div class="loan-summary">
+
+    <!-- Group -->
+    <div class="summary-item">
+      <small>Group Name</small>
+      <strong>
+        {{ selectedLoan?.groupName || '-' }}
+      </strong>
+    </div>
+
+    <!-- Woman -->
+    <div class="summary-item">
+      <small>Woman Name</small>
+      <strong>
+        {{ selectedLoan?.womanName || '-' }}
+      </strong>
+    </div>
+
+    <!-- Loan Amount -->
+    <div class="summary-item">
+      <small>Loan Amount</small>
+      <strong>
+        ₹ {{ selectedLoan?.loanAmount || 0 | number:'1.2-2' }}
+      </strong>
+    </div>
+
+    <!-- EMI -->
+    <div class="summary-item">
+      <small>Monthly EMI</small>
+      <strong>
+        ₹ {{ selectedLoan?.monthlyEmi || 0 | number:'1.2-2' }}
+      </strong>
+    </div>
+
+    <!-- Interest Rate -->
+    <div class="summary-item">
+      <small>Interest Rate</small>
+      <strong>
+        {{ selectedLoan?.interestRate || 0 }}%
+      </strong>
+    </div>
+
+    <!-- Installments -->
+    <div class="summary-item">
+      <small>Total Installments</small>
+      <strong>
+        {{ selectedLoan?.repaymentPeriodMonths || 0 }}
+      </strong>
+    </div>
+
+  </div>
+
+</div>
+
+  <div class="card-body">
+
+    <app-cl-schedule
+      [loanId]="selectedLoanId">
+    </app-cl-schedule>
+
+  </div>
+
+</div>
+<div
+  *ngIf="showRepayment"
+  id="repaymentSection"
+  class="card mt-4">
+
+  <div class="card-header d-flex justify-content-between align-items-center">
+
+    <div>
+      <h5 class="mb-1">
+        <i class="bi bi-cash-stack me-2"></i>
+        Repayment
+      </h5>
+
+      <small class="text-muted">
+        Loan #{{ selectedRepaymentLoan?.id }}
+      </small>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-sm btn-outline-secondary"
+      (click)="closeRepayment()">
+
+      <i class="bi bi-arrow-left me-1"></i>
+      Back to Loans
+    </button>
+
+  </div>
+  
+  <!-- Loan Summary -->
+  <div class="loan-summary">
+
+    <!-- Group -->
+    <div class="summary-item">
+      <small>Group Name</small>
+      <strong>
+        {{ selectedRepaymentLoan?.groupName || '-' }}
+      </strong>
+    </div>
+
+    <!-- Woman -->
+    <div class="summary-item">
+      <small>Woman Name</small>
+      <strong>
+        {{ selectedRepaymentLoan?.womanName || '-' }}
+      </strong>
+    </div>
+
+    <!-- Loan Amount -->
+    <div class="summary-item">
+      <small>Loan Amount</small>
+      <strong>
+        ₹ {{ selectedRepaymentLoan?.loanAmount || 0 | number:'1.2-2' }}
+      </strong>
+    </div>
+
+    <!-- EMI -->
+    <div class="summary-item">
+      <small>Monthly EMI</small>
+      <strong>
+        ₹ {{ selectedRepaymentLoan?.monthlyEmi || 0 | number:'1.2-2' }}
+      </strong>
+    </div>
+
+    <!-- Interest Rate -->
+    <div class="summary-item">
+      <small>Interest Rate</small>
+      <strong>
+        {{ selectedRepaymentLoan?.interestRate || 0 }}%
+      </strong>
+    </div>
+
+    <!-- Installments -->
+    <div class="summary-item">
+      <small>Total Installments</small>
+      <strong>
+        {{ selectedRepaymentLoan?.repaymentPeriodMonths || 0 }}
+      </strong>
+    </div>
+
+  </div>
+
+
+  <div class="card-body">
+
+    <app-repayment-management
+  [loanId]="selectedRepaymentLoanId"
+  [loan]="selectedRepaymentLoan">
+</app-repayment-management>
+
+  </div>
+
+</div>
 
   <!-- Add/Edit Loan Form -->
   <div

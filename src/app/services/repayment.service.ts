@@ -76,13 +76,25 @@ export class RepaymentService {
     {}
   );
 }
-
 payEmi(
   repaymentId: number,
-  paidAmount: number
+  paidAmount: number,
+  penaltyAmount: number
 ): Observable<Repayment> {
+
   return this.http.put<Repayment>(
-    `${this.apiUrl}/pay/${repaymentId}?paidAmount=${paidAmount}`,
+    `${this.apiUrl}/pay/${repaymentId}?paidAmount=${paidAmount}&penaltyAmount=${penaltyAmount}`,
+    {}
+  );
+}
+editPaidEmi(
+  repaymentId: number,
+  paidAmount: number,
+  penaltyAmount: number
+): Observable<Repayment> {
+
+  return this.http.put<Repayment>(
+    `${this.apiUrl}/edit-paid/${repaymentId}?paidAmount=${paidAmount}&penaltyAmount=${penaltyAmount}`,
     {}
   );
 }

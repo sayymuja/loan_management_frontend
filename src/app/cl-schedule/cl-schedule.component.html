@@ -1,74 +1,36 @@
 <div class="page-container">
 
-  <!-- Page Header -->
-  <div class="page-header">
-    <div>
-      <h2>CL Schedule</h2>
-      <p>Generate and view loan repayment schedule</p>
-    </div>
-  </div>
-
-  <!-- Selection Card -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-body">
-
-      <div class="row align-items-end">
-
-        <div class="col-md-8">
-          <label class="form-label">
-            Select Loan
-          </label>
-
-          <select
-            class="form-select"
-            [(ngModel)]="selectedLoanId">
-
-            <option [ngValue]="null">
-              -- Select Loan --
-            </option>
-
-            <option
-              *ngFor="let loan of loanList"
-              [ngValue]="loan.id">
-
-              Loan #{{ loan.id }}
-              - {{ loan.womanName }}
-              - ₹{{ loan.loanAmount }}
-            </option>
-
-          </select>
-        </div>
-
-        <div class="col-md-4">
-          <button
-            class="btn btn-primary w-100"
-            (click)="generateSchedule()"
-            [disabled]="loading || !selectedLoanId">
-
-            <i class="bi bi-calendar-check me-2"></i>
-
-            {{ loading ? 'Generating...' : 'Generate Schedule' }}
-
-          </button>
-        </div>
-
-      </div>
-
-    </div>
-  </div>
-
-
   <!-- Schedule Table -->
   <div
     class="card shadow-sm"
     *ngIf="scheduleList.length > 0">
 
-    <div class="card-header">
-      <h5 class="mb-0">
-        Repayment Schedule
-      </h5>
+    <!-- Header -->
+    <div class="card-header d-flex align-items-center justify-content-between">
+
+      <!-- Title -->
+      <div>
+        <h5 class="mb-0">
+          CL Schedule
+        </h5>
+      </div>
+
+      <!-- Export Right Side -->
+      <button
+        type="button"
+        class="btn btn-success btn-sm"
+        (click)="exportToExcel()"
+        [disabled]="scheduleList.length === 0">
+
+        <i class="bi bi-file-earmark-excel me-1"></i>
+        Export Excel
+
+      </button>
+
     </div>
 
+
+    <!-- Table -->
     <div class="table-responsive">
 
       <table class="table table-hover align-middle mb-0">
