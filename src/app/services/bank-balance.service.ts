@@ -15,7 +15,7 @@ export interface VoAlfBankBalance {
 })
 export class BankBalanceService {
 
-  private apiUrl = 'http://localhost:8080/api/bank-balance';
+  private apiUrl = 'http://localhost:8080/api/vo-alf-bank-balance';
 
   constructor(private http: HttpClient) {}
 
@@ -39,6 +39,15 @@ export class BankBalanceService {
     return this.http.post<VoAlfBankBalance>(
       this.apiUrl,
       balance
+    );
+  }
+
+  createBulk(
+    balances: VoAlfBankBalance[]
+  ): Observable<VoAlfBankBalance[]> {
+    return this.http.post<VoAlfBankBalance[]>(
+      `${this.apiUrl}/bulk`,
+      balances
     );
   }
 

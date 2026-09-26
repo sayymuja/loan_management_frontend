@@ -11,6 +11,7 @@ import { FundManagementComponent } from './fund-management/fund-management.compo
 import { LoanManagementComponent } from './loan-management/loan-management.component';
 import { RepaymentManagementComponent } from './repayment-management/repayment-management.component';
 import { ClScheduleComponent } from './cl-schedule/cl-schedule.component';
+import { BankBalanceComponent } from './bank-balance/bank-balance.component';
 
 const routes: Routes = [
   {
@@ -59,6 +60,11 @@ const routes: Routes = [
   {
     path: 'cl-schedule',
     component: ClScheduleComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'bank-balance',
+    component: BankBalanceComponent,
     canActivate: [AuthGuard]
   }
 ];

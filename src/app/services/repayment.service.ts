@@ -17,6 +17,10 @@ export interface Repayment {
   repaymentDate?: string;
   remark?: string;
   paidAmount?: number;
+  installmentNo?: number;
+installmentDate?: string;
+scheduledAmount?: number;
+paymentStatus?: string;
 }
 
 @Injectable({
@@ -66,4 +70,20 @@ export class RepaymentService {
       `${this.apiUrl}/${id}`
     );
   }
+  generateSchedule(loanId: number): Observable<Repayment[]> {
+  return this.http.post<Repayment[]>(
+    `${this.apiUrl}/generate/${loanId}`,
+    {}
+  );
+}
+
+payEmi(
+  repaymentId: number,
+  paidAmount: number
+): Observable<Repayment> {
+  return this.http.put<Repayment>(
+    `${this.apiUrl}/pay/${repaymentId}?paidAmount=${paidAmount}`,
+    {}
+  );
+}
 }

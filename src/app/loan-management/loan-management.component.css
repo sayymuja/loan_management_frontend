@@ -237,3 +237,23 @@
   }
 
 }
+.loan-summary {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+.loan-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.loan-item small {
+  font-size: 13px;
+  color: #666;
+}
+
+.loan-item strong {
+  font-size: 18px;
+  color: #222;
+}

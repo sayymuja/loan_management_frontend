@@ -5,7 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { CmrcService, Cmrc } from '../services/cmrc.service';
 import { VoAlfService, VoAlf } from '../services/vo-alf.service';
 import { LoanService, Loan } from '../services/loan.service';
-import { RepaymentService, Repayment } from '../services/repayment.service';
+import {
+  RepaymentService,
+  Repayment
+} from '../services/repayment.service';
 
 @Component({
   selector: 'app-repayment-management',
@@ -23,12 +26,7 @@ export class RepaymentManagementComponent implements OnInit {
   selectedVoAlfId: number | null = null;
   selectedLoanId: number | null = null;
 
-  showForm = false;
-  isEditMode = false;
-
-  newRepayment: Repayment = {
-    loanId: 0
-  };
+  loading = false;
 
   constructor(
     private cmrcService: CmrcService,
@@ -95,7 +93,7 @@ export class RepaymentManagementComponent implements OnInit {
     });
   }
 
-  loadRepayments(): void {
+  onLoanChange(): void {
 
     this.repaymentList = [];
 
@@ -103,18 +101,128 @@ export class RepaymentManagementComponent implements OnInit {
       return;
     }
 
-    this.repaymentService.getByLoanId(this.selectedLoanId).subscribe({
-      next: (data) => {
-        this.repaymentList = data;
-        console.log('Repayment Data:', this.repaymentList);
-      },
-      error: (error) => {
-        console.error('Repayment API Error:', error);
-      }
-    });
+    this.loadOrGenerateSchedule();
+  }
+
+  loadOrGenerateSchedule(): void {
+
+    if (!this.selectedLoanId) {
+      return;
+    }
+
+    this.loading = true;
+
+    this.repaymentService
+      .getByLoanId(this.selectedLoanId)
+      .subscribe({
+
+        next: (data) => {
+
+          if (data && data.length > 0) {
+
+            // Schedule already exists
+            this.repaymentList = data;
+            this.loading = false;
+
+          } else {
+
+            // Generate new schedule
+            this.generateSchedule();
+          }
+        },
+
+        error: (error) => {
+
+          console.error('Repayment API Error:', error);
+
+          this.loading = false;
+        }
+      });
+  }
+
+  generateSchedule(): void {
+
+    if (!this.selectedLoanId) {
+      return;
+    }
+
+    this.repaymentService
+      .generateSchedule(this.selectedLoanId)
+      .subscribe({
+
+        next: (data) => {
+
+          this.repaymentList = data;
+          this.loading = false;
+
+        },
+
+        error: (error) => {
+
+          console.error('Generate Schedule Error:', error);
+
+          this.loading = false;
+
+          alert('Failed to generate repayment schedule');
+        }
+      });
+  }
+
+  payEmi(repayment: Repayment): void {
+
+    if (!repayment.id) {
+      return;
+    }
+
+    const scheduledAmount =
+      Number(repayment.scheduledAmount ?? 0);
+
+    const enteredAmount = prompt(
+      `Enter paid amount for Installment ${repayment.installmentNo}`,
+      scheduledAmount.toString()
+    );
+
+    if (enteredAmount === null) {
+      return;
+    }
+
+    const paidAmount = Number(enteredAmount);
+
+    if (isNaN(paidAmount) || paidAmount <= 0) {
+      alert('Please enter a valid paid amount');
+      return;
+    }
+
+    this.repaymentService
+      .payEmi(repayment.id, paidAmount)
+      .subscribe({
+
+        next: (updated) => {
+
+          const index = this.repaymentList.findIndex(
+            r => r.id === updated.id
+          );
+
+          if (index !== -1) {
+            this.repaymentList[index] = updated;
+          }
+        },
+
+        error: (error) => {
+
+          console.error('Pay EMI Error:', error);
+
+          alert('Failed to pay EMI');
+        }
+      });
+  }
+
+  isPaid(repayment: Repayment): boolean {
+    return repayment.paymentStatus === 'PAID';
   }
 
   getSelectedCmrcName(): string {
+
     const cmrc = this.cmrcList.find(
       c => c.id === this.selectedCmrcId
     );
@@ -123,6 +231,7 @@ export class RepaymentManagementComponent implements OnInit {
   }
 
   getSelectedVoAlfName(): string {
+
     const voAlf = this.voAlfList.find(
       v => v.id === this.selectedVoAlfId
     );
@@ -131,179 +240,20 @@ export class RepaymentManagementComponent implements OnInit {
   }
 
   getSelectedLoan(): Loan | undefined {
+
     return this.loanList.find(
       loan => loan.id === this.selectedLoanId
     );
   }
-openAddForm(): void {
-
-  if (!this.selectedLoanId) {
-    alert('Please select Loan first');
-    return;
-  }
-
-  const loan = this.getSelectedLoan();
-
-  this.newRepayment = {
-    loanId: this.selectedLoanId,
-    paidAmount: loan?.monthlyEmi ?? 0,
-    principalAmount: 0,
-    interestAmount: 0,
-    totalAmount: loan?.monthlyEmi ?? 0,
-    regularRepayment: 'Yes',
-    penaltyAmount: 0
-  };
-
-  this.isEditMode = false;
-  this.showForm = true;
-
-  // Calculate automatically
-  this.calculateRepayment();
+  getPaidCount(): number {
+  return this.repaymentList.filter(
+    r => r.paymentStatus === 'PAID'
+  ).length;
 }
 
-  closeForm(): void {
-
-    this.showForm = false;
-
-    this.newRepayment = {
-      loanId: this.selectedLoanId ?? 0
-    };
-  }
-calculateRepayment(): void {
-
-  const loan = this.getSelectedLoan();
-
-  if (!loan) {
-    return;
-  }
-
-  const paidAmount = Number(this.newRepayment.paidAmount ?? 0);
-
-  if (paidAmount <= 0) {
-    this.newRepayment.principalAmount = 0;
-    this.newRepayment.interestAmount = 0;
-    this.newRepayment.totalAmount = 0;
-    return;
-  }
-
-  // Previous principal paid
-  const previousPrincipal = this.repaymentList
-    .filter(r => r.id !== this.newRepayment.id)
-    .reduce(
-      (sum, r) => sum + Number(r.principalAmount ?? 0),
-      0
-    );
-
-  const loanAmount = Number(loan.loanAmount ?? 0);
-
-  const outstandingPrincipal = Math.max(
-    loanAmount - previousPrincipal,
-    0
-  );
-
-  const annualRate = Number(loan.interestRate ?? 0);
-
-  let interestAmount = 0;
-
-  // REDUCING BALANCE
-  if (loan.interestType === 'REDUCING') {
-
-    const monthlyRate = annualRate / 12 / 100;
-
-    interestAmount =
-      outstandingPrincipal * monthlyRate;
-  }
-
-  // FLAT
-  else if (loan.interestType === 'FLAT') {
-
-    interestAmount =
-      loanAmount * annualRate / 12 / 100;
-  }
-
-  interestAmount = Math.min(
-    interestAmount,
-    paidAmount
-  );
-
-  const principalAmount =
-    paidAmount - interestAmount;
-
-  this.newRepayment.interestAmount =
-    Number(interestAmount.toFixed(2));
-
-  this.newRepayment.principalAmount =
-    Number(principalAmount.toFixed(2));
-
-  this.newRepayment.totalAmount =
-    Number(paidAmount.toFixed(2));
+getPendingCount(): number {
+  return this.repaymentList.filter(
+    r => r.paymentStatus !== 'PAID'
+  ).length;
 }
-
-  saveRepayment(): void {
-
-    if (!this.selectedLoanId) {
-      alert('Please select Loan first');
-      return;
-    }
-
-    this.newRepayment.loanId = this.selectedLoanId;
-if (!this.newRepayment.paidAmount || this.newRepayment.paidAmount <= 0) {
-  alert('Please enter EMI / Paid Amount');
-  return;
-}
-    if (this.isEditMode && this.newRepayment.id) {
-
-      this.repaymentService.update(
-        this.newRepayment.id,
-        this.newRepayment
-      ).subscribe({
-        next: () => {
-          this.closeForm();
-          this.loadRepayments();
-        },
-        error: (error) => {
-          console.error('Update Repayment Error:', error);
-        }
-      });
-
-    } else {
-
-      this.repaymentService.create(this.newRepayment).subscribe({
-        next: () => {
-          this.closeForm();
-          this.loadRepayments();
-        },
-        error: (error) => {
-          console.error('Create Repayment Error:', error);
-        }
-      });
-
-    }
-  }
-
-  openEditForm(repayment: Repayment): void {
-
-    this.newRepayment = {
-      ...repayment
-    };
-
-    this.isEditMode = true;
-    this.showForm = true;
-  }
-
-  deleteRepayment(id: number): void {
-
-    if (!confirm('Are you sure you want to delete this repayment record?')) {
-      return;
-    }
-
-    this.repaymentService.delete(id).subscribe({
-      next: () => {
-        this.loadRepayments();
-      },
-      error: (error) => {
-        console.error('Delete Repayment Error:', error);
-      }
-    });
-  }
 }

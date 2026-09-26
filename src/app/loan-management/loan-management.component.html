@@ -71,6 +71,7 @@
 
         </select>
       </div>
+      <!-- Global Search -->
 
     </div>
 
@@ -78,27 +79,57 @@
 
 
   <!-- Selected Information -->
-  <div
-    class="selected-info"
-    *ngIf="selectedVoAlfId">
+  <!-- Selected Information -->
+<div
+  class="selected-info"
+  *ngIf="selectedVoAlfId">
 
-    <div>
-      <small>CMRC</small>
-      <strong>{{ getSelectedCmrcName() }}</strong>
-    </div>
+  <div>
+  <small>CMRC Total Balance</small>
+  <strong>
+    ₹ {{ cmrcBalance | number:'1.2-2' }}
+  </strong>
+</div>
 
-    <div>
-      <small>VO / ALF</small>
-      <strong>{{ getSelectedVoAlfName() }} (₹ {{ getSelectedVoAlfRecievedFund() | number:'1.2-2' }})</strong>
-    </div>
-
-    <div>
-      <small>Total Loans</small>
-      <strong>{{ loanList.length }}</strong>
-    </div>
-    
-
+  <div>
+    <small>VO / ALF total received fund</small>
+    <strong>
+      ₹ {{ getSelectedVoAlfRecievedFund() | number:'1.2-2' }}
+    </strong>
   </div>
+  <div>
+    <small>Total Loan Amount</small>
+    <strong>
+      ₹ {{ getTotalLoanAmount() | number:'1.2-2' }}
+    </strong>
+    
+  </div>
+  <div>
+    <small>VO / ALF Remaining Amount</small>
+    <strong>
+      ₹ {{ getRemainingAmount() | number:'1.2-2' }}
+    </strong>
+  </div>
+  <div>
+    <small>Total Loans</small>
+    <strong>{{ filteredLoanList.length }}</strong>
+  </div>
+
+
+</div>
+<div class="row mt-3">
+  <div class="col-md-12">
+    <label class="form-label">Global Search</label>
+
+    <input
+      type="text"
+      class="form-control"
+      [(ngModel)]="globalSearch"
+      placeholder="Search Group Name, Woman Name, Loan Purpose..."
+    />
+  </div>
+</div>
+<br>
 
 
   <!-- Loan Table -->
@@ -124,6 +155,7 @@
             <th>Group Name</th>
             <th>Woman Name</th>
             <th>Loan Amount</th>
+            <th>Monthly Installment</th>
             <th>Loan Purpose</th>
             <th>Loan Date</th>
             <th>Repayment Period</th>
@@ -145,30 +177,39 @@
 
 
           <!-- No loans -->
-          <tr
-            *ngIf="selectedVoAlfId && loanList.length === 0">
+         <!-- No loans / No search result -->
+<tr
+  *ngIf="selectedVoAlfId && filteredLoanList.length === 0">
 
-            <td colspan="9" class="text-center empty-state">
+  <td colspan="10" class="text-center empty-state">
 
-              <i class="bi bi-inbox"></i>
+    <i class="bi bi-inbox"></i>
 
-              <p>No loan records found</p>
+    <p>
+      {{
+        globalSearch
+          ? 'No matching loan records found'
+          : 'No loan records found'
+      }}
+    </p>
 
-              <button
-                class="btn btn-sm btn-primary"
-                (click)="openAddForm()">
+    <button
+      *ngIf="!globalSearch"
+      class="btn btn-sm btn-primary"
+      (click)="openAddForm()">
 
-                <i class="bi bi-plus-lg"></i>
-                Add First Loan
+      <i class="bi bi-plus-lg"></i>
+      Add First Loan
 
-              </button>
+    </button>
 
-            </td>
-          </tr>
+  </td>
+
+</tr>
 
 
           <!-- Loan records -->
-          <tr *ngFor="let loan of loanList">
+          <tr *ngFor="let loan of filteredLoanList; let i = index">
 
             <td>
               {{ loan.serialNo || loan.id }}
@@ -185,7 +226,9 @@
             <td>
               ₹ {{ loan.loanAmount || 0 | number:'1.2-2' }}
             </td>
-
+             <td>
+              ₹ {{ loan.monthlyEmi || 0 | number:'1.2-2' }}
+            </td>
             <td>
               {{ loan.loanPurpose || '-' }}
             </td>

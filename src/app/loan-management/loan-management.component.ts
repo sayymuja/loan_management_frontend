@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { CmrcService, Cmrc } from '../services/cmrc.service';
 import { VoAlfService, VoAlf } from '../services/vo-alf.service';
 import { LoanService, Loan } from '../services/loan.service';
+import { CmrcBalance, CmrcBalanceService } from '../services/cmrc-balance.service';
 
 @Component({
   selector: 'app-loan-management',
@@ -16,6 +17,9 @@ export class LoanManagementComponent implements OnInit {
   cmrcList: Cmrc[] = [];
   voAlfList: VoAlf[] = [];
   loanList: Loan[] = [];
+  cmrcBalance: number = 0;
+totalReceivedFund: number = 0;
+cmrcLeftAmount: number = 0;
 
   selectedCmrcId: number | null = null;
   selectedVoAlfId: number | null = null;
@@ -30,7 +34,8 @@ export class LoanManagementComponent implements OnInit {
   constructor(
     private cmrcService: CmrcService,
     private voAlfService: VoAlfService,
-    private loanService: LoanService
+    private loanService: LoanService,
+     private cmrcBalanceService: CmrcBalanceService
   ) {}
 
   ngOnInit(): void {
@@ -50,23 +55,63 @@ export class LoanManagementComponent implements OnInit {
 
   loadVoAlfByCmrc(): void {
 
-    this.voAlfList = [];
-    this.loanList = [];
-    this.selectedVoAlfId = null;
+  this.voAlfList = [];
+  this.loanList = [];
+  this.selectedVoAlfId = null;
+  this.cmrcBalance = 0;
 
-    if (!this.selectedCmrcId) {
-      return;
-    }
+  if (!this.selectedCmrcId) {
+    return;
+  }
 
-    this.voAlfService.getByCmrcId(this.selectedCmrcId).subscribe({
-      next: (data) => {
-        this.voAlfList = data;
+  // Load VO / ALF
+this.voAlfService.getByCmrcId(this.selectedCmrcId).subscribe({
+  next: (data) => {
+
+    this.voAlfList = data;
+
+    // Total Received Fund of all VO / ALF
+    const totalReceivedFund = this.voAlfList.reduce(
+      (total, voAlf) =>
+        total + Number(voAlf.receivedFund || 0),
+      0
+    );
+
+    console.log('Total VO / ALF Received Fund:', totalReceivedFund);
+
+  },
+  error: (error) => {
+    console.error('VO/ALF API Error:', error);
+  }
+});
+
+  // Load CMRC Balance
+  this.cmrcBalanceService
+    .getByCmrcId(this.selectedCmrcId)
+    .subscribe({
+      next: (data: CmrcBalance[]) => {
+
+        if (data && data.length > 0) {
+
+          // Latest balance record
+          const latestBalance = data[data.length - 1];
+
+          this.cmrcBalance =
+            Number(latestBalance.balanceAmount || 0);
+
+        } else {
+          this.cmrcBalance = 0;
+        }
+
+        console.log('CMRC Balance:', this.cmrcBalance);
       },
+
       error: (error) => {
-        console.error('VO/ALF API Error:', error);
+        console.error('CMRC Balance API Error:', error);
+        this.cmrcBalance = 0;
       }
     });
-  }
+}
 
   loadLoans(): void {
 
@@ -295,4 +340,43 @@ numberToWords(amount: number): string {
 
     return voAlf?.receivedFund || '';
   }
+  globalSearch: string = '';
+
+get filteredLoanList(): any[] {
+
+  const search = this.globalSearch
+    .toLowerCase()
+    .trim();
+
+  if (!search) {
+    return this.loanList;
+  }
+
+  return this.loanList.filter(loan =>
+    (loan.groupName || '').toLowerCase().includes(search) ||
+    (loan.womanName || '').toLowerCase().includes(search) ||
+    (loan.loanPurpose || '').toLowerCase().includes(search) ||
+    String(loan.loanAmount || '').includes(search) ||
+    String(loan.monthlyEmi || '').includes(search) ||
+    String(loan.repaymentPeriodMonths || '').includes(search) ||
+    String(loan.interestRate || '').includes(search)
+  );
+}
+getTotalLoanAmount(): number {
+
+  return this.filteredLoanList.reduce(
+    (total, loan) => total + Number(loan.loanAmount || 0),
+    0
+  );
+}
+getRemainingAmount(): number {
+
+  const receivedFund = Number(
+    this.getSelectedVoAlfRecievedFund() || 0
+  );
+
+  const totalLoanAmount = this.getTotalLoanAmount();
+
+  return receivedFund - totalLoanAmount;
+}
 }

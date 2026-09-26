@@ -1,169 +1,208 @@
-<div class="repayment-page">
+
+<div class="page-container">
 
   <!-- Header -->
   <div class="page-header">
     <div>
       <h2>Repayment Management</h2>
-      <p>Manage loan repayments and payment records</p>
+      <p>View repayment schedule and record EMI payments</p>
     </div>
-
-    <button
-      class="btn btn-primary"
-      (click)="openAddForm()"
-      [disabled]="!selectedLoanId">
-
-      <i class="bi bi-plus-lg"></i>
-      Add Repayment
-
-    </button>
   </div>
 
+  <!-- Selection -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
 
-  <!-- Filters -->
-  <div class="card filter-card">
+      <div class="row">
 
-    <div class="row g-3">
+        <!-- CMRC -->
+        <div class="col-md-4 mb-3">
+          <label class="form-label">CMRC</label>
 
-      <!-- CMRC -->
-      <div class="col-md-4">
+          <select
+            class="form-select"
+            [(ngModel)]="selectedCmrcId"
+            (change)="loadVoAlfByCmrc()">
 
-        <label class="form-label">
-          CMRC
-        </label>
+            <option [ngValue]="null">
+              -- Select CMRC --
+            </option>
 
-        <select
-          class="form-select"
-          [(ngModel)]="selectedCmrcId"
-          (change)="loadVoAlfByCmrc()">
+            <option
+              *ngFor="let cmrc of cmrcList"
+              [ngValue]="cmrc.id">
 
-          <option [ngValue]="null">
-            Select CMRC
-          </option>
+              {{ cmrc.cmrcName }}
 
-          <option
-            *ngFor="let cmrc of cmrcList"
-            [ngValue]="cmrc.id">
+            </option>
 
-            {{ cmrc.cmrcName }}
+          </select>
+        </div>
 
-          </option>
+        <!-- VO / ALF -->
+        <div class="col-md-4 mb-3">
+          <label class="form-label">VO / ALF</label>
 
-        </select>
+          <select
+            class="form-select"
+            [(ngModel)]="selectedVoAlfId"
+            (change)="loadLoans()"
+            [disabled]="!selectedCmrcId">
 
-      </div>
+            <option [ngValue]="null">
+              -- Select VO / ALF --
+            </option>
 
+            <option
+              *ngFor="let voAlf of voAlfList"
+              [ngValue]="voAlf.id">
 
-      <!-- VO / ALF -->
-      <div class="col-md-4">
+              {{ voAlf.voAlfName }}
 
-        <label class="form-label">
-          VO / ALF
-        </label>
+            </option>
 
-        <select
-          class="form-select"
-          [(ngModel)]="selectedVoAlfId"
-          (change)="loadLoans()"
-          [disabled]="!selectedCmrcId">
+          </select>
+        </div>
 
-          <option [ngValue]="null">
-            Select VO / ALF
-          </option>
+        <!-- Loan / Woman -->
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Loan / Woman</label>
 
-          <option
-            *ngFor="let voAlf of voAlfList"
-            [ngValue]="voAlf.id">
+          <select
+            class="form-select"
+            [(ngModel)]="selectedLoanId"
+            (change)="onLoanChange()"
+            [disabled]="!selectedVoAlfId">
 
-            {{ voAlf.voAlfName }}
+            <option [ngValue]="null">
+              -- Select Loan / Woman --
+            </option>
 
-          </option>
+            <option
+              *ngFor="let loan of loanList"
+              [ngValue]="loan.id">
 
-        </select>
+              Loan #{{ loan.id }}
+              - {{ loan.womanName }}
+              - ₹{{ loan.loanAmount | number:'1.2-2' }}
 
-      </div>
+            </option>
 
-
-      <!-- Loan -->
-      <div class="col-md-4">
-
-        <label class="form-label">
-          Loan
-        </label>
-
-        <select
-          class="form-select"
-          [(ngModel)]="selectedLoanId"
-          (change)="loadRepayments()"
-          [disabled]="!selectedVoAlfId">
-
-          <option [ngValue]="null">
-            Select Loan
-          </option>
-
-          <option
-            *ngFor="let loan of loanList"
-            [ngValue]="loan.id">
-
-            {{ loan.groupName || 'Group' }}
-            -
-            {{ loan.womanName || 'Woman' }}
-            -
-            ₹{{ loan.loanAmount || 0 }}
-
-          </option>
-
-        </select>
+          </select>
+        </div>
 
       </div>
 
     </div>
-
   </div>
 
 
   <!-- Selected Loan Information -->
   <div
-    class="selected-info"
-    *ngIf="selectedLoanId">
+    class="card shadow-sm mb-4"
+    *ngIf="selectedLoanId && getSelectedLoan()">
 
-    <div>
-      <small>CMRC</small>
-      <strong>{{ getSelectedCmrcName() }}</strong>
+    <div class="card-header">
+      <h5 class="mb-0">Loan Details</h5>
     </div>
 
-    <div>
-      <small>VO / ALF</small>
-      <strong>{{ getSelectedVoAlfName() }}</strong>
-    </div>
+    <div class="card-body">
 
-    <div>
-      <small>Loan Amount</small>
-      <strong>
-        ₹{{ getSelectedLoan()?.loanAmount || 0 | number:'1.2-2' }}
-      </strong>
-    </div>
+      <div class="row">
 
-    <div>
-      <small>Repayment Records</small>
-      <strong>{{ repaymentList.length }}</strong>
+        <div class="col-md-3">
+          <small class="text-muted">Woman</small>
+          <div class="fw-semibold">
+            {{ getSelectedLoan()?.womanName }}
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <small class="text-muted">Loan Amount</small>
+          <div class="fw-semibold">
+            ₹{{ getSelectedLoan()?.loanAmount | number:'1.2-2' }}
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <small class="text-muted">Repayment Period</small>
+          <div class="fw-semibold">
+            {{ getSelectedLoan()?.repaymentPeriodMonths }} Months
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <small class="text-muted">Monthly EMI</small>
+          <div class="fw-semibold text-primary">
+            ₹{{ getSelectedLoan()?.monthlyEmi | number:'1.2-2' }}
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Loading -->
+  <div
+    class="card shadow-sm text-center mb-4"
+    *ngIf="loading">
+
+    <div class="card-body py-4">
+
+      <div
+        class="spinner-border text-primary"
+        role="status">
+      </div>
+
+      <div class="mt-2 text-muted">
+        Loading repayment schedule...
+      </div>
+
     </div>
 
   </div>
 
 
-  <!-- Repayment Table -->
-  <div class="card table-card">
+  <!-- Repayment Schedule -->
+  <div
+    class="card shadow-sm"
+    *ngIf="repaymentList.length > 0 && !loading">
 
-    <div class="card-header">
+    <div class="card-header schedule-header">
 
       <div>
-        <h5>Repayment Records</h5>
+        <h5 class="mb-1">
+          Repayment Schedule
+        </h5>
 
-        <span *ngIf="selectedLoanId">
-          {{ getSelectedLoan()?.groupName || '-' }}
-          -
-          {{ getSelectedLoan()?.womanName || '-' }}
+        <small class="text-muted">
+          {{ getSelectedLoan()?.womanName }}
+        </small>
+      </div>
+
+      <div class="schedule-summary">
+
+        <span class="summary-item">
+          Total:
+          <strong>{{ repaymentList.length }}</strong>
         </span>
+
+        <span class="summary-item paid-summary">
+          Paid:
+          <strong>
+             {{ getPaidCount() }}
+          </strong>
+        </span>
+
+        <span class="summary-item pending-summary">
+          Pending:
+          <strong>
+           {{ getPendingCount() }}
+          </strong>
+        </span>
+
       </div>
 
     </div>
@@ -171,21 +210,20 @@
 
     <div class="table-responsive">
 
-      <table class="table table-hover align-middle">
+      <table class="table table-hover align-middle mb-0">
 
         <thead>
 
           <tr>
-            <th>Sr. No.</th>
-            <th>Repayment Date</th>
+            <th>#</th>
+            <th>Installment Date</th>
+            <th>Scheduled EMI</th>
             <th>Paid Amount</th>
             <th>Principal</th>
             <th>Interest</th>
             <th>Total</th>
-            <th>Regular</th>
-            <th>Penalty</th>
-            <th>Remark</th>
-            <th>Actions</th>
+            <th>Status</th>
+            <th>Action</th>
           </tr>
 
         </thead>
@@ -193,122 +231,117 @@
 
         <tbody>
 
-          <!-- No Loan Selected -->
-          <tr *ngIf="!selectedLoanId">
-
-            <td
-              colspan="10"
-              class="text-center empty-state">
-
-              <i class="bi bi-arrow-up-circle"></i>
-
-              <p>
-                Select CMRC, VO / ALF and Loan
-                to view repayments
-              </p>
-
-            </td>
-
-          </tr>
-
-
-          <!-- No Repayments -->
           <tr
-            *ngIf="selectedLoanId && repaymentList.length === 0">
+            *ngFor="let repayment of repaymentList"
+            [class.paid-row]="repayment.paymentStatus === 'PAID'">
 
-            <td
-              colspan="10"
-              class="text-center empty-state">
-
-              <i class="bi bi-inbox"></i>
-
-              <p>
-                No repayment records found
-              </p>
-
-              <button
-                class="btn btn-sm btn-primary"
-                (click)="openAddForm()">
-
-                <i class="bi bi-plus-lg"></i>
-                Add First Repayment
-
-              </button>
-
+            <!-- Installment -->
+            <td class="fw-semibold">
+              {{ repayment.installmentNo }}
             </td>
 
-          </tr>
 
-
-          <!-- Repayment Records -->
-          <tr
-            *ngFor="let repayment of repaymentList">
-
+            <!-- Date -->
             <td>
-              {{ repayment.id }}
+              {{
+                repayment.installmentDate
+                  ? (repayment.installmentDate | date:'MMM-yyyy')
+                  : '-'
+              }}
             </td>
 
-            <td>
-              {{ repayment.repaymentDate || '-' }}
+
+            <!-- Scheduled EMI -->
+            <td class="fw-semibold">
+              ₹{{ repayment.scheduledAmount | number:'1.2-2' }}
             </td>
+
 
             <!-- Paid Amount -->
             <td>
-              ₹{{ repayment.paidAmount || 0 | number:'1.2-2' }}
+              <span
+                *ngIf="repayment.paymentStatus === 'PAID'"
+                class="fw-semibold">
+
+                ₹{{ repayment.paidAmount | number:'1.2-2' }}
+
+              </span>
+
+              <span
+                *ngIf="repayment.paymentStatus !== 'PAID'"
+                class="text-muted">
+
+                ₹0.00
+
+              </span>
             </td>
+
 
             <!-- Principal -->
             <td>
-              ₹{{ repayment.principalAmount || 0 | number:'1.2-2' }}
+              ₹{{ repayment.principalAmount | number:'1.2-2' }}
             </td>
+
 
             <!-- Interest -->
             <td>
-              ₹{{ repayment.interestAmount || 0 | number:'1.2-2' }}
+              ₹{{ repayment.interestAmount | number:'1.2-2' }}
             </td>
+
 
             <!-- Total -->
-            <td>
-              <strong>
-                ₹{{ repayment.totalAmount || 0 | number:'1.2-2' }}
-              </strong>
+            <td class="fw-semibold">
+              ₹{{ repayment.totalAmount | number:'1.2-2' }}
             </td>
 
-            <!-- Regular -->
+
+            <!-- Status -->
             <td>
-              {{ repayment.regularRepayment || '-' }}
+
+              <span
+                *ngIf="repayment.paymentStatus === 'PAID'"
+                class="badge bg-success">
+
+                <i class="bi bi-check-circle me-1"></i>
+                Paid
+
+              </span>
+
+              <span
+                *ngIf="repayment.paymentStatus !== 'PAID'"
+                class="badge bg-warning text-dark">
+
+                <i class="bi bi-clock me-1"></i>
+                Pending
+
+              </span>
+
             </td>
 
-            <!-- Penalty -->
-            <td>
-              ₹{{ repayment.penaltyAmount || 0 | number:'1.2-2' }}
-            </td>
 
-            <!-- Remark -->
-            <td>
-              {{ repayment.remark || '-' }}
-            </td>
-
-            <!-- Actions -->
+            <!-- Action -->
             <td>
 
               <button
-                class="btn btn-sm btn-outline-primary me-2"
-                (click)="openEditForm(repayment)"
-                title="Edit">
+                *ngIf="repayment.paymentStatus !== 'PAID'"
+                type="button"
+                class="btn btn-sm btn-primary"
+                (click)="payEmi(repayment)">
 
-                <i class="bi bi-pencil"></i>
-
-              </button>
-
-              <button
-                class="btn btn-sm btn-outline-danger"
-                (click)="deleteRepayment(repayment.id!)"
-                title="Delete">
-
-                <i class="bi bi-trash"></i>
+                <i class="bi bi-cash-coin me-1"></i>
+                Pay EMI
 
               </button>
+
+
+              <span
+                *ngIf="repayment.paymentStatus === 'PAID'"
+                class="text-success fw-semibold">
+
+                <i class="bi bi-check-circle-fill me-1"></i>
+                Paid
+
+              </span>
 
             </td>
 
@@ -323,177 +356,48 @@
   </div>
 
 
-  <!-- Add/Edit Repayment Form -->
+  <!-- No Schedule -->
   <div
-    class="form-overlay"
-    *ngIf="showForm">
+    class="card shadow-sm text-center"
+    *ngIf="selectedLoanId && repaymentList.length === 0 && !loading">
 
-    <div class="form-modal">
+    <div class="card-body py-5">
 
-      <!-- Form Header -->
-      <div class="form-header">
+      <i class="bi bi-calendar3 fs-1 text-muted"></i>
 
-        <div>
+      <h5 class="mt-3">
+        No Repayment Schedule
+      </h5>
 
-          <h4>
-            {{ isEditMode
-              ? 'Edit Repayment'
-              : 'Add Repayment' }}
-          </h4>
+      <p class="text-muted mb-0">
+        Repayment schedule could not be generated for this loan.
+      </p>
 
-          <small>
-            {{ getSelectedLoan()?.groupName || '-' }}
-            -
-            {{ getSelectedLoan()?.womanName || '-' }}
-          </small>
+    </div>
 
-        </div>
-
-        <button
-          type="button"
-          class="btn-close"
-          (click)="closeForm()">
-        </button>
-
-      </div>
-
-
-      <!-- Form Body -->
-      <div class="form-body">
-
-        <div class="row g-3">
-
-  <!-- Repayment Date -->
-  <div class="col-md-4">
-    <label class="form-label">Repayment Date</label>
-    <input
-      type="date"
-      class="form-control"
-      [(ngModel)]="newRepayment.repaymentDate">
   </div>
 
-  <!-- EMI / Paid Amount -->
- <div class="col-md-4">
-  <label class="form-label">EMI / Paid Amount</label>
 
-  <input
-    type="number"
-    class="form-control"
-    [(ngModel)]="newRepayment.paidAmount"
-    (ngModelChange)="calculateRepayment()"
-    placeholder="Enter paid amount"
-    min="0">
-</div>
+  <!-- Initial State -->
+  <div
+    class="card shadow-sm text-center"
+    *ngIf="!selectedLoanId">
 
-  <!-- Principal Amount -->
-  <div class="col-md-4">
-    <label class="form-label">Principal Amount</label>
-    <input
-      type="number"
-      class="form-control"
-      [(ngModel)]="newRepayment.principalAmount"
-      readonly>
-  </div>
+    <div class="card-body py-5">
 
-  <!-- Interest Amount -->
-  <div class="col-md-4">
-    <label class="form-label">Interest Amount</label>
-    <input
-      type="number"
-      class="form-control"
-      [(ngModel)]="newRepayment.interestAmount"
-      readonly>
-  </div>
+      <i class="bi bi-wallet2 fs-1 text-muted"></i>
 
-  <!-- Total Amount -->
-  <div class="col-md-4">
-    <label class="form-label">Total Amount</label>
-    <input
-      type="number"
-      class="form-control"
-      [(ngModel)]="newRepayment.totalAmount"
-      readonly>
-  </div>
+      <h5 class="mt-3">
+        Select a Loan
+      </h5>
 
-  <!-- Regular -->
-  <div class="col-md-4">
-    <label class="form-label">Regular</label>
-
-    <select
-      class="form-select"
-      [(ngModel)]="newRepayment.regularRepayment">
-
-      <option [ngValue]="undefined">
-        Select Regular
-      </option>
-
-      <option value="Yes">Yes</option>
-      <option value="No">No</option>
-    </select>
-  </div>
-
-  <!-- Penalty Amount -->
-  <div class="col-md-4">
-    <label class="form-label">Penalty Amount</label>
-
-    <input
-      type="number"
-      class="form-control"
-      [(ngModel)]="newRepayment.penaltyAmount"
-      placeholder="Enter penalty amount"
-      min="0">
-  </div>
-
-  <!-- Remark -->
-  <div class="col-12">
-    <label class="form-label">Remark</label>
-
-    <textarea
-      class="form-control"
-      rows="3"
-      [(ngModel)]="newRepayment.remark"
-      placeholder="Enter remark">
-    </textarea>
-  </div>
-
-</div>
-
-      </div>
-
-
-      <!-- Footer -->
-      <div class="form-footer">
-
-        <button
-          type="button"
-          class="btn btn-light"
-          (click)="closeForm()">
-
-          Cancel
-
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          (click)="saveRepayment()">
-
-          <i
-            class="bi"
-            [class.bi-check-lg]="isEditMode"
-            [class.bi-plus-lg]="!isEditMode">
-          </i>
-
-          {{ isEditMode
-            ? 'Update Repayment'
-            : 'Save Repayment' }}
-
-        </button>
-
-      </div>
+      <p class="text-muted mb-0">
+        Select CMRC, VO / ALF and Loan / Woman to view repayment schedule.
+      </p>
 
     </div>
 
   </div>
 
 </div>
+
