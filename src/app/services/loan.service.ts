@@ -17,6 +17,8 @@ export interface Loan {
   interestRate?: number;
   interestType?: string;
   monthlyEmi?: number;
+   loanStatus?: string;
+  totalInterestReceived?: number;
 }
 
 @Injectable({

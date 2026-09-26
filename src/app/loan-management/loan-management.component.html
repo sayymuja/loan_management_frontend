@@ -181,6 +181,8 @@
             <th>Loan Date</th>
             <th>Repayment Period</th>
             <th>Interest Rate</th>
+            <th>Loan Status</th>
+            <th>Total Interest Received</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -190,7 +192,7 @@
 
           <!-- No VO/ALF selected -->
           <tr *ngIf="!selectedVoAlfId">
-           <td colspan="10" class="text-center empty-state">
+          <td colspan="12" class="text-center empty-state">
               <i class="bi bi-arrow-up-circle"></i>
               <p>Select CMRC and VO / ALF to view loans</p>
             </td>
@@ -202,7 +204,7 @@
 <tr
   *ngIf="selectedVoAlfId && filteredLoanList.length === 0">
 
-  <td colspan="10" class="text-center empty-state">
+  <td colspan="12" class="text-center empty-state">
 
     <i class="bi bi-inbox"></i>
 
@@ -262,10 +264,32 @@
               {{ loan.repaymentPeriodMonths || 0 }} months
             </td>
 
-            <td>
-              {{ loan.interestRate || 0 }}%
-            </td>
+           <td>
+  {{ loan.interestRate || 0 }}%
+</td>
+
+<!-- Loan Status -->
 <td>
+  <span
+    class="badge"
+    [ngClass]="
+      loan.loanStatus === 'CLOSED'
+        ? 'bg-success'
+        : 'bg-warning text-dark'
+    ">
+
+    {{ loan.loanStatus || 'ACTIVE' }}
+
+  </span>
+</td>
+
+<!-- Total Interest Received -->
+<td>
+  ₹ {{ loan.totalInterestReceived || 0 | number:'1.2-2' }}
+</td>
+
+<td>
+
 
   <!-- CL Schedule -->
   <button

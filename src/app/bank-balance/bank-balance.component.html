@@ -1,0 +1,550 @@
+<div class="page-container">
+
+  <!-- ============================= -->
+  <!-- Page Header -->
+  <!-- ============================= -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+      <h4 class="mb-1">
+        <i class="bi bi-bank me-2"></i>
+        Bank Balance
+      </h4>
+
+      <p class="text-muted mb-0">
+        View CMRC bank balance and VO / ALF received funds
+      </p>
+    </div>
+
+  </div>
+
+
+  <!-- ============================= -->
+  <!-- CMRC Selection -->
+  <!-- ============================= -->
+  <div class="card shadow-sm mb-4">
+
+    <div class="card-body">
+
+      <div class="row align-items-end">
+
+        <div class="col-md-6">
+
+          <label class="form-label fw-semibold">
+            Select CMRC
+          </label>
+
+          <select
+            class="form-select"
+            [(ngModel)]="selectedCmrcId"
+            (change)="loadBankBalance()">
+
+            <option [ngValue]="null">
+              Select CMRC
+            </option>
+
+            <option
+              *ngFor="let cmrc of cmrcList"
+              [ngValue]="cmrc.id">
+
+              {{ cmrc.cmrcName }}
+
+            </option>
+
+          </select>
+
+        </div>
+
+        <!-- CMRC Balance -->
+        <div
+  class="col-md-6"
+  *ngIf="selectedCmrcId">
+
+  <div class="row g-3">
+
+    <!-- CMRC Bank Balance -->
+    <div class="col-md-6">
+
+      <div class="balance-box">
+
+        <div class="balance-label">
+          CMRC Bank Balance
+        </div>
+
+        <div class="balance-amount">
+          ₹{{ cmrcBalance | number:'1.2-2' }}
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- Total Received Amount -->
+    <div class="col-md-6">
+
+
+    </div>
+
+  </div>
+
+</div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ============================= -->
+  <!-- Loading -->
+  <!-- ============================= -->
+  <div
+    class="card shadow-sm text-center mb-4"
+    *ngIf="selectedCmrcId && (loadingVoAlf || loadingBalance)">
+
+    <div class="card-body py-4">
+
+      <div
+        class="spinner-border text-primary"
+        role="status">
+      </div>
+
+      <div class="mt-2 text-muted">
+        Loading bank balance details...
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ============================= -->
+  <!-- VO / ALF Details -->
+  <!-- ============================= -->
+  <div
+    class="card shadow-sm"
+    *ngIf="selectedCmrcId && voAlfList.length > 0 && !loadingVoAlf">
+
+    <!-- Header -->
+    <div class="card-header">
+
+      <div class="d-flex justify-content-between align-items-center">
+
+        <div>
+
+          <h5 class="mb-1">
+            VO / ALF Details
+          </h5>
+
+          <small class="text-muted">
+            {{ getSelectedCmrcName() }}
+          </small>
+
+        </div>
+
+
+
+      </div>
+
+    </div>
+
+
+    <!-- Table -->
+   <!-- ========================================= -->
+<!-- VO / ALF Monthly Balance Details -->
+<!-- ========================================= -->
+
+<div class="card shadow-sm">
+
+  <!-- Main Heading -->
+  <div class="card-header bg-white">
+
+
+  </div>
+
+
+  <!-- Table -->
+  <div class="table-responsive">
+
+  <table class="table table-bordered table-hover align-middle mb-0">
+
+    <thead class="table-light">
+
+      <!-- MAIN HEADER ROW -->
+      <tr>
+
+        <!-- Normal columns -->
+        <th rowspan="2">
+          VO / ALF Name
+        </th>
+
+        <th rowspan="2">
+          Village
+        </th>
+
+        <th rowspan="2" class="text-end">
+          Received Amount
+        </th>
+
+        <!-- MAIN GROUP COLUMN -->
+        <th
+          [attr.colspan]="loanMonths.length + 2"
+          class="text-center fw-bold">
+
+          VO / ALF Current Balance – Month-wise Details
+
+        </th>
+
+      </tr>
+
+
+      <!-- SUB HEADER ROW -->
+      <tr>
+
+        <!-- Dynamic Month Columns -->
+        <th
+          *ngFor="let month of loanMonths"
+          class="text-end">
+
+          {{ formatMonth(month) }}
+
+        </th>
+
+        <!-- Total -->
+        <th class="text-end">
+          Total
+        </th>
+
+        <!-- Remaining -->
+        <th class="text-end">
+          Remaining
+        </th>
+
+      </tr>
+
+    </thead>
+
+
+    <tbody>
+
+      <tr *ngFor="let voAlf of voAlfList">
+
+        <!-- VO / ALF Name -->
+        <td class="fw-semibold">
+          {{ voAlf.voAlfName }}
+        </td>
+
+
+        <!-- Village -->
+        <td>
+          {{ voAlf.villageName || '-' }}
+        </td>
+
+
+        <!-- Received Amount -->
+        <td class="text-end fw-semibold">
+
+          ₹{{
+            (voAlf.receivedFund || 0)
+            | number:'1.2-2'
+          }}
+
+        </td>
+
+
+        <!-- Monthly Loan Amount -->
+      <td
+  *ngFor="let month of loanMonths"
+  class="text-end">
+
+  ₹{{
+    getMonthlyRemainingAmount(
+      voAlf.id!,
+      month,
+      voAlf.receivedFund
+    ) | number:'1.2-2'
+  }}
+
+</td>
+
+
+        <!-- Total -->
+        <td class="text-end fw-bold">
+
+          ₹{{
+            getTotalLoanAmountForVoAlf(
+              voAlf.id!
+            )
+            | number:'1.2-2'
+          }}
+
+        </td>
+
+
+        <!-- Remaining -->
+        <td class="text-end fw-bold">
+
+          ₹{{
+            getRemainingAmount(
+              voAlf.id!,
+              voAlf.receivedFund
+            )
+            | number:'1.2-2'
+          }}
+
+        </td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+
+</div>
+
+
+</div>
+
+
+  </div>
+  <br><br>
+<div
+    class="card shadow-sm"
+    *ngIf="selectedCmrcId && voAlfList.length > 0 && !loadingVoAlf">
+
+    <!-- Header -->
+    <div class="card-header">
+
+      <div class="d-flex justify-content-between align-items-center">
+
+        <div>
+
+          <h5 class="mb-1">
+            VO / ALF Details (Details of Interest Received from Women Who Fully Repaid Their Loans During Financial Year 2025–26)
+          </h5>
+
+          <small class="text-muted">
+            {{ getSelectedCmrcName() }}
+          </small>
+
+        </div>
+
+
+
+      </div>
+
+    </div>
+
+
+
+
+<div class="card shadow-sm">
+
+  <!-- Main Heading -->
+  <div class="card-header bg-white">
+
+
+  </div>
+
+
+  <!-- Table -->
+  <div class="table-responsive">
+
+  <table class="table table-bordered table-hover align-middle mb-0 details">
+
+    <thead class="table-light">
+
+      <!-- MAIN HEADER ROW -->
+      <tr>
+
+        <!-- Normal columns -->
+        <th rowspan="2">
+          VO / ALF Name
+        </th>
+
+        <th rowspan="2">
+          Village
+        </th>
+
+        <th rowspan="2" class="text-end">
+          Received Amount
+        </th>
+
+        <!-- MAIN GROUP COLUMN -->
+        <th
+          [attr.colspan]="loanMonths.length + 2"
+          class="text-center fw-bold">
+
+          VO / ALF Current Balance – Month-wise Details
+
+        </th>
+
+      </tr>
+
+
+      <!-- SUB HEADER ROW -->
+      <tr>
+
+        <!-- Dynamic Month Columns -->
+        <th
+          *ngFor="let month of loanMonths"
+          class="text-end">
+
+          {{ formatMonth(month) }}
+
+        </th>
+
+        <!-- Total -->
+        <th class="text-end">
+          Total
+        </th>
+
+        <!-- Remaining -->
+        <th class="text-end">
+          Remaining
+        </th>
+
+      </tr>
+
+    </thead>
+
+
+    <tbody>
+
+      <tr *ngFor="let voAlf of voAlfList">
+
+        <!-- VO / ALF Name -->
+        <td class="fw-semibold">
+          {{ voAlf.voAlfName }}
+        </td>
+
+
+        <!-- Village -->
+        <td>
+          {{ voAlf.villageName || '-' }}
+        </td>
+
+
+        <!-- Received Amount -->
+        <td class="text-end fw-semibold">
+
+          ₹{{
+            (voAlf.receivedFund || 0)
+            | number:'1.2-2'
+          }}
+
+        </td>
+
+
+        <!-- Monthly Loan Amount -->
+      <td
+  *ngFor="let month of loanMonths"
+  class="text-end">
+
+  ₹{{
+    getMonthlyRemainingAmount(
+      voAlf.id!,
+      month,
+      voAlf.receivedFund
+    ) | number:'1.2-2'
+  }}
+
+</td>
+
+
+        <!-- Total -->
+        <td class="text-end fw-bold">
+
+          ₹{{
+            getTotalLoanAmountForVoAlf(
+              voAlf.id!
+            )
+            | number:'1.2-2'
+          }}
+
+        </td>
+
+
+        <!-- Remaining -->
+        <td class="text-end fw-bold">
+
+          ₹{{
+            getRemainingAmount(
+              voAlf.id!,
+              voAlf.receivedFund
+            )
+            | number:'1.2-2'
+          }}
+
+        </td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+
+</div>
+
+
+</div>
+
+
+  </div>
+
+  <!-- ============================= -->
+  <!-- No VO / ALF -->
+  <!-- ============================= -->
+  <div
+    class="card shadow-sm text-center"
+    *ngIf="
+      selectedCmrcId &&
+      !loadingVoAlf &&
+      voAlfList.length === 0
+    ">
+
+    <div class="card-body py-5">
+
+      <i class="bi bi-inbox fs-1 text-muted"></i>
+
+      <h5 class="mt-3">
+        No VO / ALF Found
+      </h5>
+
+      <p class="text-muted mb-0">
+        No VO / ALF records are available
+        for the selected CMRC.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <!-- ============================= -->
+  <!-- Initial State -->
+  <!-- ============================= -->
+  <div
+    class="card shadow-sm text-center"
+    *ngIf="!selectedCmrcId">
+
+    <div class="card-body py-5">
+
+      <i class="bi bi-bank fs-1 text-muted"></i>
+
+      <h5 class="mt-3">
+        Select a CMRC
+      </h5>
+
+      <p class="text-muted mb-0">
+        Select a CMRC to view bank balance
+        and VO / ALF details.
+      </p>
+
+    </div>
+
+  </div>
+
+</div>

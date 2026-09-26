@@ -66,7 +66,8 @@ const routes: Routes = [
     path: 'bank-balance',
     component: BankBalanceComponent,
     canActivate: [AuthGuard]
-  }
+  },
+  
 ];
 
 @NgModule({

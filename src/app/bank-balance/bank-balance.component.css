@@ -1,0 +1,71 @@
+
+.container-fluid {
+  padding: 20px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.page-header p {
+  margin: 5px 0 0;
+  color: #777;
+}
+
+.action-card {
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.action-card label {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.table-card {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+table {
+  margin-bottom: 0;
+}
+
+thead th {
+  font-weight: 600;
+  text-align: center;
+  vertical-align: middle;
+}
+
+tbody td {
+  vertical-align: middle;
+  text-align: center;
+}
+
+.amount {
+  text-align: right !important;
+  font-weight: 600;
+}
+
+.no-data {
+  padding: 30px;
+  color: #777;
+}
+

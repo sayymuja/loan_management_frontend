@@ -1,3 +1,4 @@
+
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -5,8 +6,8 @@ import { Observable } from 'rxjs';
 export interface VoAlfBankBalance {
   id?: number;
   voAlfId: number;
-  balanceMonth?: string;
-  balanceAmount?: number;
+  balanceMonth: string;
+  balanceAmount: number;
   serialNo?: number;
 }
 
@@ -15,55 +16,61 @@ export interface VoAlfBankBalance {
 })
 export class BankBalanceService {
 
-  private apiUrl = 'http://localhost:8080/api/vo-alf-bank-balance';
+  private baseUrl =
+    'http://localhost:8080/api/vo-alf-bank-balance';
 
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<VoAlfBankBalance[]> {
-    return this.http.get<VoAlfBankBalance[]>(this.apiUrl);
-  }
-
-  getById(id: number): Observable<VoAlfBankBalance> {
-    return this.http.get<VoAlfBankBalance>(
-      `${this.apiUrl}/${id}`
-    );
-  }
-
-  getByVoAlfId(voAlfId: number): Observable<VoAlfBankBalance[]> {
     return this.http.get<VoAlfBankBalance[]>(
-      `${this.apiUrl}/vo-alf/${voAlfId}`
+      this.baseUrl
     );
   }
 
-  create(balance: VoAlfBankBalance): Observable<VoAlfBankBalance> {
-    return this.http.post<VoAlfBankBalance>(
-      this.apiUrl,
-      balance
-    );
-  }
-
-  createBulk(
-    balances: VoAlfBankBalance[]
+  getByVoAlfId(
+    voAlfId: number
   ): Observable<VoAlfBankBalance[]> {
-    return this.http.post<VoAlfBankBalance[]>(
-      `${this.apiUrl}/bulk`,
-      balances
+
+    return this.http.get<VoAlfBankBalance[]>(
+      `${this.baseUrl}/vo-alf/${voAlfId}`
+    );
+  }
+
+  generateMonthlyBalance(
+    voAlfId: number
+  ): Observable<VoAlfBankBalance[]> {
+
+    return this.http.get<VoAlfBankBalance[]>(
+      `${this.baseUrl}/generate/${voAlfId}`
+    );
+  }
+
+  create(
+    data: VoAlfBankBalance
+  ): Observable<VoAlfBankBalance> {
+
+    return this.http.post<VoAlfBankBalance>(
+      this.baseUrl,
+      data
     );
   }
 
   update(
     id: number,
-    balance: VoAlfBankBalance
+    data: VoAlfBankBalance
   ): Observable<VoAlfBankBalance> {
+
     return this.http.put<VoAlfBankBalance>(
-      `${this.apiUrl}/${id}`,
-      balance
+      `${this.baseUrl}/${id}`,
+      data
     );
   }
 
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(
-      `${this.apiUrl}/${id}`
+  delete(id: number): Observable<any> {
+
+    return this.http.delete(
+      `${this.baseUrl}/${id}`
     );
   }
 }
+
