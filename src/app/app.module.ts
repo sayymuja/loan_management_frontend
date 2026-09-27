@@ -23,7 +23,7 @@ import { RepaymentManagementComponent } from './repayment-management/repayment-m
 import { ClScheduleComponent } from './cl-schedule/cl-schedule.component';
 import { BankBalanceComponent } from './bank-balance/bank-balance.component';
 import { InterestComponent } from './interest/interest.component';
-
+import { NgChartsModule } from 'ng2-charts';
 @NgModule({
   declarations: [
     AppComponent,
@@ -48,6 +48,7 @@ import { InterestComponent } from './interest/interest.component';
     AppRoutingModule,
     HttpClientModule,
     FormsModule,
+    NgChartsModule
     
   ],
   providers: [{

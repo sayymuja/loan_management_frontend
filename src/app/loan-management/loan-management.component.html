@@ -186,8 +186,7 @@
 
     <div class="card-body">
 
-      <div
-        class="row align-items-center g-2">
+      <div class="row align-items-center g-2">
 
         <!-- SEARCH -->
         <div class="col-md-6">
@@ -223,18 +222,8 @@
         </div>
 
 
-        <!-- BUTTONS -->
+        <!-- ADD BUTTON -->
         <div class="col-md-3 text-md-end">
-
-          <button
-            type="button"
-            class="btn btn-success btn-sm me-2"
-            (click)="exportToExcel()">
-
-            Export Excel
-
-          </button>
-
 
           <button
             type="button"
@@ -259,6 +248,7 @@
   ======================================================== -->
 
   <div
+    id="loanFormSection"
     class="card shadow-sm mb-4"
     *ngIf="showForm">
 
@@ -269,9 +259,7 @@
       <div>
 
         <h5 class="mb-0">
-
-          {{ isEditMode ? 'Edit Loan' : 'Add New Loan' }}
-
+          Add New Loan
         </h5>
 
         <small class="text-muted">
@@ -363,11 +351,7 @@
         </div>
 
 
-       
-
-        <!-- =================================================
-             SANCTIONED AMOUNT
-        ================================================== -->
+        <!-- SANCTIONED AMOUNT -->
 
         <div class="col-md-6">
 
@@ -402,9 +386,7 @@
         </div>
 
 
-        <!-- =================================================
-             PROCESSING FEE
-        ================================================== -->
+        <!-- PROCESSING FEE -->
 
         <div class="col-md-6">
 
@@ -432,9 +414,7 @@
         </div>
 
 
-        <!-- =================================================
-             DISBURSED AMOUNT
-        ================================================== -->
+        <!-- DISBURSED AMOUNT -->
 
         <div class="col-md-6">
 
@@ -665,31 +645,9 @@
 
       <div class="row g-3">
 
-        <!-- LOAN AMOUNT -->
-
-        <div class="col-md-2">
-
-          <div class="summary-box">
-
-            <small>
-              Loan Amount
-            </small>
-
-            <strong>
-              ₹ {{
-                newLoan.loanAmount || 0
-                | number:'1.2-2'
-              }}
-            </strong>
-
-          </div>
-
-        </div>
-
-
         <!-- SANCTIONED -->
 
-        <div class="col-md-2">
+        <div class="col-md-3">
 
           <div class="summary-box">
 
@@ -711,7 +669,7 @@
 
         <!-- PROCESSING FEE -->
 
-        <div class="col-md-2">
+        <div class="col-md-3">
 
           <div class="summary-box">
 
@@ -733,7 +691,7 @@
 
         <!-- DISBURSED -->
 
-        <div class="col-md-2">
+        <div class="col-md-3">
 
           <div class="summary-box">
 
@@ -755,7 +713,7 @@
 
         <!-- EMI -->
 
-        <div class="col-md-2">
+        <div class="col-md-3">
 
           <div class="summary-box">
 
@@ -768,27 +726,6 @@
                 newLoan.monthlyEmi || 0
                 | number:'1.2-2'
               }}
-            </strong>
-
-          </div>
-
-        </div>
-
-
-        <!-- INTEREST -->
-
-        <div class="col-md-2">
-
-          <div class="summary-box">
-
-            <small>
-              Interest Rate
-            </small>
-
-            <strong>
-              {{
-                newLoan.interestRate || 0
-              }}%
             </strong>
 
           </div>
@@ -819,7 +756,7 @@
           class="btn btn-primary"
           (click)="saveLoan()">
 
-          {{ isEditMode ? 'Update Loan' : 'Save Loan' }}
+          Save Loan
 
         </button>
 
@@ -878,8 +815,7 @@
 
     <div class="card-body p-0">
 
-      <div
-        class="table-responsive">
+      <div class="table-responsive">
 
         <table
           class="table table-bordered table-hover align-middle mb-0">
@@ -898,10 +834,6 @@
 
               <th>
                 Woman Name
-              </th>
-
-              <th class="text-end">
-                Loan Amount
               </th>
 
               <th class="text-end">
@@ -951,9 +883,7 @@
 
           <tbody>
 
-            <!-- =================================================
-                 DATA
-            ================================================== -->
+            <!-- DATA -->
 
             <tr
               *ngFor="
@@ -979,18 +909,6 @@
 
               <td>
                 {{ loan.womanName || '-' }}
-              </td>
-
-
-              <!-- LOAN AMOUNT -->
-
-              <td class="text-end">
-
-                ₹ {{
-                  loan.loanAmount || 0
-                  | number:'1.2-2'
-                }}
-
               </td>
 
 
@@ -1023,7 +941,7 @@
               <td class="text-end fw-semibold">
 
                 ₹ {{
-                  loan.loanAmount || 0
+                  loan.disbursedAmount || 0
                   | number:'1.2-2'
                 }}
 
@@ -1045,18 +963,14 @@
               <!-- PURPOSE -->
 
               <td>
-
                 {{ loan.loanPurpose || '-' }}
-
               </td>
 
 
               <!-- DATE -->
 
               <td>
-
                 {{ loan.loanGivenDate || '-' }}
-
               </td>
 
 
@@ -1110,19 +1024,6 @@
 
                 <div class="action-buttons">
 
-                  <!-- EDIT -->
-
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-primary"
-                    (click)="openEditForm(loan)"
-                    title="Edit Loan">
-
-                    Edit
-
-                  </button>
-
-
                   <!-- CL SCHEDULE -->
 
                   <button
@@ -1168,9 +1069,7 @@
             </tr>
 
 
-            <!-- =================================================
-                 NO RECORD
-            ================================================== -->
+            <!-- NO RECORD -->
 
             <tr
               *ngIf="
@@ -1178,7 +1077,7 @@
               ">
 
               <td
-                colspan="14"
+                colspan="13"
                 class="text-center py-4 text-muted">
 
                 No loan records found.
@@ -1190,91 +1089,77 @@
           </tbody>
 
 
-          <!-- =================================================
-               TABLE FOOTER
-          ================================================== -->
+          <!-- TABLE FOOTER -->
 
           <tfoot
-  *ngIf="filteredLoanList.length > 0">
+            *ngIf="filteredLoanList.length > 0">
 
-  <tr class="table-light fw-bold">
+            <tr class="table-light fw-bold">
 
-    <td
-      colspan="3"
-      class="text-end">
+              <td
+                colspan="3"
+                class="text-end">
 
-      Total
+                Total
 
-    </td>
-
-
-    <!-- TOTAL LOAN AMOUNT -->
-
-    <td class="text-end">
-
-      ₹ {{
-        getTotalSanctionedAmount()
-        | number:'1.2-2'
-      }}
-
-    </td>
+              </td>
 
 
-    <!-- TOTAL SANCTIONED -->
+              <!-- TOTAL SANCTIONED -->
 
-    <td class="text-end">
+              <td class="text-end">
 
-      ₹ {{
-        getTotalSanctionedAmount()
-        | number:'1.2-2'
-      }}
+                ₹ {{
+                  getTotalSanctionedAmount()
+                  | number:'1.2-2'
+                }}
 
-    </td>
-
-
-    <!-- TOTAL PROCESSING FEE -->
-
-    <td class="text-end">
-
-      ₹ {{
-        getTotalProcessingFee()
-        | number:'1.2-2'
-      }}
-
-    </td>
+              </td>
 
 
-    <!-- TOTAL DISBURSED -->
+              <!-- TOTAL PROCESSING FEE -->
 
-    <td class="text-end">
+              <td class="text-end">
 
-      ₹ {{
-        getTotalDisbursedAmount()
-        | number:'1.2-2'
-      }}
+                ₹ {{
+                  getTotalProcessingFee()
+                  | number:'1.2-2'
+                }}
 
-    </td>
-
-
-    <!-- TOTAL EMI -->
-
-    <td class="text-end">
-
-      ₹ {{
-        getTotalMonthlyEmi()
-        | number:'1.2-2'
-      }}
-
-    </td>
+              </td>
 
 
-    <!-- REMAINING COLUMNS -->
+              <!-- TOTAL DISBURSED -->
 
-    <td colspan="6"></td>
+              <td class="text-end">
 
-  </tr>
+                ₹ {{
+                  getTotalDisbursedAmount()
+                  | number:'1.2-2'
+                }}
 
-</tfoot>
+              </td>
+
+
+              <!-- TOTAL EMI -->
+
+              <td class="text-end">
+
+                ₹ {{
+                  getTotalMonthlyEmi()
+                  | number:'1.2-2'
+                }}
+
+              </td>
+
+
+              <!-- REMAINING COLUMNS -->
+
+              <td colspan="6"></td>
+
+            </tr>
+
+          </tfoot>
 
         </table>
 
@@ -1382,7 +1267,7 @@
 
               <strong>
                 ₹ {{
-                  selectedLoan.loanAmount || 0
+                  selectedLoan.sanctionedAmount || 0
                   | number:'1.2-2'
                 }}
               </strong>
@@ -1551,7 +1436,7 @@
 
               <strong>
                 ₹ {{
-                  selectedRepaymentLoan.loanAmount || 0
+                  selectedRepaymentLoan.sanctionedAmount || 0
                   | number:'1.2-2'
                 }}
               </strong>

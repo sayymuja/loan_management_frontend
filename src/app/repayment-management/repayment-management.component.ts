@@ -25,6 +25,7 @@ export class RepaymentManagementComponent implements OnInit {
   selectedCmrcId: number | null = null;
   selectedVoAlfId: number | null = null;
   selectedLoanId: number | null = null;
+  regularRepayment: boolean = true;
 
   loading = false;
   @Input() loanId: number | null = null;
@@ -495,7 +496,8 @@ confirmPayment(): void {
     .payEmi(
       repaymentId,
       paidAmount,
-      penaltyAmount
+      penaltyAmount,
+      this.regularRepayment
     )
     .subscribe({
 

@@ -11,7 +11,7 @@ export interface Repayment {
   interestAmount?: number;
   totalAmount?: number;
 
-  regularRepayment?: string;
+  regularRepayment?: boolean;
   penaltyAmount?: number;
 
   repaymentDate?: string;
@@ -79,11 +79,12 @@ export class RepaymentService {
 payEmi(
   repaymentId: number,
   paidAmount: number,
-  penaltyAmount: number
+  penaltyAmount: number,
+  regularRepayment: boolean
 ): Observable<Repayment> {
 
-  return this.http.put<Repayment>(
-    `${this.apiUrl}/pay/${repaymentId}?paidAmount=${paidAmount}&penaltyAmount=${penaltyAmount}`,
+  return this.http.post<Repayment>(
+    `${this.apiUrl}/pay/${repaymentId}?paidAmount=${paidAmount}&penaltyAmount=${penaltyAmount}&regularRepayment=${regularRepayment}`,
     {}
   );
 }

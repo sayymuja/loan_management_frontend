@@ -46,7 +46,6 @@ export class LoanManagementComponent implements OnInit {
   // =========================================================
 
   showForm: boolean = false;
-  isEditMode: boolean = false;
 
   newLoan: Loan = {
     voAlfId: 0
@@ -73,8 +72,8 @@ export class LoanManagementComponent implements OnInit {
 
   showRepayment: boolean = false;
 
-selectedRepaymentLoanId: number | null = null;
-selectedRepaymentLoan: Loan | null = null;
+  selectedRepaymentLoanId: number | null = null;
+  selectedRepaymentLoan: Loan | null = null;
 
   // =========================================================
   // CONSTRUCTOR
@@ -108,7 +107,12 @@ selectedRepaymentLoan: Loan | null = null;
       },
 
       error: (error) => {
-        console.error('CMRC API Error:', error);
+
+        console.error(
+          'CMRC API Error:',
+          error
+        );
+
         this.cmrcList = [];
       }
 
@@ -129,6 +133,8 @@ selectedRepaymentLoan: Loan | null = null;
     this.cmrcBalance = 0;
     this.totalReceivedFund = 0;
     this.cmrcLeftAmount = 0;
+
+    this.showForm = false;
 
     this.showClSchedule = false;
     this.selectedLoanId = null;
@@ -252,6 +258,8 @@ selectedRepaymentLoan: Loan | null = null;
     this.loanList = [];
     this.globalSearch = '';
 
+    this.showForm = false;
+
     this.showClSchedule = false;
     this.selectedLoanId = null;
     this.selectedLoan = null;
@@ -350,6 +358,18 @@ selectedRepaymentLoan: Loan | null = null;
       return;
     }
 
+    // Close other sections
+
+    this.showClSchedule = false;
+    this.selectedLoanId = null;
+    this.selectedLoan = null;
+
+    this.showRepayment = false;
+    this.selectedRepaymentLoanId = null;
+    this.selectedRepaymentLoan = null;
+
+    // New Loan
+
     this.newLoan = {
 
       voAlfId:
@@ -359,23 +379,11 @@ selectedRepaymentLoan: Loan | null = null;
 
       womanName: '',
 
-      // -----------------------------------------------------
-      // ACTUAL LOAN PRINCIPAL
-      // -----------------------------------------------------
-
       sanctionedAmount:
         undefined,
 
-      // -----------------------------------------------------
-      // DEDUCTION
-      // -----------------------------------------------------
-
       processingFee:
         0,
-
-      // -----------------------------------------------------
-      // AUTO CALCULATED
-      // -----------------------------------------------------
 
       disbursedAmount:
         0,
@@ -397,9 +405,30 @@ selectedRepaymentLoan: Loan | null = null;
         undefined
     };
 
-    this.isEditMode = false;
-
     this.showForm = true;
+
+    // Scroll to form
+
+    setTimeout(() => {
+
+      const element =
+        document.getElementById(
+          'loanFormSection'
+        );
+
+      if (element) {
+
+        element.scrollIntoView({
+
+          behavior: 'smooth',
+
+          block: 'start'
+
+        });
+
+      }
+
+    }, 100);
   }
 
   // =========================================================
@@ -409,8 +438,6 @@ selectedRepaymentLoan: Loan | null = null;
   closeForm(): void {
 
     this.showForm = false;
-
-    this.isEditMode = false;
 
     this.newLoan = {
 
@@ -423,41 +450,49 @@ selectedRepaymentLoan: Loan | null = null;
   // SAVE LOAN
   // =========================================================
 
- saveLoan(): void {
+  saveLoan(): void {
 
-  if (!this.selectedVoAlfId) {
-    alert('Please select VO / ALF first');
-    return;
-  }
+    if (!this.selectedVoAlfId) {
 
-  this.newLoan.voAlfId = this.selectedVoAlfId;
+      alert(
+        'Please select VO / ALF first'
+      );
 
-  // 1. Calculate Disbursed Amount
-  this.calculateDisbursedAmount();
+      return;
+    }
 
-  // 2. Calculate EMI on Sanctioned Amount
-  this.calculateEmi();
+    // -------------------------------------------------------
+    // SET VO / ALF
+    // -------------------------------------------------------
 
-  // 3. OLD loanAmount = Disbursed Amount
-  this.newLoan.loanAmount =
-    Number(this.newLoan.disbursedAmount || 0);
+    this.newLoan.voAlfId =
+      this.selectedVoAlfId;
 
-  // =====================================================
-  // UPDATE EXISTING LOAN
-  // =====================================================
+    // -------------------------------------------------------
+    // CALCULATE DISBURSED AMOUNT
+    // -------------------------------------------------------
 
-  if (this.isEditMode && this.newLoan.id) {
+    this.calculateDisbursedAmount();
+
+    // -------------------------------------------------------
+    // CALCULATE EMI
+    // -------------------------------------------------------
+
+    this.calculateEmi();
+
+    // -------------------------------------------------------
+    // CREATE NEW LOAN
+    // -------------------------------------------------------
 
     this.loanService
-      .update(
-        this.newLoan.id,
-        this.newLoan
-      )
+      .create(this.newLoan)
       .subscribe({
 
         next: () => {
 
-          alert('Loan updated successfully');
+          alert(
+            'Loan created successfully'
+          );
 
           this.closeForm();
 
@@ -467,110 +502,46 @@ selectedRepaymentLoan: Loan | null = null;
         error: (error) => {
 
           console.error(
-            'Update Loan Error:',
+            'Create Loan Error:',
             error
           );
 
-          alert('Failed to update loan');
+          alert(
+            'Failed to create loan'
+          );
         }
 
       });
-
-    return;
-  }
-
-  // =====================================================
-  // CREATE NEW LOAN
-  // =====================================================
-
-  this.loanService
-    .create(this.newLoan)
-    .subscribe({
-
-      next: () => {
-
-        alert('Loan created successfully');
-
-        this.closeForm();
-
-        this.loadLoans();
-      },
-
-      error: (error) => {
-
-        console.error(
-          'Create Loan Error:',
-          error
-        );
-
-        alert('Failed to create loan');
-      }
-
-    });
-}
-
-  // =========================================================
-  // OPEN EDIT FORM
-  // =========================================================
-
-  openEditForm(loan: Loan): void {
-
-    this.newLoan = {
-      ...loan
-    };
-
-    this.isEditMode = true;
-
-    this.showForm = true;
-
-    // Recalculate values
-    this.calculateDisbursedAmount();
-
-    this.calculateEmi();
   }
 
   // =========================================================
   // DELETE LOAN
   // =========================================================
 
-  deleteLoan(id: number): void {
+  deleteLoan(id: number) {
 
-    if (
-      !confirm(
-        'Are you sure you want to delete this loan record?'
-      )
-    ) {
-      return;
-    }
-
-    this.loanService
-      .delete(id)
-      .subscribe({
-
-        next: () => {
-
-          alert(
-            'Loan deleted successfully'
-          );
-
-          this.loadLoans();
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Delete Loan Error:',
-            error
-          );
-
-          alert(
-            'Failed to delete loan'
-          );
-        }
-
-      });
+  if (!confirm('Are you sure you want to delete this loan?')) {
+    return;
   }
 
+  this.loanService.delete(id).subscribe({
+
+    next: () => {
+
+      alert('Loan deleted successfully.');
+
+      // Refresh loan table
+      this.loadLoans();
+
+    },
+
+    error: (error) => {
+ this.loadLoans();
+      console.error('Delete loan error:', error);
+    }
+
+  });
+}
   // =========================================================
   // CALCULATE DISBURSED AMOUNT
   // =========================================================
@@ -623,8 +594,6 @@ selectedRepaymentLoan: Loan | null = null;
   // =========================================================
   // CALCULATE EMI
   // =========================================================
-  //
-  // IMPORTANT:
   //
   // EMI is calculated on SANCTIONED AMOUNT.
   //
@@ -781,6 +750,7 @@ selectedRepaymentLoan: Loan | null = null;
       'Eighteen',
 
       'Nineteen'
+
     ];
 
     const tens = [
@@ -804,6 +774,7 @@ selectedRepaymentLoan: Loan | null = null;
       'Eighty',
 
       'Ninety'
+
     ];
 
     const convertBelowThousand =
@@ -1140,55 +1111,63 @@ selectedRepaymentLoan: Loan | null = null;
 
   openClSchedule(loan: Loan): void {
 
-    if (!loan.id) {
+  if (!loan.id) {
+    alert('Loan ID not found');
+    return;
+  }
 
-      alert(
-        'Loan ID not found'
-      );
+  // Close repayment and form
+  this.showRepayment = false;
+  this.showForm = false;
 
-      return;
-    }
+  this.selectedRepaymentLoanId = null;
+  this.selectedRepaymentLoan = null;
 
-    // Close repayment
-    this.showRepayment = false;
+  // -------------------------------------------------------
+  // FORCE CL SCHEDULE COMPONENT RESET
+  // -------------------------------------------------------
 
-    this.selectedRepaymentLoanId =
-      null;
+  this.showClSchedule = false;
 
-    this.selectedRepaymentLoan =
-      null;
+  this.selectedLoanId = null;
+  this.selectedLoan = null;
 
-    // Open CL Schedule
-    this.selectedLoanId =
-      loan.id;
+  // -------------------------------------------------------
+  // SET SELECTED LOAN
+  // -------------------------------------------------------
 
-    this.selectedLoan =
-      loan;
+  this.selectedLoanId = loan.id;
 
-    this.showClSchedule =
-      true;
+  this.selectedLoan = {
+    ...loan
+  };
 
-    // Scroll
+  // -------------------------------------------------------
+  // OPEN CL SCHEDULE AGAIN
+  // -------------------------------------------------------
+
+  setTimeout(() => {
+
+    this.showClSchedule = true;
+
     setTimeout(() => {
 
       const element =
-        document.getElementById(
-          'clScheduleSection'
-        );
+        document.getElementById('clScheduleSection');
 
       if (element) {
 
         element.scrollIntoView({
-
           behavior: 'smooth',
-
           block: 'start'
-
         });
+
       }
 
-    }, 100);
-  }
+    }, 50);
+
+  }, 0);
+}
 
   // =========================================================
   // CLOSE CL SCHEDULE
@@ -1206,34 +1185,32 @@ selectedRepaymentLoan: Loan | null = null;
   // =========================================================
   // OPEN REPAYMENT
   // =========================================================
-// =========================================================
-// OPEN REPAYMENT
-// =========================================================
 
-openRepayment(loan: Loan): void {
-
-  // -------------------------------------------------------
-  // Validate Loan ID
-  // -------------------------------------------------------
+  openRepayment(loan: Loan): void {
 
   if (!loan.id) {
-
     alert('Loan ID not found');
-
     return;
   }
 
-  // -------------------------------------------------------
   // Close CL Schedule
-  // -------------------------------------------------------
-
   this.showClSchedule = false;
+  this.showForm = false;
 
   this.selectedLoanId = null;
   this.selectedLoan = null;
 
   // -------------------------------------------------------
-  // PASS SELECTED LOAN
+  // FORCE REPAYMENT COMPONENT RESET
+  // -------------------------------------------------------
+
+  this.showRepayment = false;
+
+  this.selectedRepaymentLoanId = null;
+  this.selectedRepaymentLoan = null;
+
+  // -------------------------------------------------------
+  // SET NEW LOAN
   // -------------------------------------------------------
 
   this.selectedRepaymentLoanId = loan.id;
@@ -1243,33 +1220,32 @@ openRepayment(loan: Loan): void {
   };
 
   // -------------------------------------------------------
-  // Open Repayment
-  // -------------------------------------------------------
-
-  this.showRepayment = true;
-
-  // -------------------------------------------------------
-  // Scroll to Repayment
+  // OPEN REPAYMENT AGAIN
   // -------------------------------------------------------
 
   setTimeout(() => {
 
-    const element =
-      document.getElementById(
-        'repaymentSection'
-      );
+    this.showRepayment = true;
 
-    if (element) {
+    setTimeout(() => {
 
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
+      const element =
+        document.getElementById('repaymentSection');
 
-    }
+      if (element) {
 
-  }, 100);
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+
+      }
+
+    }, 50);
+
+  }, 0);
 }
+
   // =========================================================
   // CLOSE REPAYMENT
   // =========================================================
@@ -1382,6 +1358,7 @@ openRepayment(loan: Loan): void {
 
           'Loan Status':
             loan.loanStatus || ''
+
         })
       );
 
@@ -1559,4 +1536,5 @@ openRepayment(loan: Loan): void {
 
     );
   }
+
 }
