@@ -102,6 +102,7 @@
         <th>Installment Date</th>
         <th>Scheduled EMI</th>
         <th>Paid Amount</th>
+        <th>Outstanding Amount</th>
         <th>Principal</th>
         <th>Interest</th>
         <th>Penalty Amount</th>
@@ -139,6 +140,10 @@
         <!-- 4. Paid Amount -->
         <td>
           ₹{{ (repayment.paidAmount || 0) | number:'1.2-2' }}
+        </td>
+         <!-- 4. Paid Amount -->
+        <td>
+         ₹{{ getOutstandingAmount(repayment) | number:'1.2-2' }}
         </td>
 
         <!-- 5. Principal -->
@@ -224,6 +229,63 @@
       </tr>
 
     </tbody>
+    <!-- ========================================= -->
+<!-- REPAYMENT TOTAL -->
+<!-- ========================================= -->
+
+<tfoot>
+
+  <tr class="table-total-row">
+
+    <!-- # -->
+    <th colspan="2" class="text-end">
+      Total
+    </th>
+
+    <!-- Scheduled EMI -->
+    <th class="text-end">
+      ₹{{ getTotalScheduledEmi() | number:'1.2-2' }}
+    </th>
+
+    <!-- Paid Amount -->
+    <th class="text-end">
+      ₹{{ getTotalPaidAmount() | number:'1.2-2' }}
+    </th>
+
+    <!-- Outstanding Amount -->
+    <th class="text-end">
+      ₹{{ getTotalOutstandingAmount() | number:'1.2-2' }}
+    </th>
+
+    <!-- Principal -->
+    <th class="text-end">
+      ₹{{ getTotalPrincipal() | number:'1.2-2' }}
+    </th>
+
+    <!-- Interest -->
+    <th class="text-end">
+      ₹{{ getTotalInterest() | number:'1.2-2' }}
+    </th>
+
+    <!-- Penalty -->
+    <th class="text-end">
+      ₹{{ getTotalPenalty() | number:'1.2-2' }}
+    </th>
+
+    <!-- Total -->
+    <th class="text-end">
+      ₹{{ getTotalAmount() | number:'1.2-2' }}
+    </th>
+
+    <!-- Status -->
+    <th></th>
+
+    <!-- Action -->
+    <th></th>
+
+  </tr>
+
+</tfoot>
 
   </table>
 </div>

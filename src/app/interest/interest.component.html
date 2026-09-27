@@ -7,11 +7,15 @@
   <div class="page-header">
 
     <div>
-      <h2>Interest Details</h2>
+
+      <h2>
+        Interest Details
+      </h2>
 
       <p>
         Interest details by CMRC, VO / ALF and Women
       </p>
+
     </div>
 
   </div>
@@ -25,7 +29,9 @@
 
     <div class="filter-group">
 
-      <label>Select CMRC</label>
+      <label>
+        Select CMRC
+      </label>
 
       <select
         class="form-select"
@@ -196,14 +202,10 @@
                   </option>
 
                   <option
-                    *ngFor="
-                      let year of availableYears
-                    "
+                    *ngFor="let year of availableYears"
                     [ngValue]="year">
 
-                    {{
-                      getFinancialYearLabel(year)
-                    }}
+                    {{ getFinancialYearLabel(year) }}
 
                   </option>
 
@@ -233,9 +235,7 @@
                   </option>
 
                   <option
-                    *ngFor="
-                      let rate of availableInterestRates
-                    "
+                    *ngFor="let rate of availableInterestRates"
                     [ngValue]="rate">
 
                     {{ rate }}%
@@ -403,7 +403,6 @@
 
               <!-- ================================= -->
               <!-- WOMEN COUNT -->
-              <!-- BESIDE WOMAN -->
               <!-- ================================= -->
 
               <td
@@ -524,7 +523,7 @@
                 ">
 
                 ₹{{
-                  record.interestAmount
+                  record.totalInterestReceived
                     | number:'1.2-2'
                 }}
 
@@ -547,7 +546,7 @@
 
 
               <!-- ================================= -->
-              <!-- VO / ALF TOTAL INTEREST -->
+              <!-- VO / ALF FILTERED TOTAL INTEREST -->
               <!-- ================================= -->
 
               <td
@@ -561,8 +560,10 @@
                 ">
 
                 ₹{{
-                  record.voAlfTotalInterest
-                    | number:'1.2-2'
+                  getVoAlfFilteredInterest(
+                    record.voAlfId
+                  )
+                  | number:'1.2-2'
                 }}
 
               </td>

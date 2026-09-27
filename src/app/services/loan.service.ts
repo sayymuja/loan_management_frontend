@@ -19,6 +19,9 @@ export interface Loan {
   monthlyEmi?: number;
    loanStatus?: string;
   totalInterestReceived?: number;
+  sanctionedAmount?: number;
+processingFee?: number;
+disbursedAmount?: number;
 }
 
 @Injectable({

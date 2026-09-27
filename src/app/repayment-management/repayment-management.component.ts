@@ -134,7 +134,9 @@ ngOnInit(): void {
         next: (data) => {
 
           if (data && data.length > 0) {
-
+           alert(
+              'Repayment schedule already exists for this loan. Loading existing schedule.'
+           )
             // Schedule already exists
             this.repaymentList = data;
             this.loading = false;
@@ -538,6 +540,166 @@ editPaidEmi(repayment: Repayment): void {
     Number(repayment.penaltyAmount || 0);
 
   this.showPaymentModal = true;
+}
+getOutstandingAmount(repayment: any): number {
+
+  const loanAmount = Number(
+    this.loan?.loanAmount || 0
+  );
+
+  const installmentNo = Number(
+    repayment.installmentNo || 0
+  );
+
+  let totalPrincipalPaid = 0;
+
+  for (const item of this.repaymentList) {
+
+    if (
+      Number(item.installmentNo || 0) <= installmentNo
+    ) {
+
+      totalPrincipalPaid += Number(
+        item.principalAmount || 0
+      );
+
+    }
+  }
+
+  return Math.max(
+    loanAmount - totalPrincipalPaid,
+    0
+  );
+}
+// =========================================================
+// REPAYMENT TOTALS
+// =========================================================
+
+getTotalScheduledEmi(): number {
+
+  return this.repaymentList.reduce(
+    (total: number, repayment: any) => {
+
+      return total +
+        Number(
+          repayment.scheduledAmount || 0
+        );
+
+    },
+    0
+  );
+}
+
+
+getTotalPaidAmount(): number {
+
+  return this.repaymentList.reduce(
+    (total: number, repayment: any) => {
+
+      return total +
+        Number(
+          repayment.paidAmount || 0
+        );
+
+    },
+    0
+  );
+}
+
+
+getTotalOutstandingAmount(): number {
+
+  if (!this.loan) {
+    return 0;
+  }
+
+  const loanAmount =
+    Number(
+      this.loan.loanAmount || 0
+    );
+
+  let totalPrincipalPaid = 0;
+
+  this.repaymentList.forEach(
+    (repayment: any) => {
+
+      totalPrincipalPaid +=
+        Number(
+          repayment.principalAmount || 0
+        );
+
+    }
+  );
+
+  return Math.max(
+    loanAmount -
+    totalPrincipalPaid,
+    0
+  );
+}
+
+
+getTotalPrincipal(): number {
+
+  return this.repaymentList.reduce(
+    (total: number, repayment: any) => {
+
+      return total +
+        Number(
+          repayment.principalAmount || 0
+        );
+
+    },
+    0
+  );
+}
+
+
+getTotalInterest(): number {
+
+  return this.repaymentList.reduce(
+    (total: number, repayment: any) => {
+
+      return total +
+        Number(
+          repayment.interestAmount || 0
+        );
+
+    },
+    0
+  );
+}
+
+
+getTotalPenalty(): number {
+
+  return this.repaymentList.reduce(
+    (total: number, repayment: any) => {
+
+      return total +
+        Number(
+          repayment.penaltyAmount || 0
+        );
+
+    },
+    0
+  );
+}
+
+
+getTotalAmount(): number {
+
+  return this.repaymentList.reduce(
+    (total: number, repayment: any) => {
+
+      return total +
+        Number(
+          repayment.totalAmount || 0
+        );
+
+    },
+    0
+  );
 }
 
 }

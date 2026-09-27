@@ -1,140 +1,149 @@
+/* =========================================================
+   LOAN PAGE
+========================================================= */
+
 .loan-page {
-  padding: 24px;
+  padding: 20px;
+  background: #f5f7fb;
+  min-height: 100vh;
 }
 
-/* Header */
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .page-header h2 {
   margin: 0;
-  font-weight: 700;
-  color: #172033;
+  font-weight: 600;
+  color: #212529;
 }
 
 .page-header p {
   margin: 5px 0 0;
-  color: #7b8496;
+  color: #6c757d;
 }
 
-/* Cards */
-.card {
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
-}
+
+/* =========================================================
+   FILTER CARD
+========================================================= */
 
 .filter-card {
+  border: none;
+  border-radius: 10px;
   padding: 20px;
-  margin-bottom: 20px;
 }
 
-.form-label {
-  font-weight: 600;
-  color: #394150;
-  margin-bottom: 7px;
-}
 
-.form-control,
-.form-select {
-  min-height: 42px;
-  border: 1px solid #dce1e8;
-  border-radius: 8px;
-}
+/* =========================================================
+   SELECTED INFORMATION
+========================================================= */
 
-.form-control:focus,
-.form-select:focus {
-  border-color: #315efb;
-  box-shadow: 0 0 0 3px rgba(49, 94, 251, 0.1);
-}
-
-/* Selected Info */
 .selected-info {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
+  margin-top: 20px;
 }
 
 .selected-info > div {
   background: #ffffff;
-  padding: 18px 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e3e7ed;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .selected-info small {
   display: block;
-  color: #8a93a5;
+  color: #6c757d;
   font-size: 12px;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
 
 .selected-info strong {
   display: block;
-  color: #172033;
   font-size: 17px;
+  color: #212529;
 }
 
-/* Table */
+
+/* =========================================================
+   TABLE CARD
+========================================================= */
+
 .table-card {
+  border: none;
+  border-radius: 10px;
   overflow: hidden;
 }
 
-.card-header {
-  padding: 18px 20px;
+.table-card .card-header {
   background: #ffffff;
-  border-bottom: 1px solid #edf0f4;
+  border-bottom: 1px solid #e9ecef;
+  padding: 16px 20px;
 }
 
-.card-header h5 {
+.table-card .card-header h5 {
   margin: 0;
-  color: #172033;
-  font-weight: 700;
+  font-weight: 600;
 }
 
-.card-header span {
+.table-card .card-header span {
   font-size: 13px;
-  color: #8a93a5;
+  color: #6c757d;
 }
+
+
+/* =========================================================
+   TABLE
+========================================================= */
 
 .table {
   margin-bottom: 0;
 }
 
 .table thead th {
-  background: #f7f8fa;
-  color: #596273;
-  font-size: 12px;
-  font-weight: 700;
+  background: #f8f9fa;
+  color: #495057;
+  font-size: 13px;
+  font-weight: 600;
   white-space: nowrap;
-  padding: 13px 15px;
-  border-bottom: 1px solid #e9edf2;
+  vertical-align: middle;
 }
 
 .table tbody td {
-  padding: 14px 15px;
-  color: #333b4a;
   font-size: 13px;
+  vertical-align: middle;
   white-space: nowrap;
 }
 
-.table tbody tr:hover {
-  background: #fafbfc;
+.amount-cell {
+  font-weight: 600;
+  text-align: right;
 }
 
-/* Empty State */
+.action-cell {
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
 .empty-state {
-  padding: 45px !important;
-  color: #8b94a5;
+  padding: 50px 20px !important;
+  color: #6c757d;
 }
 
 .empty-state i {
-  font-size: 32px;
+  font-size: 35px;
   display: block;
   margin-bottom: 10px;
 }
@@ -143,93 +152,298 @@
   margin-bottom: 15px;
 }
 
-/* Buttons */
-.btn {
-  border-radius: 7px;
-  font-weight: 600;
+
+/* =========================================================
+   LOAN SUMMARY
+========================================================= */
+
+.loan-summary {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  padding: 0 20px 18px;
 }
 
-.btn-primary {
-  background: #315efb;
-  border-color: #315efb;
+.summary-item {
+  background: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
 }
 
-.btn-primary:hover {
-  background: #244bd3;
-  border-color: #244bd3;
+.summary-item small {
+  display: block;
+  color: #6c757d;
+  font-size: 11px;
+  margin-bottom: 4px;
 }
 
-/* Modal Overlay */
+.summary-item strong {
+  display: block;
+  font-size: 14px;
+  color: #212529;
+}
+
+
+/* =========================================================
+   FORM OVERLAY
+========================================================= */
+
 .form-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1050;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1050;
+
   padding: 20px;
 }
 
-/* Modal */
+
+/* =========================================================
+   FORM MODAL
+========================================================= */
+
 .form-modal {
   width: 100%;
-  max-width: 850px;
-  max-height: 90vh;
+  max-width: 900px;
+  max-height: 92vh;
+
   background: #ffffff;
-  border-radius: 14px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
+  border-radius: 12px;
+
   display: flex;
   flex-direction: column;
+
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.25);
+
+  overflow: hidden;
 }
+
+
+/* =========================================================
+   FORM HEADER
+========================================================= */
 
 .form-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #edf0f4;
+
+  padding: 18px 22px;
+
+  border-bottom: 1px solid #e9ecef;
+  background: #ffffff;
 }
 
 .form-header h4 {
   margin: 0;
-  font-weight: 700;
-  color: #172033;
+  font-weight: 600;
 }
 
 .form-header small {
-  color: #8a93a5;
+  color: #6c757d;
 }
 
+
+/* =========================================================
+   FORM BODY
+========================================================= */
+
 .form-body {
-  padding: 24px;
+  padding: 22px;
   overflow-y: auto;
 }
+
+.form-body .form-label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #343a40;
+}
+
+.form-body .form-control,
+.form-body .form-select {
+  min-height: 42px;
+  border-color: #ced4da;
+  border-radius: 6px;
+}
+
+.form-body .form-control:focus,
+.form-body .form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.12);
+}
+
+
+/* =========================================================
+   REQUIRED
+========================================================= */
+
+.required {
+  color: #dc3545;
+  margin-left: 2px;
+}
+
+
+/* =========================================================
+   CURRENCY
+========================================================= */
+
+.currency-symbol {
+  min-width: 45px;
+  justify-content: center;
+  font-weight: 600;
+  background: #f8f9fa;
+}
+
+
+/* =========================================================
+   AMOUNT IN WORDS
+========================================================= */
+
+.amount-words {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #6c757d;
+}
+
+
+/* =========================================================
+   FORM TEXT
+========================================================= */
+
+.form-text {
+  font-size: 11px;
+  color: #6c757d;
+  margin-top: 4px;
+}
+
+
+/* =========================================================
+   EMI FIELD
+========================================================= */
+
+.emi-field {
+  background: #f8f9fa;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   LOAN FORM SUMMARY
+========================================================= */
+
+.loan-form-summary {
+  margin-top: 8px;
+
+  border: 1px solid #dfe3e8;
+  border-radius: 10px;
+
+  background: #f8f9fb;
+
+  overflow: hidden;
+}
+
+.summary-title {
+  padding: 12px 15px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  background: #eef2f7;
+  border-bottom: 1px solid #dfe3e8;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+
+  padding: 15px;
+}
+
+.summary-box {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+
+  padding: 12px;
+}
+
+.summary-box span {
+  display: block;
+
+  font-size: 11px;
+  color: #6c757d;
+
+  margin-bottom: 5px;
+}
+
+.summary-box strong {
+  font-size: 15px;
+  color: #212529;
+}
+
+
+/* =========================================================
+   FORM FOOTER
+========================================================= */
 
 .form-footer {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 10px;
-  padding: 16px 24px;
-  border-top: 1px solid #edf0f4;
-  background: #fafbfc;
+
+  padding: 15px 22px;
+
+  border-top: 1px solid #e9ecef;
+  background: #ffffff;
 }
 
-/* Responsive */
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1200px) {
+
+  .selected-info {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .loan-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+}
+
+
 @media (max-width: 768px) {
 
   .loan-page {
-    padding: 15px;
-  }
-
-  .page-header {
-    align-items: flex-start;
-    gap: 15px;
+    padding: 12px;
   }
 
   .selected-info {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .loan-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-overlay {
+    padding: 10px;
   }
 
   .form-modal {
@@ -237,49 +451,28 @@
   }
 
 }
-.loan-summary {
-  display: flex;
-  gap: 30px;
-  align-items: center;
-}
 
-.loan-item {
-  display: flex;
-  flex-direction: column;
-}
 
-.loan-item small {
-  font-size: 13px;
-  color: #666;
-}
+@media (max-width: 576px) {
 
-.loan-item strong {
-  font-size: 18px;
-  color: #222;
-}
-.loan-summary {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 12px;
-  padding: 15px;
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-}
+  .selected-info {
+    grid-template-columns: 1fr;
+  }
 
-.summary-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+  .loan-summary {
+    grid-template-columns: 1fr;
+  }
 
-.summary-item small {
-  font-size: 12px;
-  color: #6c757d;
-  font-weight: 500;
-}
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
 
-.summary-item strong {
-  font-size: 14px;
-  color: #212529;
+  .form-footer {
+    flex-direction: column-reverse;
+  }
+
+  .form-footer button {
+    width: 100%;
+  }
+
 }
