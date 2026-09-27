@@ -44,8 +44,16 @@ selectedRepaymentLoan: Loan | null = null;
     private loanService: LoanService,
      private cmrcBalanceService: CmrcBalanceService
   ) {}
-
+today: string = '';
   ngOnInit(): void {
+    const currentDate = new Date();
+
+  this.today =
+    currentDate.getFullYear() +
+    '-' +
+    String(currentDate.getMonth() + 1).padStart(2, '0') +
+    '-' +
+    String(currentDate.getDate()).padStart(2, '0');
     this.loadCmrc();
   }
 

@@ -182,7 +182,6 @@
             <th>Repayment Period</th>
             <th>Interest Rate</th>
             <th>Loan Status</th>
-            <th>Total Interest Received</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -283,10 +282,7 @@
   </span>
 </td>
 
-<!-- Total Interest Received -->
-<td>
-  ₹ {{ loan.totalInterestReceived || 0 | number:'1.2-2' }}
-</td>
+
 
 <td>
 
@@ -589,24 +585,26 @@
 
 
           <!-- Loan Amount -->
+<!-- Loan Amount -->
 <div class="col-md-6">
-
   <label class="form-label">
     Loan Amount
-    <span
-      *ngIf="newLoan.loanAmount"
-      class="text-muted">
+    <span *ngIf="newLoan.loanAmount" class="text-muted">
       ({{ numberToWords(newLoan.loanAmount) }})
     </span>
   </label>
 
-  <input
-    type="number"
-    class="form-control"
-    [(ngModel)]="newLoan.loanAmount"
-    (ngModelChange)="calculateEmi()"
-    placeholder="Enter loan amount">
+  <div class="input-group">
+    <span class="input-group-text">₹</span>
 
+    <input
+      type="number"
+      class="form-control"
+      [(ngModel)]="newLoan.loanAmount"
+      (ngModelChange)="calculateEmi()"
+      placeholder="Enter loan amount"
+      min="1">
+  </div>
 </div>
 
 
@@ -634,9 +632,10 @@
             </label>
 
             <input
-              type="date"
-              class="form-control"
-              [(ngModel)]="newLoan.loanGivenDate">
+    type="date"
+    class="form-control"
+    [(ngModel)]="newLoan.loanGivenDate"
+    [max]="today">
 
           </div>
 

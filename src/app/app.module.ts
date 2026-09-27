@@ -22,6 +22,7 @@ import { LoanManagementComponent } from './loan-management/loan-management.compo
 import { RepaymentManagementComponent } from './repayment-management/repayment-management.component';
 import { ClScheduleComponent } from './cl-schedule/cl-schedule.component';
 import { BankBalanceComponent } from './bank-balance/bank-balance.component';
+import { InterestComponent } from './interest/interest.component';
 
 @NgModule({
   declarations: [
@@ -39,7 +40,8 @@ import { BankBalanceComponent } from './bank-balance/bank-balance.component';
     LoanManagementComponent,
     RepaymentManagementComponent,
     ClScheduleComponent,
-    BankBalanceComponent
+    BankBalanceComponent,
+    InterestComponent
   ],
   imports: [
     BrowserModule,

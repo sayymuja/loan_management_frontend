@@ -1,7 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 
-import { CmrcService, Cmrc } from '../services/cmrc.service';
-import { VoAlfService, VoAlf } from '../services/vo-alf.service';
+import {
+  CmrcService,
+  Cmrc
+} from '../services/cmrc.service';
+
+import {
+  VoAlfService,
+  VoAlf
+} from '../services/vo-alf.service';
 
 import {
   CmrcBalanceService,
@@ -21,20 +28,14 @@ import {
 })
 export class BankBalanceComponent implements OnInit {
 
-  // ==========================================
-  // Loan Totals
-  // ==========================================
+  // =========================================
+  // LOAN TOTALS
+  // =========================================
 
   loanTotals: {
     [voAlfId: number]: number;
   } = {};
 
-
-  // ==========================================
-  // Dynamic Monthly Loan Data
-  // ==========================================
-
-  loanMonths: string[] = [];
 
   monthlyLoanTotals: {
     [voAlfId: number]: {
@@ -43,42 +44,50 @@ export class BankBalanceComponent implements OnInit {
   } = {};
 
 
-  // ==========================================
-  // CMRC / VO ALF Data
-  // ==========================================
+  // =========================================
+  // MONTHS
+  // =========================================
+
+  allLoanMonths: string[] = [];
+
+  loanMonths: string[] = [];
+
+
+  // =========================================
+  // YEARS
+  // =========================================
+
+  availableYears: number[] = [];
+
+  selectedYear: number | null = null;
+
+
+  // =========================================
+  // CMRC / VO ALF
+  // =========================================
 
   cmrcList: Cmrc[] = [];
 
   voAlfList: VoAlf[] = [];
-fullyRepaidLoans: any[] = [];
-
-cmrcBalance = 0;
-
-  // ==========================================
-  // CMRC Balance
-  // ==========================================
 
 
+  // =========================================
+  // CMRC BALANCE
+  // =========================================
 
-  // ==========================================
-  // Selected CMRC
-  // ==========================================
+  cmrcBalance = 0;
 
   selectedCmrcId: number | null = null;
 
 
-  // ==========================================
-  // Loading
-  // ==========================================
+  // =========================================
+  // LOADING
+  // =========================================
 
   loadingVoAlf = false;
 
   loadingBalance = false;
 
-
-  // ==========================================
-  // Constructor
-  // ==========================================
 
   constructor(
     private cmrcService: CmrcService,
@@ -88,9 +97,9 @@ cmrcBalance = 0;
   ) {}
 
 
-  // ==========================================
-  // On Init
-  // ==========================================
+  // =========================================
+  // INIT
+  // =========================================
 
   ngOnInit(): void {
 
@@ -99,15 +108,15 @@ cmrcBalance = 0;
   }
 
 
-  // ==========================================
-  // Load CMRC
-  // ==========================================
+  // =========================================
+  // LOAD CMRC
+  // =========================================
 
   loadCmrc(): void {
 
     this.cmrcService.getAll().subscribe({
 
-      next: (data) => {
+      next: (data: Cmrc[]) => {
 
         this.cmrcList = data;
 
@@ -127,25 +136,29 @@ cmrcBalance = 0;
   }
 
 
-  // ==========================================
-  // CMRC Selection
-  // ==========================================
+  // =========================================
+  // LOAD BANK BALANCE
+  // =========================================
 
   loadBankBalance(): void {
 
-    // Reset old data
     this.voAlfList = [];
 
     this.cmrcBalance = 0;
 
     this.loanTotals = {};
 
-    this.loanMonths = [];
-
     this.monthlyLoanTotals = {};
 
+    this.allLoanMonths = [];
 
-    // No CMRC selected
+    this.loanMonths = [];
+
+    this.availableYears = [];
+
+    this.selectedYear = null;
+
+
     if (!this.selectedCmrcId) {
 
       return;
@@ -153,9 +166,9 @@ cmrcBalance = 0;
     }
 
 
-    // ========================================
-    // API 1 - VO / ALF
-    // ========================================
+    // =======================================
+    // LOAD VO / ALF
+    // =======================================
 
     this.loadingVoAlf = true;
 
@@ -164,24 +177,15 @@ cmrcBalance = 0;
       .getByCmrcId(this.selectedCmrcId)
       .subscribe({
 
-        next: (data) => {
+        next: (data: VoAlf[]) => {
 
           this.voAlfList = data;
 
           this.loadingVoAlf = false;
 
-
-          console.log(
-            'VO / ALF Data:',
-            this.voAlfList
-          );
-
-
-          // Load loans for every VO / ALF
           this.loadLoanTotals();
 
         },
-
 
         error: (error) => {
 
@@ -197,9 +201,9 @@ cmrcBalance = 0;
       });
 
 
-    // ========================================
-    // API 2 - CMRC Balance
-    // ========================================
+    // =======================================
+    // LOAD CMRC BALANCE
+    // =======================================
 
     this.loadingBalance = true;
 
@@ -218,7 +222,6 @@ cmrcBalance = 0;
             const latestBalance =
               data[data.length - 1];
 
-
             this.cmrcBalance =
               Number(
                 latestBalance.balanceAmount || 0
@@ -233,14 +236,7 @@ cmrcBalance = 0;
 
           this.loadingBalance = false;
 
-
-          console.log(
-            'CMRC Balance:',
-            this.cmrcBalance
-          );
-
         },
-
 
         error: (error) => {
 
@@ -260,9 +256,9 @@ cmrcBalance = 0;
   }
 
 
-  // ==========================================
-  // Load Loans for Every VO / ALF
-  // ==========================================
+  // =========================================
+  // LOAD LOAN TOTALS
+  // =========================================
 
   loadLoanTotals(): void {
 
@@ -270,211 +266,265 @@ cmrcBalance = 0;
 
     this.monthlyLoanTotals = {};
 
+    this.allLoanMonths = [];
+
     this.loanMonths = [];
 
-
-    this.voAlfList.forEach(voAlf => {
-
-      if (!voAlf.id) {
-
-        return;
-
-      }
+    this.availableYears = [];
 
 
-      // ======================================
-      // Loan API
-      // ======================================
+    this.voAlfList.forEach(
+      (voAlf: VoAlf) => {
 
-      this.loanService
-        .getByVoAlfId(voAlf.id)
-        .subscribe({
+        if (!voAlf.id) {
 
-          next: (loans: Loan[]) => {
+          return;
+
+        }
 
 
-            // ==================================
-            // Total Loan Amount
-            // ==================================
+        const voAlfId =
+          voAlf.id;
 
-            const totalLoanAmount =
-              loans.reduce(
 
-                (total, loan) =>
+        this.loanService
+          .getByVoAlfId(voAlfId)
+          .subscribe({
 
-                  total +
-                  Number(
-                    loan.loanAmount || 0
-                  ),
+            next: (loans: Loan[]) => {
 
-                0
+              this.monthlyLoanTotals[voAlfId] = {};
+
+
+              let totalLoanAmount = 0;
+
+
+              loans.forEach(
+                (loan: Loan) => {
+
+                  const loanAmount =
+                    Number(
+                      loan.loanAmount || 0
+                    );
+
+
+                  totalLoanAmount +=
+                    loanAmount;
+
+
+                  if (!loan.loanGivenDate) {
+
+                    return;
+
+                  }
+
+
+                  const date =
+                    new Date(
+                      loan.loanGivenDate
+                    );
+
+
+                  const year =
+                    date.getFullYear();
+
+
+                  const month =
+                    String(
+                      date.getMonth() + 1
+                    ).padStart(2, '0');
+
+
+                  const monthKey =
+                    `${year}-${month}`;
+
+
+                  // Monthly total
+
+                  if (
+                    this.monthlyLoanTotals[
+                      voAlfId
+                    ][monthKey] === undefined
+                  ) {
+
+                    this.monthlyLoanTotals[
+                      voAlfId
+                    ][monthKey] = 0;
+
+                  }
+
+
+                  this.monthlyLoanTotals[
+                    voAlfId
+                  ][monthKey] += loanAmount;
+
+
+                  // All months
+
+                  if (
+                    !this.allLoanMonths.includes(
+                      monthKey
+                    )
+                  ) {
+
+                    this.allLoanMonths.push(
+                      monthKey
+                    );
+
+                  }
+
+
+                  // Years
+
+                  if (
+                    !this.availableYears.includes(
+                      year
+                    )
+                  ) {
+
+                    this.availableYears.push(
+                      year
+                    );
+
+                  }
+
+                }
 
               );
 
 
-            this.loanTotals[voAlf.id!] =
-              totalLoanAmount;
+              this.loanTotals[voAlfId] =
+                totalLoanAmount;
 
 
-            // ==================================
-            // Initialize Monthly Data
-            // ==================================
-
-            this.monthlyLoanTotals[
-              voAlf.id!
-            ] = {};
+              this.allLoanMonths.sort();
 
 
-            // ==================================
-            // Process Every Loan
-            // ==================================
-
-            loans.forEach(loan => {
+              this.availableYears.sort(
+                (a, b) => a - b
+              );
 
 
-              // No loan date
-              if (!loan.loanGivenDate) {
-
-                return;
-
-              }
-
-
-              // =================================
-              // Get Month from loanGivenDate
-              // =================================
-
-              const date =
-                new Date(
-                  loan.loanGivenDate
-                );
-
-
-              const monthKey =
-                date.getFullYear() +
-                '-' +
-                String(
-                  date.getMonth() + 1
-                ).padStart(2, '0');
-
-
-              // =================================
-              // Initialize Month
-              // =================================
+              // Latest year
 
               if (
-                !this.monthlyLoanTotals[
-                  voAlf.id!
-                ][monthKey]
+                this.selectedYear === null &&
+                this.availableYears.length > 0
               ) {
 
-                this.monthlyLoanTotals[
-                  voAlf.id!
-                ][monthKey] = 0;
+                this.selectedYear =
+                  this.availableYears[
+                    this.availableYears.length - 1
+                  ];
 
               }
 
 
-              // =================================
-              // Add Loan Amount
-              // =================================
+              this.updateYearMonths();
+
+            },
+
+            error: (error) => {
+
+              console.error(
+                'Loan API Error:',
+                voAlfId,
+                error
+              );
+
+              this.loanTotals[voAlfId] = 0;
 
               this.monthlyLoanTotals[
-                voAlf.id!
-              ][monthKey] +=
-                Number(
-                  loan.loanAmount || 0
-                );
+                voAlfId
+              ] = {};
 
+            }
 
-              // =================================
-              // Add Dynamic Month
-              // =================================
+          });
 
-              if (
-                !this.loanMonths.includes(
-                  monthKey
-                )
-              ) {
+      }
 
-                this.loanMonths.push(
-                  monthKey
-                );
-
-              }
-
-            });
-
-
-            // ==================================
-            // Sort Months
-            // ==================================
-
-            this.loanMonths.sort();
-
-
-            // ==================================
-            // Console
-            // ==================================
-
-            console.log(
-              'VO / ALF:',
-              voAlf.voAlfName
-            );
-
-
-            console.log(
-              'Total Loan:',
-              totalLoanAmount
-            );
-
-
-            console.log(
-              'Monthly Loans:',
-              this.monthlyLoanTotals[
-                voAlf.id!
-              ]
-            );
-
-
-            console.log(
-              'All Loan Months:',
-              this.loanMonths
-            );
-
-          },
-
-
-          error: (error) => {
-
-            console.error(
-              'Loan API Error for VO / ALF:',
-              voAlf.id,
-              error
-            );
-
-
-            this.loanTotals[
-              voAlf.id!
-            ] = 0;
-
-
-            this.monthlyLoanTotals[
-              voAlf.id!
-            ] = {};
-
-          }
-
-        });
-
-    });
+    );
 
   }
 
 
-  // ==========================================
-  // Selected CMRC Name
-  // ==========================================
+  // =========================================
+  // UPDATE YEAR MONTHS
+  // =========================================
+
+  updateYearMonths(): void {
+
+    if (
+      this.selectedYear === null
+    ) {
+
+      this.loanMonths = [];
+
+      return;
+
+    }
+
+
+    this.loanMonths =
+      this.allLoanMonths
+        .filter(
+          (month: string) => {
+
+            const year =
+              Number(
+                month.substring(0, 4)
+              );
+
+            return (
+              year === this.selectedYear
+            );
+
+          }
+        )
+        .sort();
+
+  }
+
+
+  // =========================================
+  // YEAR CHANGE
+  // =========================================
+
+  onYearChange(): void {
+
+    this.updateYearMonths();
+
+  }
+
+
+  // =========================================
+  // FINANCIAL YEAR LABEL
+  // =========================================
+
+  getFinancialYearLabel(): string {
+
+    if (
+      this.selectedYear === null
+    ) {
+
+      return '';
+
+    }
+
+
+    return `${this.selectedYear}-${
+      String(
+        this.selectedYear + 1
+      ).slice(-2)
+    }`;
+
+  }
+
+
+  // =========================================
+  // CMRC NAME
+  // =========================================
 
   getSelectedCmrcName(): string {
 
@@ -491,32 +541,35 @@ cmrcBalance = 0;
   }
 
 
-  // ==========================================
-  // Total VO / ALF Received Fund
-  // ==========================================
+  // =========================================
+  // TOTAL RECEIVED FUND
+  // =========================================
 
   getTotalReceivedFund(): number {
 
     return this.voAlfList.reduce(
+      (
+        total: number,
+        voAlf: VoAlf
+      ) => {
 
-      (total, voAlf) =>
+        return (
+          total +
+          Number(
+            voAlf.receivedFund || 0
+          )
+        );
 
-        total +
-        Number(
-          voAlf.receivedFund || 0
-        ),
-
+      },
       0
-
     );
 
   }
 
 
-  // ==========================================
-  // Format Month
-  // Example: 2026-09 → Sep 2026
-  // ==========================================
+  // =========================================
+  // FORMAT MONTH
+  // =========================================
 
   formatMonth(
     monthKey: string
@@ -547,9 +600,9 @@ cmrcBalance = 0;
   }
 
 
-  // ==========================================
-  // Get Monthly Loan Amount
-  // ==========================================
+  // =========================================
+  // MONTHLY LOAN AMOUNT
+  // =========================================
 
   getMonthlyLoanAmount(
     voAlfId: number,
@@ -557,81 +610,143 @@ cmrcBalance = 0;
   ): number {
 
     return Number(
-
       this.monthlyLoanTotals[
         voAlfId
       ]?.[month] || 0
-
     );
 
   }
-  getTotalLoanAmountForVoAlf(voAlfId: number): number {
 
-  return this.loanMonths.reduce(
-    (total, month) =>
-      total + this.getMonthlyLoanAmount(voAlfId, month),
+
+  // =========================================
+  // TOTAL LOAN
+  // =========================================
+
+  getTotalLoanAmountForVoAlf(
+    voAlfId: number
+  ): number {
+
+    return Number(
+      this.loanTotals[
+        voAlfId
+      ] || 0
+    );
+
+  }
+
+
+  // =========================================
+  // REMAINING AMOUNT
+  // =========================================
+
+  getRemainingAmount(
+    voAlfId: number,
+    receivedFund: number | undefined
+  ): number {
+
+    const receivedAmount =
+      Number(
+        receivedFund || 0
+      );
+
+
+    const totalLoanAmount =
+      this.getTotalLoanAmountForVoAlf(
+        voAlfId
+      );
+
+
+    return (
+      receivedAmount -
+      totalLoanAmount
+    );
+
+  }
+
+
+  // =========================================
+  // MONTHLY REMAINING
+  // =========================================
+
+  getMonthlyRemainingAmount(
+    voAlfId: number,
+    month: string,
+    receivedFund: number | undefined
+  ): number {
+
+    let remainingAmount =
+      Number(
+        receivedFund || 0
+      );
+
+
+    for (
+      const currentMonth
+      of this.allLoanMonths
+    ) {
+
+      if (
+        currentMonth > month
+      ) {
+
+        break;
+
+      }
+
+
+      const loanAmount =
+        this.getMonthlyLoanAmount(
+          voAlfId,
+          currentMonth
+        );
+
+
+      remainingAmount -=
+        loanAmount;
+
+    }
+
+
+    return remainingAmount;
+
+  }
+getTotalLoanAmount(): number {
+
+  return this.voAlfList.reduce(
+    (
+      total: number,
+      voAlf: VoAlf
+    ) => {
+
+      return total +
+        this.getTotalLoanAmountForVoAlf(
+          voAlf.id!
+        );
+
+    },
     0
   );
 
 }
-getRemainingAmount(
-  voAlfId: number,
-  receivedFund: number | undefined
-): number {
 
-  const receivedAmount =
-    Number(receivedFund || 0);
 
-  const totalLoanAmount =
-    this.getTotalLoanAmountForVoAlf(voAlfId);
+getTotalRemainingAmount(): number {
 
-  return receivedAmount - totalLoanAmount;
+  return this.voAlfList.reduce(
+    (
+      total: number,
+      voAlf: VoAlf
+    ) => {
+
+      return total +
+        this.getRemainingAmount(
+          voAlf.id!,
+          voAlf.receivedFund
+        );
+
+    },
+    0
+  );
 
 }
-getMonthlyRemainingAmount(
-  voAlfId: number,
-  month: string,
-  receivedFund: number | undefined
-): number {
-
-  let remainingAmount = Number(receivedFund || 0);
-
-  for (const currentMonth of this.loanMonths) {
-
-    const currentValue =
-      this.getMonthlyLoanAmount(
-        voAlfId,
-        currentMonth
-      );
-
-    // If current month loan is 0,
-    // keep previous balance unchanged
-    if (currentValue === 0) {
-
-      remainingAmount = remainingAmount;
-
-    } else {
-
-      remainingAmount =
-        remainingAmount - currentValue;
-    }
-
-    // Stop when required month is reached
-    if (currentMonth === month) {
-      break;
-    }
-  }
-
-  return remainingAmount;
-}
-
-closedLoanData: {
-  [voAlfId: number]: {
-    [month: string]: {
-      count: number;
-      interest: number;
-    };
-  };
-} = {};
-
 }
