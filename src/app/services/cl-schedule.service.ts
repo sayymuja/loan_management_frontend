@@ -12,6 +12,8 @@ export interface ClSchedule {
   monthlyInstallment?: number;
   averageMonthlyInstallment?: number;
   remark?: string;
+  closingBalance?: number;
+  installmentDate?: string;
 }
 
 @Injectable({

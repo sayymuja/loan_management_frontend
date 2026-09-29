@@ -25,6 +25,8 @@ export interface VoAlfFund {
   currentInterestUltraPoor?: number;
   currentInterestDebtTrappedWomen?: number;
   currentInterestTotal?: number;
+    voAlfName: string;
+
 }
 
 @Injectable({

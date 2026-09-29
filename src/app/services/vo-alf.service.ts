@@ -5,11 +5,13 @@ import { Observable } from 'rxjs';
 export interface VoAlf {
   id?: number;
   serialNo?: number;
-  cmrcId: number;
+  cmrcId?: number;
   villageName?: string;
   voAlfName?: string;
   accountNo?: string;
   receivedFund?: number;
+  cmrcName?: string;
+  voAlfId?: number;
 }
 
 @Injectable({

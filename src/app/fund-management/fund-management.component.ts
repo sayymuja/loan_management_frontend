@@ -26,7 +26,8 @@ export class FundManagementComponent implements OnInit {
 isEditMode = false;
 
 newFund: VoAlfFund = {
-  voAlfId: 0
+  voAlfId: 0,
+   voAlfName: ''
 };
 
   constructor(
@@ -92,7 +93,8 @@ newFund: VoAlfFund = {
       // Fund nahi mila → Add mode
       if (error.status === 404) {
         this.newFund = {
-          voAlfId: this.selectedVoAlfId!
+          voAlfId: this.selectedVoAlfId!,
+           voAlfName: ''
         };
 
         this.isEditMode = false;
@@ -144,7 +146,8 @@ openAddForm(): void {
   // Fund nahi hai → Add mode
   else {
     this.newFund = {
-      voAlfId: this.selectedVoAlfId
+      voAlfId: this.selectedVoAlfId,
+       voAlfName: ''
     };
     this.isEditMode = false;
   }
@@ -156,7 +159,9 @@ closeForm(): void {
   this.showForm = false;
 
   this.newFund = {
-    voAlfId: this.selectedVoAlfId ?? 0
+    voAlfId: this.selectedVoAlfId ?? 0,
+    voAlfName: ''
+
   };
 }
 saveFund(): void {

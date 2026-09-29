@@ -487,7 +487,7 @@ export class InterestComponent implements OnInit {
                 voAlfId,
 
               cmrcId:
-                voAlf.cmrcId,
+                voAlf.cmrcId ?? 0,
 
               cmrcName:
                 this.getCmrcName(

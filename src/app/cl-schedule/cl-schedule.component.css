@@ -1,125 +1,545 @@
+/* =========================================================
+PAGE CONTAINER
+========================================================= */
+
 .page-container {
-  padding: 24px;
-  background: #f5f7fb;
-  min-height: calc(100vh - 70px);
+width: 100%;
 }
 
-/* Page Header */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+/* =========================================================
+COMMON CARD
+========================================================= */
+
+.selection-card,
+.loan-summary-card,
+.schedule-card,
+.empty-card,
+.loading-card {
+width: 100%;
+background: #ffffff;
+border: 1px solid #e5e7eb;
+border-radius: 10px;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.page-header h2 {
-  margin: 0;
-  font-weight: 700;
-  color: #172033;
+/* =========================================================
+SELECT LOAN CARD
+========================================================= */
+
+.selection-card {
+margin-bottom: 18px;
 }
 
-.page-header p {
-  margin: 6px 0 0;
-  color: #6b7280;
-  font-size: 14px;
+/* Header */
+
+.selection-header {
+padding: 16px 20px;
+border-bottom: 1px solid #e9ecef;
 }
 
-/* Cards */
-.card {
-  border: none;
-  border-radius: 12px;
-  background: #ffffff;
+.selection-header h5 {
+margin: 0;
+font-size: 17px;
+font-weight: 600;
+color: #212529;
 }
 
-.card-header {
-  background: #ffffff;
-  border-bottom: 1px solid #e9edf3;
-  padding: 16px 20px;
+.selection-header h5 i {
+font-size: 15px;
 }
 
-.card-header h5 {
-  color: #172033;
-  font-weight: 600;
+.selection-header p {
+margin: 4px 0 0;
+font-size: 12px;
+color: #6c757d;
 }
 
-/* Form */
-.form-label {
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 8px;
+/* =========================================================
+SELECTION FORM
+========================================================= */
+
+.selection-body {
+display: grid;
+grid-template-columns: 1fr 1fr 1fr auto;
+gap: 16px;
+align-items: end;
+padding: 18px 20px;
 }
+
+/* Form Group */
+
+.form-group {
+min-width: 0;
+}
+
+.form-group label {
+display: block;
+margin-bottom: 6px;
+font-size: 12px;
+font-weight: 600;
+color: #495057;
+}
+
+/* Select */
 
 .form-select {
-  min-height: 44px;
-  border: 1px solid #d8dee8;
-  border-radius: 8px;
+width: 100%;
+height: 38px;
+padding: 6px 34px 6px 11px;
+border: 1px solid #ced4da;
+border-radius: 6px;
+background-color: #ffffff;
+color: #343a40;
+font-size: 13px;
+cursor: pointer;
+}
+
+.form-select:hover {
+border-color: #adb5bd;
 }
 
 .form-select:focus {
-  border-color: #526dff;
-  box-shadow: 0 0 0 0.2rem rgba(82, 109, 255, 0.12);
+border-color: #86b7fe;
+box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.12);
+outline: none;
 }
 
-/* Generate Button */
-.btn-primary {
-  min-height: 44px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
+.form-select:disabled {
+background-color: #f1f3f5;
+color: #adb5bd;
+cursor: not-allowed;
 }
 
-/* Table */
-.table {
-  margin: 0;
+/* =========================================================
+GENERATE BUTTON
+========================================================= */
+
+.form-action {
+display: flex;
+align-items: flex-end;
 }
 
-.table thead th {
-  background: #f8f9fc;
-  color: #4b5563;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  padding: 14px 16px;
-  border-bottom: 1px solid #e5e7eb;
+.form-action .btn {
+height: 38px;
+padding: 6px 15px;
+border-radius: 6px;
+font-size: 13px;
+font-weight: 500;
+white-space: nowrap;
 }
 
-.table tbody td {
-  padding: 14px 16px;
-  color: #374151;
-  font-size: 14px;
-  white-space: nowrap;
-  border-bottom: 1px solid #f0f2f5;
+.form-action .btn:disabled {
+cursor: not-allowed;
+opacity: 0.65;
 }
 
-.table tbody tr:hover {
-  background: #f8faff;
+/* =========================================================
+LOAN SUMMARY CARD
+========================================================= */
+
+.loan-summary-card {
+margin-bottom: 18px;
 }
 
-/* Empty State */
-.text-muted {
-  color: #8a94a6 !important;
+/* Summary Header */
+
+.summary-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 16px 20px;
+border-bottom: 1px solid #e9ecef;
 }
 
-/* Responsive */
+.summary-header h5 {
+margin: 0;
+font-size: 18px;
+font-weight: 600;
+color: #212529;
+}
+
+.summary-header span {
+display: block;
+margin-top: 3px;
+font-size: 12px;
+color: #6c757d;
+}
+
+/* Export */
+
+.summary-header .btn {
+min-width: 120px;
+padding: 6px 12px;
+border-radius: 6px;
+font-size: 12px;
+font-weight: 500;
+}
+
+/* =========================================================
+LOAN DETAILS
+========================================================= */
+
+.loan-details-grid {
+display: grid;
+grid-template-columns: repeat(6, 1fr);
+}
+
+.loan-detail {
+min-width: 0;
+min-height: 74px;
+padding: 14px 18px;
+border-right: 1px solid #eeeeee;
+}
+
+.loan-detail:last-child {
+border-right: none;
+}
+
+/* Label */
+
+.detail-label {
+display: block;
+margin-bottom: 6px;
+font-size: 10px;
+font-weight: 600;
+color: #7a828a;
+text-transform: uppercase;
+letter-spacing: 0.35px;
+}
+
+/* Value */
+
+.detail-value {
+display: block;
+font-size: 14px;
+font-weight: 600;
+color: #212529;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+.detail-value.amount {
+font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================
+SCHEDULE CARD
+========================================================= */
+
+.schedule-card {
+overflow: hidden;
+}
+
+/* Schedule Header */
+
+.schedule-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 15px 20px;
+border-bottom: 1px solid #e9ecef;
+}
+
+.schedule-header h5 {
+margin: 0;
+font-size: 17px;
+font-weight: 600;
+color: #212529;
+}
+
+.schedule-header span {
+display: block;
+margin-top: 3px;
+font-size: 12px;
+color: #6c757d;
+}
+
+/* =========================================================
+TABLE WRAPPER
+========================================================= */
+
+.table-wrapper {
+width: 100%;
+overflow-x: auto;
+overflow-y: hidden;
+}
+
+/* =========================================================
+TABLE
+========================================================= */
+
+.schedule-table {
+width: 100%;
+min-width: 1250px;
+border-collapse: collapse;
+table-layout: auto;
+}
+
+/* =========================================================
+TABLE HEADER
+========================================================= */
+
+.schedule-table thead th {
+padding: 12px 13px;
+background: #f8f9fa;
+border-bottom: 1px solid #dee2e6;
+color: #495057;
+font-size: 11px;
+font-weight: 600;
+white-space: nowrap;
+vertical-align: middle;
+}
+
+.schedule-table thead th.center {
+text-align: center;
+}
+
+.schedule-table thead th.amount-column {
+text-align: right;
+}
+
+/* =========================================================
+TABLE BODY
+========================================================= */
+
+.schedule-table tbody td {
+padding: 12px 13px;
+border-bottom: 1px solid #eeeeee;
+color: #343a40;
+font-size: 12.5px;
+white-space: nowrap;
+vertical-align: middle;
+}
+
+.schedule-table tbody tr {
+transition: background-color 0.15s ease;
+}
+
+.schedule-table tbody tr:hover {
+background-color: #f8f9fa;
+}
+
+.schedule-table tbody tr:last-child td {
+border-bottom: none;
+}
+
+/* =========================================================
+TABLE ALIGNMENT
+========================================================= */
+
+.center {
+text-align: center !important;
+}
+
+.amount-column {
+text-align: right;
+}
+
+.amount-cell {
+text-align: right;
+font-variant-numeric: tabular-nums;
+font-feature-settings: "tnum";
+}
+
+.installment-no {
+font-weight: 600;
+color: #212529;
+}
+
+.date-cell {
+color: #495057;
+}
+
+.amount-cell.highlight {
+font-weight: 600;
+color: #212529;
+}
+
+.closing-balance {
+font-weight: 500;
+}
+
+/* =========================================================
+REMARK BADGE
+========================================================= */
+
+.remark-badge {
+display: inline-block;
+min-width: 58px;
+padding: 4px 8px;
+border-radius: 12px;
+background: #f1f3f5;
+color: #6c757d;
+font-size: 10px;
+font-weight: 600;
+text-align: center;
+}
+
+.remark-badge.final {
+background: #e9ecef;
+color: #212529;
+}
+
+/* =========================================================
+EMPTY STATE
+========================================================= */
+
+.empty-card {
+padding: 45px 20px;
+text-align: center;
+}
+
+.empty-icon {
+margin-bottom: 12px;
+font-size: 38px;
+color: #adb5bd;
+}
+
+.empty-card h5 {
+margin: 0 0 6px;
+font-size: 16px;
+font-weight: 600;
+color: #343a40;
+}
+
+.empty-card p {
+margin: 0;
+font-size: 13px;
+color: #6c757d;
+}
+
+/* =========================================================
+LOADING
+========================================================= */
+
+.loading-card {
+padding: 18px 20px;
+text-align: center;
+color: #6c757d;
+font-size: 13px;
+}
+
+/* =========================================================
+RESPONSIVE - TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+
+.selection-body {
+grid-template-columns: 1fr 1fr;
+}
+
+.form-action {
+grid-column: span 2;
+}
+
+.form-action .btn {
+width: 100%;
+}
+
+.loan-details-grid {
+grid-template-columns: repeat(3, 1fr);
+}
+
+.loan-detail:nth-child(3),
+.loan-detail:nth-child(6) {
+border-right: none;
+}
+
+.loan-detail:nth-child(-n + 3) {
+border-bottom: 1px solid #eeeeee;
+}
+
+}
+
+/* =========================================================
+RESPONSIVE - MOBILE
+========================================================= */
+
 @media (max-width: 768px) {
 
-  .page-container {
-    padding: 16px;
-  }
+.selection-header {
+padding: 14px;
+}
 
-  .page-header {
-    margin-bottom: 18px;
-  }
+.selection-body {
+grid-template-columns: 1fr;
+gap: 12px;
+padding: 15px;
+}
 
-  .page-header h2 {
-    font-size: 22px;
-  }
+.form-action {
+grid-column: auto;
+}
 
-  .col-md-4 {
-    margin-top: 15px;
-  }
+.form-action .btn {
+width: 100%;
+}
 
-  .table {
-    min-width: 900px;
-  }
+.loan-details-grid {
+grid-template-columns: 1fr 1fr;
+}
+
+.loan-detail {
+padding: 12px 14px;
+border-bottom: 1px solid #eeeeee;
+}
+
+.loan-detail:nth-child(2n) {
+border-right: none;
+}
+
+.summary-header {
+padding: 14px;
+}
+
+.summary-header h5 {
+font-size: 16px;
+}
+
+.summary-header .btn {
+min-width: auto;
+padding: 6px 9px;
+}
+
+.schedule-header {
+padding: 14px;
+}
+
+.schedule-table thead th {
+padding: 10px;
+font-size: 10px;
+}
+
+.schedule-table tbody td {
+padding: 10px;
+font-size: 12px;
+}
+
+}
+
+/* =========================================================
+RESPONSIVE - SMALL MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+.loan-details-grid {
+grid-template-columns: 1fr;
+}
+
+.loan-detail {
+border-right: none;
+}
+
+.summary-header {
+align-items: flex-start;
+gap: 10px;
+}
+
+.summary-header .btn {
+flex-shrink: 0;
+}
+
 }
