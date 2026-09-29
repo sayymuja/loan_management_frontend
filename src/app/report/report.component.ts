@@ -1,93 +1,56 @@
 import { Component, OnInit } from '@angular/core';
-
-import {
-  CmrcService,
-  Cmrc
-} from '../services/cmrc.service';
-
-import {
-  VoAlfService,
-  VoAlf
-} from '../services/vo-alf.service';
-
-import {
-  LoanService,
-  Loan
-} from '../services/loan.service';
-
-import {
-  RepaymentService
-} from '../services/repayment.service';
-
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 
+import { CmrcService, Cmrc } from '../services/cmrc.service';
+import { VoAlfService, VoAlf } from '../services/vo-alf.service';
+import { LoanService, Loan } from '../services/loan.service';
+import { RepaymentService, Repayment } from '../services/repayment.service';
+import { CmrcBalanceService } from '../services/cmrc-balance.service';
 
-/* =========================================================
-   REPORT DATA INTERFACES
-========================================================= */
 
-interface ReportSection {
+/* ============================================================
+   REPORT INTERFACES
+============================================================ */
 
-  groupCount: number;
-
-  womenCount: number;
-
-  groupAmount: number;
-
-  womenAmount: number;
-
+interface FundsReceived {
+  alfReceivedFund: number;
 }
 
+interface FundsDistributed {
+  groupCount: number;
+  womenCount: number;
+  groupAmount: number;
+  womenAmount: number;
+}
+
+interface FundsRepaid {
+  groupCount: number;
+  womenCount: number;
+  groupAmount: number;
+  womenAmount: number;
+}
 
 interface CurrentStatus {
-
-  groupCount: number;
-
-  womenCount: number;
-
-  groupAmount: number;
-
-  womenAmount: number;
-
-  ultraPoor: number;
-
   debtCycleWomen: number;
-
-  total: number;
-
+  totalInterestReceived: number;
 }
 
-
-interface FundReportRecord {
-
-  cmrcId: number;
-
+interface ReportRecord {
+  cmrcId: number | null;
   cmrcName: string;
-
   villageName: string;
-
-  voAlfId: number;
-
+  voAlfId: number | null;
   voAlfName: string;
-
   accountNo: string;
 
-  fundsReceived: ReportSection;
-
-  fundsDistributed: ReportSection;
-
-  fundsRepaid: ReportSection;
-
-  reLoan: ReportSection;
-
+  fundsReceived: FundsReceived;
+  fundsDistributed: FundsDistributed;
+  fundsRepaid: FundsRepaid;
   currentStatus: CurrentStatus;
-
 }
 
-
-/* =========================================================
-   COMPONENT
-========================================================= */
 
 @Component({
   selector: 'app-report',
@@ -96,109 +59,89 @@ interface FundReportRecord {
 })
 export class ReportComponent implements OnInit {
 
-
-  /* =======================================================
-     CMRC
-  ======================================================= */
-
-  cmrcList: Cmrc[] = [];
-
-  selectedCmrcId: number | null = null;
-
-
-  /* =======================================================
-     VO / ALF
-  ======================================================= */
-
-  voAlfList: VoAlf[] = [];
-
-
-  /* =======================================================
-     LOANS
-  ======================================================= */
-
-  loansByVoAlf: {
-    [voAlfId: number]: Loan[];
-  } = {};
-
-
-  /* =======================================================
-     REPAYMENTS
-  ======================================================= */
-
-  repaymentsByLoan: {
-    [loanId: number]: any[];
-  } = {};
-
-
-  /* =======================================================
-     REPORT
-  ======================================================= */
-
-  reportRecords: FundReportRecord[] = [];
-
-  filteredReportRecords: FundReportRecord[] = [];
-
-
-  /* =======================================================
-     YEAR
-  ======================================================= */
-
-  availableYears: number[] = [];
+  /* ============================================================
+     FILTERS
+  ============================================================ */
 
   selectedYear: number | null = null;
 
+  selectedCmrcId: number | null = null;
 
-  /* =======================================================
-     SEARCH
-  ======================================================= */
-
-  searchText: string = '';
+  searchText = '';
 
 
-  /* =======================================================
+  /* ============================================================
+     DROPDOWN DATA
+  ============================================================ */
+
+  availableYears: number[] = [
+    2024,
+    2025,
+    2026
+  ];
+
+  cmrcList: Cmrc[] = [];
+
+  voAlfList: VoAlf[] = [];
+
+  loanList: Loan[] = [];
+
+  repaymentList: Repayment[] = [];
+
+
+  /* ============================================================
+     REPORT DATA
+  ============================================================ */
+
+  reportRecords: ReportRecord[] = [];
+
+  filteredReportRecords: ReportRecord[] = [];
+
+
+  /* ============================================================
      LOADING
-  ======================================================= */
+  ============================================================ */
 
   loading = false;
 
 
-  /* =======================================================
+  /* ============================================================
      CONSTRUCTOR
-  ======================================================= */
+  ============================================================ */
 
   constructor(
     private cmrcService: CmrcService,
     private voAlfService: VoAlfService,
     private loanService: LoanService,
-    private repaymentService: RepaymentService
+    private repaymentService: RepaymentService,
+    private cmrcBalanceService: CmrcBalanceService
   ) {}
 
 
-  /* =======================================================
+  /* ============================================================
      INIT
-  ======================================================= */
+  ============================================================ */
 
   ngOnInit(): void {
 
-    this.loadCmrc();
+    this.loadCmrcList();
+
+    this.loadReportData();
 
   }
 
 
-  /* =======================================================
+  /* ============================================================
      LOAD CMRC
-  ======================================================= */
+  ============================================================ */
 
-  loadCmrc(): void {
+  loadCmrcList(): void {
 
     this.cmrcService.getAll().subscribe({
 
       next: (data: Cmrc[]) => {
 
         this.cmrcList = data || [];
-
-        this.loadAllVoAlf();
 
       },
 
@@ -218,104 +161,608 @@ export class ReportComponent implements OnInit {
   }
 
 
-  /* =======================================================
-     LOAD VO / ALF
-     ALL CMRC
-  ======================================================= */
+  /* ============================================================
+     LOAD REPORT DATA
+  ============================================================ */
 
-  loadAllVoAlf(): void {
-
-    this.voAlfList = [];
-
-    if (
-      !this.cmrcList ||
-      this.cmrcList.length === 0
-    ) {
-
-      this.loading = false;
-
-      return;
-
-    }
+  loadReportData(): void {
 
     this.loading = true;
 
-    let completed = 0;
+    /*
+     * Load required master/report data.
+     *
+     * We load VO / ALF first, then loans and repayments.
+     */
 
-    this.cmrcList.forEach(
-      (cmrc: Cmrc) => {
+    this.voAlfService.getAll().subscribe({
 
-        if (
-          cmrc.id === undefined ||
-          cmrc.id === null
-        ) {
+      next: (voAlfData: VoAlf[]) => {
 
-          completed++;
+        this.voAlfList = voAlfData || [];
 
-          return;
+        this.loadLoans();
 
-        }
+      },
 
-        this.voAlfService
-          .getByCmrcId(cmrc.id)
-          .subscribe({
+      error: (error) => {
 
-            next: (data: VoAlf[]) => {
+        console.error(
+          'VO / ALF API Error:',
+          error
+        );
 
-              if (data && data.length > 0) {
+        this.voAlfList = [];
 
-                this.voAlfList.push(
-                  ...data
-                );
-
-              }
-
-              completed++;
-
-              if (
-                completed ===
-                this.cmrcList.length
-              ) {
-
-                this.loadLoans();
-
-              }
-
-            },
-
-            error: (error) => {
-
-              console.error(
-                'VO / ALF API Error:',
-                cmrc.id,
-                error
-              );
-
-              completed++;
-
-              if (
-                completed ===
-                this.cmrcList.length
-              ) {
-
-                this.loadLoans();
-
-              }
-
-            }
-
-          });
+        this.loadLoans();
 
       }
 
-    );
+    });
 
   }
 
 
-  /* =======================================================
+  /* ============================================================
+     LOAD LOANS
+  ============================================================ */
+
+  loadLoans(): void {
+
+    this.loanService.getAll().subscribe({
+
+      next: (data: Loan[]) => {
+
+        this.loanList = data || [];
+
+        this.loadRepayments();
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Loan API Error:',
+          error
+        );
+
+        this.loanList = [];
+
+        this.loadRepayments();
+
+      }
+
+    });
+
+  }
+
+
+  /* ============================================================
+     LOAD REPAYMENTS
+  ============================================================ */
+
+  loadRepayments(): void {
+
+    this.repaymentService.getAll().subscribe({
+
+      next: (data: Repayment[]) => {
+
+        this.repaymentList = data || [];
+
+        this.buildReport();
+
+        this.loading = false;
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Repayment API Error:',
+          error
+        );
+
+        this.repaymentList = [];
+
+        this.buildReport();
+
+        this.loading = false;
+
+      }
+
+    });
+
+  }
+
+
+  /* ============================================================
+     BUILD REPORT
+  ============================================================ */
+
+  buildReport(): void {
+
+    const records: ReportRecord[] = [];
+
+
+    /*
+     * Create report row for every VO / ALF.
+     */
+
+    this.voAlfList.forEach((voAlf: any) => {
+
+      const voAlfId = voAlf.id;
+
+      const voLoans = this.loanList.filter(
+        loan => loan.voAlfId === voAlfId
+      );
+
+
+      /* --------------------------------------------------------
+         FILTER BY FINANCIAL YEAR
+      -------------------------------------------------------- */
+
+      const yearLoans = voLoans.filter(
+        loan => this.isInSelectedFinancialYear(
+          loan.loanGivenDate
+        )
+      );
+
+
+      /* --------------------------------------------------------
+         FUNDS DISTRIBUTED
+      -------------------------------------------------------- */
+
+      const womenSet = new Set<string>();
+
+      yearLoans.forEach(
+        loan => {
+
+          if (loan.womanName) {
+
+            womenSet.add(
+              loan.womanName.trim().toLowerCase()
+            );
+
+          }
+
+        }
+      );
+
+
+      const groupSet = new Set<string>();
+
+      yearLoans.forEach(
+        loan => {
+
+          if (loan.groupName) {
+
+            groupSet.add(
+              loan.groupName.trim().toLowerCase()
+            );
+
+          }
+
+        }
+      );
+
+
+      const totalSanctionedAmount =
+        yearLoans.reduce(
+          (sum, loan) =>
+            sum + Number(loan.loanAmount || 0),
+          0
+        );
+
+
+      /*
+       * Women Amount
+       *
+       * Based on the total sanctioned amount
+       * of women-linked loans.
+       */
+
+      const womenAmount =
+        yearLoans.reduce(
+          (sum, loan) =>
+            sum + Number(loan.loanAmount || 0),
+          0
+        );
+
+
+      /* --------------------------------------------------------
+         FUNDS REPAID
+         ONLY CLOSED LOANS
+      -------------------------------------------------------- */
+
+      const closedLoans =
+        yearLoans.filter(
+          loan =>
+            String(
+              (loan as any).status || ''
+            ).toUpperCase() === 'CLOSED'
+        );
+
+
+      const closedGroups = new Set<string>();
+
+      const closedWomen = new Set<string>();
+
+
+      closedLoans.forEach(
+        loan => {
+
+          if (loan.groupName) {
+
+            closedGroups.add(
+              loan.groupName.trim().toLowerCase()
+            );
+
+          }
+
+          if (loan.womanName) {
+
+            closedWomen.add(
+              loan.womanName.trim().toLowerCase()
+            );
+
+          }
+
+        }
+      );
+
+
+      const closedAmount =
+        closedLoans.reduce(
+          (sum, loan) =>
+            sum + Number(loan.loanAmount || 0),
+          0
+        );
+
+
+      /*
+       * --------------------------------------------------------
+       * ACTUAL REPAYMENT AMOUNT
+       * --------------------------------------------------------
+       */
+
+      const loanIds = new Set(
+        closedLoans.map(
+          loan => loan.id
+        )
+      );
+
+
+      const closedRepayments =
+        this.repaymentList.filter(
+          repayment =>
+            loanIds.has(
+              (repayment as any).loanId
+            )
+        );
+
+
+      const actualRepaidAmount =
+        closedRepayments.reduce(
+          (sum, repayment: any) =>
+            sum +
+            Number(
+              repayment.amount ||
+              repayment.paidAmount ||
+              repayment.paymentAmount ||
+              0
+            ),
+          0
+        );
+
+
+      /* --------------------------------------------------------
+         INTEREST RECEIVED
+      -------------------------------------------------------- */
+
+      const totalInterest =
+        this.repaymentList
+          .filter(
+            repayment =>
+              loanIds.has(
+                (repayment as any).loanId
+              )
+          )
+          .reduce(
+            (sum, repayment: any) =>
+              sum +
+              Number(
+                repayment.interestAmount ||
+                repayment.interestPaid ||
+                repayment.interest ||
+                0
+              ),
+            0
+          );
+
+
+      /* --------------------------------------------------------
+         DEBT CYCLE WOMEN
+      -------------------------------------------------------- */
+
+      /*
+       * Current temporary rule:
+       *
+       * Women with repeated unpaid/bounced repayments.
+       *
+       * This checks repayment records for a loan.
+       */
+
+      const debtCycleWomen =
+        this.calculateDebtCycleWomen(
+          yearLoans
+        );
+
+
+      /* --------------------------------------------------------
+         ALF RECEIVED FUND
+      -------------------------------------------------------- */
+
+      /*
+       * This should come from your ALF fund/transaction
+       * table/API.
+       *
+       * Until that API is connected, value is 0.
+       */
+
+      const alfReceivedFund = 0;
+
+
+      /* --------------------------------------------------------
+         ADD REPORT ROW
+      -------------------------------------------------------- */
+
+      records.push({
+
+        cmrcId:
+          voAlf.cmrcId || null,
+
+        cmrcName:
+          this.getCmrcName(
+            voAlf.cmrcId
+          ),
+
+        villageName:
+          voAlf.villageName ||
+          voAlf.village ||
+          '-',
+
+        voAlfId:
+          voAlfId,
+
+        voAlfName:
+          voAlf.name ||
+          voAlf.voAlfName ||
+          voAlf.voAlf ||
+          '-',
+
+        accountNo:
+          voAlf.accountNo ||
+          '-',
+
+        fundsReceived: {
+
+          alfReceivedFund:
+            alfReceivedFund
+
+        },
+
+        fundsDistributed: {
+
+          groupCount:
+            groupSet.size,
+
+          womenCount:
+            womenSet.size,
+
+          groupAmount:
+            totalSanctionedAmount,
+
+          womenAmount:
+            womenAmount
+
+        },
+
+        fundsRepaid: {
+
+          groupCount:
+            closedGroups.size,
+
+          womenCount:
+            closedWomen.size,
+
+          groupAmount:
+            closedAmount,
+
+          womenAmount:
+            closedAmount
+
+        },
+
+        currentStatus: {
+
+          debtCycleWomen:
+            debtCycleWomen,
+
+          totalInterestReceived:
+            totalInterest
+
+        }
+
+      });
+
+    });
+
+
+    this.reportRecords = records;
+
+    this.applyFilters();
+
+  }
+
+
+  /* ============================================================
+     FINANCIAL YEAR CHECK
+  ============================================================ */
+
+  isInSelectedFinancialYear(
+    date: any
+  ): boolean {
+
+    if (!date) {
+
+      return true;
+
+    }
+
+
+    if (this.selectedYear === null) {
+
+      return true;
+
+    }
+
+
+    const loanDate =
+      new Date(date);
+
+    const month =
+      loanDate.getMonth() + 1;
+
+    const year =
+      loanDate.getFullYear();
+
+
+    /*
+     * Financial Year:
+     *
+     * April to March
+     */
+
+    if (month >= 4) {
+
+      return year === this.selectedYear;
+
+    }
+
+    return year ===
+      this.selectedYear + 1;
+
+  }
+
+
+  /* ============================================================
+     DEBT CYCLE WOMEN
+  ============================================================ */
+
+  calculateDebtCycleWomen(
+    loans: Loan[]
+  ): number {
+
+    const women = new Set<string>();
+
+
+    loans.forEach(
+      loan => {
+
+        const loanId =
+          loan.id;
+
+        const repayments =
+          this.repaymentList.filter(
+            repayment =>
+              (repayment as any).loanId === loanId
+          );
+
+
+        /*
+         * If repayment records contain status,
+         * look for repeated unpaid/bounced status.
+         */
+
+        const failedPayments =
+          repayments.filter(
+            (repayment: any) => {
+
+              const status =
+                String(
+                  repayment.status || ''
+                ).toUpperCase();
+
+              return (
+                status === 'BOUNCED' ||
+                status === 'UNPAID' ||
+                status === 'FAILED' ||
+                status === 'OVERDUE'
+              );
+
+            }
+          );
+
+
+        /*
+         * Current rule:
+         * 2 or more failed repayments
+         */
+
+        if (
+          failedPayments.length >= 2 &&
+          loan.womanName
+        ) {
+
+          women.add(
+            loan.womanName
+              .trim()
+              .toLowerCase()
+          );
+
+        }
+
+      }
+    );
+
+
+    return women.size;
+
+  }
+
+
+  /* ============================================================
+     GET CMRC NAME
+  ============================================================ */
+
+getCmrcName(cmrcId: number | null): string {
+  if (!cmrcId) {
+    return '-';
+  }
+
+  const cmrc = this.cmrcList.find(c => c.id === cmrcId);
+
+  return cmrc?.cmrcName || '-';
+}
+
+
+   
+
+
+  /* ============================================================
+     YEAR CHANGE
+  ============================================================ */
+
+  onYearChange(): void {
+
+    this.buildReport();
+
+  }
+
+
+  /* ============================================================
      CMRC CHANGE
-  ======================================================= */
+  ============================================================ */
 
   onCmrcChange(): void {
 
@@ -324,637 +771,38 @@ export class ReportComponent implements OnInit {
   }
 
 
-  /* =======================================================
-     LOAD LOANS
-  ======================================================= */
+  /* ============================================================
+     SEARCH / FILTER
+  ============================================================ */
 
-  loadLoans(): void {
+  applyFilters(): void {
 
-    this.loansByVoAlf = {};
+    const search =
+      this.searchText
+        .trim()
+        .toLowerCase();
 
-    if (
-      !this.voAlfList ||
-      this.voAlfList.length === 0
-    ) {
 
-      this.buildReport();
+    this.filteredReportRecords =
+      this.reportRecords.filter(
+        record => {
 
-      return;
-
-    }
-
-    let completed = 0;
-
-    this.voAlfList.forEach(
-      (voAlf: VoAlf) => {
-
-        if (
-          voAlf.id === undefined ||
-          voAlf.id === null
-        ) {
-
-          completed++;
-
-          return;
-
-        }
-
-        const voAlfId =
-          Number(voAlf.id);
-
-        this.loanService
-          .getByVoAlfId(voAlfId)
-          .subscribe({
-
-            next: (data: Loan[]) => {
-
-              this.loansByVoAlf[voAlfId] =
-                data || [];
-
-              completed++;
-
-              if (
-                completed ===
-                this.voAlfList.length
-              ) {
-
-                this.loadRepayments();
-
-              }
-
-            },
-
-            error: (error) => {
-
-              console.error(
-                'Loan API Error:',
-                voAlfId,
-                error
-              );
-
-              this.loansByVoAlf[voAlfId] =
-                [];
-
-              completed++;
-
-              if (
-                completed ===
-                this.voAlfList.length
-              ) {
-
-                this.loadRepayments();
-
-              }
-
-            }
-
-          });
-
-      }
-
-    );
-
-  }
-
-
-  /* =======================================================
-     LOAD REPAYMENTS
-  ======================================================= */
-
-  loadRepayments(): void {
-
-    this.repaymentsByLoan = {};
-
-    const allLoans: Loan[] = [];
-
-    Object.keys(
-      this.loansByVoAlf
-    ).forEach(
-      (key: string) => {
-
-        const loans =
-          this.loansByVoAlf[
-            Number(key)
-          ] || [];
-
-        allLoans.push(
-          ...loans
-        );
-
-      }
-    );
-
-
-    if (allLoans.length === 0) {
-
-      this.buildReport();
-
-      return;
-
-    }
-
-
-    let completed = 0;
-
-
-    allLoans.forEach(
-      (loan: Loan) => {
-
-        if (
-          loan.id === undefined ||
-          loan.id === null
-        ) {
-
-          completed++;
-
-          return;
-
-        }
-
-        const loanId =
-          Number(loan.id);
-
-
-        /*
-         * IMPORTANT:
-         *
-         * This method name should match
-         * your existing RepaymentService.
-         *
-         * If your service has another method name,
-         * we will change only this line.
-         */
-
-        this.repaymentService
-          .getByLoanId(loanId)
-          .subscribe({
-
-            next: (data: any[]) => {
-
-              this.repaymentsByLoan[
-                loanId
-              ] = data || [];
-
-              completed++;
-
-              if (
-                completed ===
-                allLoans.length
-              ) {
-
-                this.buildReport();
-
-              }
-
-            },
-
-            error: (error) => {
-
-              console.error(
-                'Repayment API Error:',
-                loanId,
-                error
-              );
-
-              this.repaymentsByLoan[
-                loanId
-              ] = [];
-
-              completed++;
-
-              if (
-                completed ===
-                allLoans.length
-              ) {
-
-                this.buildReport();
-
-              }
-
-            }
-
-          });
-
-      }
-
-    );
-
-  }
-
-
-  /* =======================================================
-     BUILD REPORT
-  ======================================================= */
-
-  buildReport(): void {
-
-    this.reportRecords = [];
-
-    this.generateAvailableYears();
-
-
-    this.voAlfList.forEach(
-      (voAlf: VoAlf) => {
-
-        if (
-          voAlf.id === undefined ||
-          voAlf.id === null
-        ) {
-
-          return;
-
-        }
-
-
-        const voAlfId =
-          Number(voAlf.id);
-
-
-        const loans =
-          this.loansByVoAlf[
-            voAlfId
-          ] || [];
-
-
-        /* ---------------------------------------------------
-           CMRC
-        --------------------------------------------------- */
-
-        const cmrc =
-          this.cmrcList.find(
-            (c: Cmrc) =>
-              Number(c.id) ===
-              Number(voAlf.cmrcId)
-          );
-
-
-        /* ---------------------------------------------------
-           FUNDS RECEIVED
-        --------------------------------------------------- */
-
-        const fundsReceived =
-          this.calculateFundsReceived(
-            voAlf
-          );
-
-
-        /* ---------------------------------------------------
-           FUNDS DISTRIBUTED
-        --------------------------------------------------- */
-
-        const fundsDistributed =
-          this.calculateFundsDistributed(
-            loans
-          );
-
-
-        /* ---------------------------------------------------
-           FUNDS REPAID
-        --------------------------------------------------- */
-
-        const fundsRepaid =
-          this.calculateFundsRepaid(
-            loans
-          );
-
-
-        /* ---------------------------------------------------
-           RE-LOAN
-        --------------------------------------------------- */
-
-        const reLoan =
-          this.calculateReLoan(
-            loans
-          );
-
-
-        /* ---------------------------------------------------
-           CURRENT STATUS
-        --------------------------------------------------- */
-
-        const currentStatus =
-          this.calculateCurrentStatus(
-            loans
-          );
-
-
-        const record:
-          FundReportRecord = {
-
-          cmrcId:
-            Number(
-              voAlf.cmrcId || 0
-            ),
-
-          cmrcName:
-            cmrc?.cmrcName || '-',
-
-          villageName:
-            voAlf.villageName || '-',
-
-          voAlfId:
-            voAlfId,
-
-          voAlfName:
-            voAlf.voAlfName || '-',
-
-          accountNo:
-            voAlf.accountNo || '-',
-
-          fundsReceived:
-            fundsReceived,
-
-          fundsDistributed:
-            fundsDistributed,
-
-          fundsRepaid:
-            fundsRepaid,
-
-          reLoan:
-            reLoan,
-
-          currentStatus:
-            currentStatus
-
-        };
-
-
-        this.reportRecords.push(
-          record
-        );
-
-      }
-    );
-
-
-    this.applyFilters();
-
-    this.loading = false;
-
-
-    console.log(
-      'Fund Report:',
-      this.reportRecords
-    );
-
-  }
-
-
-  /* =======================================================
-     FUNDS RECEIVED
-  ======================================================= */
-
-  calculateFundsReceived(
-    voAlf: VoAlf
-  ): ReportSection {
-
-    const amount =
-      Number(
-        voAlf.receivedFund || 0
-      );
-
-
-    return {
-
-      /*
-       * One VO / ALF receiving fund
-       * is currently counted as one group.
-       *
-       * We can refine this later if your
-       * business rule is different.
-       */
-
-      groupCount:
-        amount > 0 ? 1 : 0,
-
-      womenCount:
-        0,
-
-      groupAmount:
-        amount,
-
-      womenAmount:
-        0
-
-    };
-
-  }
-
-
-  /* =======================================================
-     FUNDS DISTRIBUTED
-  ======================================================= */
-
-  calculateFundsDistributed(
-    loans: Loan[]
-  ): ReportSection {
-
-
-    const validLoans =
-      loans || [];
-
-
-    const uniqueGroups =
-      this.getUniqueGroupCount(
-        validLoans
-      );
-
-
-    const womenCount =
-      validLoans.length;
-
-
-    const groupAmount =
-      validLoans.reduce(
-        (
-          total: number,
-          loan: Loan
-        ) => {
-
-          return (
-            total +
-            Number(
-              loan.sanctionedAmount ||
-              loan.loanAmount ||
-              0
-            )
-          );
-
-        },
-        0
-      );
-
-
-    const womenAmount =
-      groupAmount;
-
-
-    return {
-
-      groupCount:
-        uniqueGroups,
-
-      womenCount:
-        womenCount,
-
-      groupAmount:
-        groupAmount,
-
-      womenAmount:
-        womenAmount
-
-    };
-
-  }
-
-
-  /* =======================================================
-     FUNDS REPAID
-  ======================================================= */
-
-  calculateFundsRepaid(
-    loans: Loan[]
-  ): ReportSection {
-
-
-    let groupCount = 0;
-
-    let womenCount = 0;
-
-    let groupAmount = 0;
-
-    let womenAmount = 0;
-
-
-    const groups:
-      string[] = [];
-
-
-    (loans || []).forEach(
-      (loan: Loan) => {
-
-        if (
-          loan.id === undefined ||
-          loan.id === null
-        ) {
-
-          return;
-
-        }
-
-
-        const repayments =
-          this.repaymentsByLoan[
-            Number(loan.id)
-          ] || [];
-
-
-        if (
-          repayments.length === 0
-        ) {
-
-          return;
-
-        }
-
-
-        womenCount++;
-
-
-        const groupName =
-          (
-            loan.groupName ||
-            ''
-          ).trim();
-
-
-        if (
-          groupName &&
-          !groups.includes(
-            groupName
-          )
-        ) {
-
-          groups.push(
-            groupName
-          );
-
-        }
-
-
-        repayments.forEach(
-          (repayment: any) => {
-
-            const amount =
-              this.getRepaymentAmount(
-                repayment
-              );
-
-            womenAmount +=
-              amount;
-
-          }
-        );
-
-      }
-    );
-
-
-    groupCount =
-      groups.length;
-
-
-    groupAmount =
-      womenAmount;
-
-
-    return {
-
-      groupCount:
-        groupCount,
-
-      womenCount:
-        womenCount,
-
-      groupAmount:
-        groupAmount,
-
-      womenAmount:
-        womenAmount
-
-    };
-
-  }
-
-
-  /* =======================================================
-     RE-LOAN
-     CURRENT SELECTED YEAR
-  ======================================================= */
-
-  calculateReLoan(
-    loans: Loan[]
-  ): ReportSection {
-
-
-    const selectedLoans =
-      (loans || []).filter(
-        (loan: Loan) => {
-
-          const year =
-            this.getFinancialYear(
-              loan.loanGivenDate
-            );
-
-
-          /*
-           * If no year is selected,
-           * show all re-loans.
-           */
+          /* CMRC filter */
 
           if (
-            this.selectedYear === null
+            this.selectedCmrcId !== null &&
+            record.cmrcId !==
+              this.selectedCmrcId
           ) {
+
+            return false;
+
+          }
+
+
+          /* Search filter */
+
+          if (!search) {
 
             return true;
 
@@ -962,476 +810,40 @@ export class ReportComponent implements OnInit {
 
 
           return (
-            year ===
-            this.selectedYear
-          );
 
-        }
-      );
-
-
-    return {
-
-      groupCount:
-        this.getUniqueGroupCount(
-          selectedLoans
-        ),
-
-      womenCount:
-        selectedLoans.length,
-
-      groupAmount:
-        selectedLoans.reduce(
-          (
-            total: number,
-            loan: Loan
-          ) => {
-
-            return (
-              total +
-              Number(
-                loan.sanctionedAmount ||
-                loan.loanAmount ||
-                0
-              )
-            );
-
-          },
-          0
-        ),
-
-      womenAmount:
-        selectedLoans.reduce(
-          (
-            total: number,
-            loan: Loan
-          ) => {
-
-            return (
-              total +
-              Number(
-                loan.sanctionedAmount ||
-                loan.loanAmount ||
-                0
-              )
-            );
-
-          },
-          0
-        )
-
-    };
-
-  }
-
-
-  /* =======================================================
-     CURRENT STATUS
-  ======================================================= */
-
-  calculateCurrentStatus(
-    loans: Loan[]
-  ): CurrentStatus {
-
-
-    const closedLoans =
-      (loans || []).filter(
-        (loan: Loan) => {
-
-          return (
-            (
-              loan.loanStatus ||
-              ''
-            )
-              .toUpperCase() ===
-            'CLOSED'
-          );
-
-        }
-      );
-
-
-    const groupCount =
-      this.getUniqueGroupCount(
-        closedLoans
-      );
-
-
-    const womenCount =
-      closedLoans.length;
-
-
-    const groupAmount =
-      closedLoans.reduce(
-        (
-          total: number,
-          loan: Loan
-        ) => {
-
-          return (
-            total +
-            Number(
-              loan.sanctionedAmount ||
-              loan.loanAmount ||
-              0
-            )
-          );
-
-        },
-        0
-      );
-
-
-    const womenAmount =
-      closedLoans.reduce(
-        (
-          total: number,
-          loan: Loan
-        ) => {
-
-          return (
-            total +
-            Number(
-              loan.sanctionedAmount ||
-              loan.loanAmount ||
-              0
-            )
-          );
-
-        },
-        0
-      );
-
-
-    /*
-     * These two fields depend on your
-     * actual beneficiary classification
-     * fields.
-     *
-     * For now they remain 0.
-     */
-
-    const ultraPoor =
-      0;
-
-
-    const debtCycleWomen =
-      0;
-
-
-    const total =
-      groupAmount;
-
-
-    return {
-
-      groupCount:
-        groupCount,
-
-      womenCount:
-        womenCount,
-
-      groupAmount:
-        groupAmount,
-
-      womenAmount:
-        womenAmount,
-
-      ultraPoor:
-        ultraPoor,
-
-      debtCycleWomen:
-        debtCycleWomen,
-
-      total:
-        total
-
-    };
-
-  }
-
-
-  /* =======================================================
-     UNIQUE GROUP COUNT
-  ======================================================= */
-
-  getUniqueGroupCount(
-    loans: Loan[]
-  ): number {
-
-    const groups =
-      new Set<string>();
-
-
-    (loans || []).forEach(
-      (loan: Loan) => {
-
-        const groupName =
-          (
-            loan.groupName ||
-            ''
-          ).trim();
-
-
-        if (groupName) {
-
-          groups.add(
-            groupName.toLowerCase()
-          );
-
-        }
-
-      }
-    );
-
-
-    return groups.size;
-
-  }
-
-
-  /* =======================================================
-     REPAYMENT AMOUNT
-  ======================================================= */
-
-  getRepaymentAmount(
-    repayment: any
-  ): number {
-
-    /*
-     * Adjust this field after checking
-     * your exact Repayment entity/interface.
-     */
-
-    return Number(
-      repayment.amount ||
-      repayment.repaymentAmount ||
-      repayment.paidAmount ||
-      0
-    );
-
-  }
-
-
-  /* =======================================================
-     FINANCIAL YEAR
-     APRIL - MARCH
-  ======================================================= */
-
-  getFinancialYear(
-    dateValue: string | undefined
-  ): number | null {
-
-    if (!dateValue) {
-
-      return null;
-
-    }
-
-
-    const date =
-      new Date(dateValue);
-
-
-    if (
-      isNaN(
-        date.getTime()
-      )
-    ) {
-
-      return null;
-
-    }
-
-
-    const year =
-      date.getFullYear();
-
-
-    const month =
-      date.getMonth() + 1;
-
-
-    return month >= 4
-      ? year
-      : year - 1;
-
-  }
-
-
-  /* =======================================================
-     GENERATE AVAILABLE YEARS
-  ======================================================= */
-
-  generateAvailableYears(): void {
-
-    const years =
-      new Set<number>();
-
-
-    Object.keys(
-      this.loansByVoAlf
-    ).forEach(
-      (key: string) => {
-
-        const loans =
-          this.loansByVoAlf[
-            Number(key)
-          ] || [];
-
-
-        loans.forEach(
-          (loan: Loan) => {
-
-            const year =
-              this.getFinancialYear(
-                loan.loanGivenDate
-              );
-
-
-            if (year !== null) {
-
-              years.add(
-                year
-              );
-
-            }
-
-          }
-        );
-
-      }
-    );
-
-
-    this.availableYears =
-      Array.from(years)
-        .sort(
-          (
-            a: number,
-            b: number
-          ) => a - b
-        );
-
-  }
-
-
-  /* =======================================================
-     YEAR CHANGE
-  ======================================================= */
-
-  onYearChange(): void {
-
-    /*
-     * Re-build because Re-loan
-     * depends on selected year.
-     */
-
-    this.buildReport();
-
-  }
-
-
-  /* =======================================================
-     SEARCH + CMRC + YEAR FILTER
-  ======================================================= */
-
-  applyFilters(): void {
-
-    let records =
-      [...this.reportRecords];
-
-
-    /* -----------------------------------------------------
-       CMRC
-    ----------------------------------------------------- */
-
-    if (
-      this.selectedCmrcId !== null &&
-      this.selectedCmrcId !== undefined
-    ) {
-
-      records =
-        records.filter(
-          (record: FundReportRecord) =>
-            Number(
-              record.cmrcId
-            ) ===
-            Number(
-              this.selectedCmrcId
-            )
-        );
-
-    }
-
-
-    /* -----------------------------------------------------
-       SEARCH
-    ----------------------------------------------------- */
-
-    if (
-      this.searchText &&
-      this.searchText.trim()
-    ) {
-
-      const search =
-        this.searchText
-          .trim()
-          .toLowerCase();
-
-
-      records =
-        records.filter(
-          (record: FundReportRecord) =>
-
-            (
-              record.cmrcName ||
-              ''
-            )
+            record.cmrcName
               .toLowerCase()
               .includes(search)
 
             ||
 
-            (
-              record.villageName ||
-              ''
-            )
+            record.villageName
               .toLowerCase()
               .includes(search)
 
             ||
 
-            (
-              record.voAlfName ||
-              ''
-            )
+            record.voAlfName
               .toLowerCase()
               .includes(search)
 
             ||
 
-            (
-              record.accountNo ||
-              ''
-            )
+            record.accountNo
               .toLowerCase()
               .includes(search)
 
-        );
+          );
 
-    }
-
-
-    this.filteredReportRecords =
-      records;
+        }
+      );
 
   }
 
 
-  /* =======================================================
+  /* ============================================================
      CLEAR FILTERS
-  ======================================================= */
+  ============================================================ */
 
   clearFilters(): void {
 
@@ -1446,160 +858,221 @@ export class ReportComponent implements OnInit {
   }
 
 
-  /* =======================================================
-     TOTAL GROUPS
-  ======================================================= */
+  /* ============================================================
+     SUMMARY
+  ============================================================ */
 
-  getTotalGroups(): number {
+  getTotalAlfReceivedFund(): number {
 
-    const groups =
-      new Set<string>();
-
-
-    this.filteredReportRecords.forEach(
-      (record: FundReportRecord) => {
-
-        /*
-         * VO / ALF + group count
-         * will be refined with exact
-         * business mapping later.
-         */
-
-        groups.add(
-          String(
-            record.voAlfId
-          )
-        );
-
-      }
+    return this.filteredReportRecords.reduce(
+      (sum, record) =>
+        sum +
+        Number(
+          record.fundsReceived
+            ?.alfReceivedFund || 0
+        ),
+      0
     );
 
+  }
 
-    return groups.size;
+
+  getTotalDistributedGroupCount(): number {
+
+    return this.filteredReportRecords.reduce(
+      (sum, record) =>
+        sum +
+        Number(
+          record.fundsDistributed
+            ?.groupCount || 0
+        ),
+      0
+    );
 
   }
 
 
-  /* =======================================================
-     TOTAL WOMEN
-  ======================================================= */
+  getTotalDistributedWomen(): number {
 
-  getTotalWomen(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) => {
-
-          return (
-            total +
-            record.fundsDistributed
-              .womenCount
-          );
-
-        },
-        0
-      );
+    return this.filteredReportRecords.reduce(
+      (sum, record) =>
+        sum +
+        Number(
+          record.fundsDistributed
+            ?.womenCount || 0
+        ),
+      0
+    );
 
   }
 
 
-  /* =======================================================
-     TOTAL DISTRIBUTED
-  ======================================================= */
+  getTotalDistributedGroupAmount(): number {
 
-  getTotalDistributedAmount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) => {
-
-          return (
-            total +
-            record.fundsDistributed
-              .groupAmount
-          );
-
-        },
-        0
-      );
+    return this.filteredReportRecords.reduce(
+      (sum, record) =>
+        sum +
+        Number(
+          record.fundsDistributed
+            ?.groupAmount || 0
+        ),
+      0
+    );
 
   }
 
 
-  /* =======================================================
-     TOTAL REPAID
-  ======================================================= */
+  getTotalDistributedWomenAmount(): number {
 
-  getTotalRepaidAmount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) => {
-
-          return (
-            total +
-            record.fundsRepaid
-              .groupAmount
-          );
-
-        },
-        0
-      );
+    return this.filteredReportRecords.reduce(
+      (sum, record) =>
+        sum +
+        Number(
+          record.fundsDistributed
+            ?.womenAmount || 0
+        ),
+      0
+    );
 
   }
 
 
-  /* =======================================================
-     TOTAL INTEREST
-  ======================================================= */
+  getTotalRepaidGroupCount(): number {
+
+    return this.filteredReportRecords.reduce(
+      (sum, record) =>
+        sum +
+        Number(
+          record.fundsRepaid
+            ?.groupCount || 0
+        ),
+      0
+    );
+
+  }
+
+
+  getTotalRepaidWomen(): number {
+
+    return this.filteredReportRecords.reduce(
+      (sum, record) =>
+        sum +
+        Number(
+          record.fundsRepaid
+            ?.womenCount || 0
+        ),
+      0
+    );
+
+  }
+
+
+  getTotalRepaidGroupAmount(): number {
+
+    return this.filteredReportRecords.reduce(
+      (sum, record) =>
+        sum +
+        Number(
+          record.fundsRepaid
+            ?.groupAmount || 0
+        ),
+      0
+    );
+
+  }
+
+
+  getTotalRepaidWomenAmount(): number {
+
+    return this.filteredReportRecords.reduce(
+      (sum, record) =>
+        sum +
+        Number(
+          record.fundsRepaid
+            ?.womenAmount || 0
+        ),
+      0
+    );
+
+  }
+
+
+  getTotalDebtCycleWomen(): number {
+
+    return this.filteredReportRecords.reduce(
+      (sum, record) =>
+        sum +
+        Number(
+          record.currentStatus
+            ?.debtCycleWomen || 0
+        ),
+      0
+    );
+
+  }
+
 
   getTotalInterestReceived(): number {
 
-    let total = 0;
-
-
-    this.filteredReportRecords.forEach(
-      (record: FundReportRecord) => {
-
-        const loans =
-          this.loansByVoAlf[
-            record.voAlfId
-          ] || [];
-
-
-        loans.forEach(
-          (loan: Loan) => {
-
-            total +=
-              Number(
-                loan.totalInterestReceived ||
-                0
-              );
-
-          }
-        );
-
-      }
+    return this.filteredReportRecords.reduce(
+      (sum, record) =>
+        sum +
+        Number(
+          record.currentStatus
+            ?.totalInterestReceived || 0
+        ),
+      0
     );
-
-
-    return total;
 
   }
 
 
-  /* =======================================================
-     EXCEL EXPORT
-  ======================================================= */
+  /* ============================================================
+     OLD SUMMARY METHODS
+     ============================================================ */
+
+  getTotalGroups(): number {
+
+    return this.getTotalDistributedGroupCount();
+
+  }
+
+
+  getTotalWomen(): number {
+
+    return this.getTotalDistributedWomen();
+
+  }
+
+
+  getTotalDistributedAmount(): number {
+
+    return this.getTotalDistributedGroupAmount();
+
+  }
+
+
+  getTotalRepaidAmount(): number {
+
+    return this.getTotalRepaidGroupAmount();
+
+  }
+
+
+  /* ============================================================
+     GRAND TOTAL
+  ============================================================ */
+
+  getGrandTotal(): number {
+
+    return this.getTotalInterestReceived();
+
+  }
+
+
+  /* ============================================================
+     EXPORT TO EXCEL
+  ============================================================ */
 
   exportToExcel(): void {
 
@@ -1609,7 +1082,7 @@ export class ReportComponent implements OnInit {
     ) {
 
       alert(
-        'No report data available to export.'
+        'No report data available for export.'
       );
 
       return;
@@ -1619,115 +1092,80 @@ export class ReportComponent implements OnInit {
 
     const excelData =
       this.filteredReportRecords.map(
-        (
-          record: FundReportRecord,
-          index: number
-        ) => {
+        (record, index) => ({
 
-          return {
+          'Sr. No.':
+            index + 1,
 
-            'Sr. No.':
-              index + 1,
+          'CMRC Name':
+            record.cmrcName,
 
-            'CMRC Name':
-              record.cmrcName,
+          'Village Name':
+            record.villageName,
 
-            'Village Name':
-              record.villageName,
+          'VO / ALF Name':
+            record.voAlfName,
 
-            'VO / ALF Name':
-              record.voAlfName,
-
-            'VO / ALF Account No.':
-              record.accountNo,
+          'VO / ALF Account No.':
+            record.accountNo,
 
 
-            /* Funds Received */
+          /* Funds Received */
 
-            'Received - Group Count':
-              record.fundsReceived.groupCount,
-
-            'Received - Women Count':
-              record.fundsReceived.womenCount,
-
-            'Received - Group Amount':
-              record.fundsReceived.groupAmount,
-
-            'Received - Women Amount':
-              record.fundsReceived.womenAmount,
+          'ALF Received Fund':
+            record.fundsReceived
+              .alfReceivedFund,
 
 
-            /* Funds Distributed */
+          /* Funds Distributed */
 
-            'Distributed - Group Count':
-              record.fundsDistributed.groupCount,
+          'Distributed - Group Count':
+            record.fundsDistributed
+              .groupCount,
 
-            'Distributed - Women Count':
-              record.fundsDistributed.womenCount,
+          'Distributed - Number of Women':
+            record.fundsDistributed
+              .womenCount,
 
-            'Distributed - Group Amount':
-              record.fundsDistributed.groupAmount,
+          'Distributed - Group Amount':
+            record.fundsDistributed
+              .groupAmount,
 
-            'Distributed - Women Amount':
-              record.fundsDistributed.womenAmount,
-
-
-            /* Funds Repaid */
-
-            'Repaid - Group Count':
-              record.fundsRepaid.groupCount,
-
-            'Repaid - Women Count':
-              record.fundsRepaid.womenCount,
-
-            'Repaid - Group Amount':
-              record.fundsRepaid.groupAmount,
-
-            'Repaid - Women Amount':
-              record.fundsRepaid.womenAmount,
+          'Distributed - Women Amount':
+            record.fundsDistributed
+              .womenAmount,
 
 
-            /* Re-loan */
+          /* Funds Repaid */
 
-            'Re-loan - Group Count':
-              record.reLoan.groupCount,
+          'Repaid - Group Count':
+            record.fundsRepaid
+              .groupCount,
 
-            'Re-loan - Women Count':
-              record.reLoan.womenCount,
+          'Repaid - Number of Women':
+            record.fundsRepaid
+              .womenCount,
 
-            'Re-loan - Group Amount':
-              record.reLoan.groupAmount,
+          'Repaid - Group Amount':
+            record.fundsRepaid
+              .groupAmount,
 
-            'Re-loan - Women Amount':
-              record.reLoan.womenAmount,
+          'Repaid - Women Amount':
+            record.fundsRepaid
+              .womenAmount,
 
 
-            /* Current Status */
+          /* Current Status */
 
-            'Current - Group Count':
-              record.currentStatus.groupCount,
+          'Women Trapped in Debt Cycle':
+            record.currentStatus
+              .debtCycleWomen,
 
-            'Current - Women Count':
-              record.currentStatus.womenCount,
+          'Total Interest Received':
+            record.currentStatus
+              .totalInterestReceived
 
-            'Current - Group Amount':
-              record.currentStatus.groupAmount,
-
-            'Current - Women Amount':
-              record.currentStatus.womenAmount,
-
-            'Ultra-Poor':
-              record.currentStatus.ultraPoor,
-
-            'Women Trapped in Debt Cycle':
-              record.currentStatus.debtCycleWomen,
-
-            'Total':
-              record.currentStatus.total
-
-          };
-
-        }
+        })
       );
 
 
@@ -1737,45 +1175,6 @@ export class ReportComponent implements OnInit {
       );
 
 
-    worksheet['!cols'] = [
-
-      { wch: 10 },
-      { wch: 20 },
-      { wch: 20 },
-      { wch: 25 },
-      { wch: 20 },
-
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 18 },
-      { wch: 18 },
-
-      { wch: 18 },
-      { wch: 18 },
-      { wch: 20 },
-      { wch: 20 },
-
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 18 },
-      { wch: 18 },
-
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 18 },
-      { wch: 18 },
-
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 18 },
-      { wch: 18 },
-      { wch: 14 },
-      { wch: 25 },
-      { wch: 18 }
-
-    ];
-
-
     const workbook =
       XLSX.utils.book_new();
 
@@ -1783,422 +1182,22 @@ export class ReportComponent implements OnInit {
     XLSX.utils.book_append_sheet(
       workbook,
       worksheet,
-      'Fund Report'
+      'Fund Loan Report'
     );
 
 
-    let yearText =
-      'All_Years';
-
-
-    if (
-      this.selectedYear !== null
-    ) {
-
-      yearText =
-        `${this.selectedYear}-${String(
-          this.selectedYear + 1
-        ).slice(-2)}`;
-
-    }
-
-
-    const fileName =
-      `Fund_Report_${yearText}.xlsx`;
+    const yearText =
+      this.selectedYear === null
+        ? 'All-Years'
+        : `${this.selectedYear}-${String(
+            this.selectedYear + 1
+          ).slice(-2)}`;
 
 
     XLSX.writeFile(
       workbook,
-      fileName
+      `Fund-Loan-Report-${yearText}.xlsx`
     );
-
-  }
-
-
-  /* =======================================================
-     TOTAL FUNCTIONS - RECEIVED
-  ======================================================= */
-
-  getTotalReceivedGroupCount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.fundsReceived.groupCount,
-        0
-      );
-
-  }
-
-
-  getTotalReceivedWomen(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.fundsReceived.womenCount,
-        0
-      );
-
-  }
-
-
-  getTotalReceivedGroupAmount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.fundsReceived.groupAmount,
-        0
-      );
-
-  }
-
-
-  getTotalReceivedWomenAmount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.fundsReceived.womenAmount,
-        0
-      );
-
-  }
-
-
-  /* =======================================================
-     TOTAL FUNCTIONS - DISTRIBUTED
-  ======================================================= */
-
-  getTotalDistributedGroupCount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.fundsDistributed.groupCount,
-        0
-      );
-
-  }
-
-
-  getTotalDistributedWomen(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.fundsDistributed.womenCount,
-        0
-      );
-
-  }
-
-
-  getTotalDistributedGroupAmount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.fundsDistributed.groupAmount,
-        0
-      );
-
-  }
-
-
-  getTotalDistributedWomenAmount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.fundsDistributed.womenAmount,
-        0
-      );
-
-  }
-
-
-  /* =======================================================
-     TOTAL FUNCTIONS - REPAID
-  ======================================================= */
-
-  getTotalRepaidGroupCount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.fundsRepaid.groupCount,
-        0
-      );
-
-  }
-
-
-  getTotalRepaidWomen(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.fundsRepaid.womenCount,
-        0
-      );
-
-  }
-
-
-  getTotalRepaidGroupAmount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.fundsRepaid.groupAmount,
-        0
-      );
-
-  }
-
-
-  getTotalRepaidWomenAmount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.fundsRepaid.womenAmount,
-        0
-      );
-
-  }
-
-
-  /* =======================================================
-     TOTAL FUNCTIONS - RE-LOAN
-  ======================================================= */
-
-  getTotalReLoanGroupCount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.reLoan.groupCount,
-        0
-      );
-
-  }
-
-
-  getTotalReLoanWomen(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.reLoan.womenCount,
-        0
-      );
-
-  }
-
-
-  getTotalReLoanGroupAmount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.reLoan.groupAmount,
-        0
-      );
-
-  }
-
-
-  getTotalReLoanWomenAmount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.reLoan.womenAmount,
-        0
-      );
-
-  }
-
-
-  /* =======================================================
-     TOTAL FUNCTIONS - CURRENT
-  ======================================================= */
-
-  getTotalCurrentGroupCount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.currentStatus.groupCount,
-        0
-      );
-
-  }
-
-
-  getTotalCurrentWomen(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.currentStatus.womenCount,
-        0
-      );
-
-  }
-
-
-  getTotalCurrentGroupAmount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.currentStatus.groupAmount,
-        0
-      );
-
-  }
-
-
-  getTotalCurrentWomenAmount(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.currentStatus.womenAmount,
-        0
-      );
-
-  }
-
-
-  getTotalUltraPoor(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.currentStatus.ultraPoor,
-        0
-      );
-
-  }
-
-
-  getTotalDebtCycleWomen(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.currentStatus.debtCycleWomen,
-        0
-      );
-
-  }
-
-
-  getGrandTotal(): number {
-
-    return this.filteredReportRecords
-      .reduce(
-        (
-          total: number,
-          record: FundReportRecord
-        ) =>
-          total +
-          record.currentStatus.total,
-        0
-      );
 
   }
 

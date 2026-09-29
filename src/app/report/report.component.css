@@ -1,44 +1,43 @@
-/* =========================================================
-   PAGE
-========================================================= */
+/* ============================================================
+   REPORT PAGE
+============================================================ */
 
 .report-page {
-  width: 100%;
   padding: 20px;
   background: #f5f7fb;
-  min-height: calc(100vh - 60px);
-  box-sizing: border-box;
+  min-height: 100vh;
+  color: #212529;
 }
 
 
-/* =========================================================
+/* ============================================================
    PAGE HEADER
-========================================================= */
+============================================================ */
 
 .page-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
 }
 
 .page-title {
   margin: 0;
-  font-size: 24px;
+  font-size: 25px;
   font-weight: 700;
   color: #1f2937;
 }
 
 .page-subtitle {
   margin: 5px 0 0;
-  font-size: 13px;
+  font-size: 14px;
   color: #6b7280;
 }
 
 
-/* =========================================================
+/* ============================================================
    FILTER CARD
-========================================================= */
+============================================================ */
 
 .filter-card {
   background: #ffffff;
@@ -52,17 +51,13 @@
 .filter-row {
   display: flex;
   align-items: flex-end;
-  gap: 15px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
 .filter-group {
-  min-width: 190px;
-}
-
-.search-group {
   flex: 1;
-  min-width: 260px;
+  min-width: 190px;
 }
 
 .filter-group label {
@@ -73,18 +68,22 @@
   color: #374151;
 }
 
-.filter-group .form-select,
-.filter-group .form-control {
-  height: 38px;
-  font-size: 13px;
-  border-radius: 6px;
+.form-select,
+.form-control {
+  height: 40px;
   border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
 }
 
-.filter-group .form-select:focus,
-.filter-group .form-control:focus {
+.form-select:focus,
+.form-control:focus {
   border-color: #6366f1;
-  box-shadow: 0 0 0 0.15rem rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 0 0.15rem rgba(99, 102, 241, 0.15);
+}
+
+.search-group {
+  flex: 2;
 }
 
 .filter-actions {
@@ -92,16 +91,15 @@
   align-items: center;
 }
 
-.filter-actions button {
-  height: 38px;
-  font-size: 13px;
+.filter-actions .btn {
+  height: 40px;
   white-space: nowrap;
 }
 
 
-/* =========================================================
-   SUMMARY CARDS
-========================================================= */
+/* ============================================================
+   SUMMARY GRID
+============================================================ */
 
 .summary-grid {
   display: grid;
@@ -117,29 +115,40 @@
   padding: 16px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-height: 85px;
+  gap: 13px;
+  min-height: 90px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease,
+              box-shadow 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.08);
 }
 
 .summary-icon {
-  width: 42px;
-  height: 42px;
+  width: 46px;
+  height: 46px;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: #eef2ff;
-  color: #4f46e5;
-  font-size: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   flex-shrink: 0;
+}
+
+.summary-icon i {
+  font-size: 21px;
+  color: #4f46e5;
 }
 
 .summary-label {
   display: block;
   font-size: 12px;
   color: #6b7280;
-  margin-bottom: 3px;
+  margin-bottom: 5px;
+  line-height: 1.3;
 }
 
 .summary-value {
@@ -147,32 +156,36 @@
   font-size: 18px;
   font-weight: 700;
   color: #111827;
+  line-height: 1.2;
 }
 
 
-/* =========================================================
+/* ============================================================
    LOADING
-========================================================= */
+============================================================ */
 
 .loading-container {
   min-height: 250px;
   background: #ffffff;
   border-radius: 10px;
-  border: 1px solid #e5e7eb;
-
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  gap: 10px;
-
+  align-items: center;
+  gap: 12px;
   color: #6b7280;
-  font-size: 14px;
+  border: 1px solid #e5e7eb;
+}
+
+.loading-container .spinner-border {
+  width: 35px;
+  height: 35px;
 }
 
 
-/* =========================================================
+/* ============================================================
    REPORT CARD
-========================================================= */
+============================================================ */
 
 .report-card {
   background: #ffffff;
@@ -183,26 +196,24 @@
 }
 
 .report-card-header {
-  min-height: 70px;
+  min-height: 72px;
   padding: 15px 18px;
-
   display: flex;
-  align-items: center;
   justify-content: space-between;
-
+  align-items: center;
+  gap: 15px;
   border-bottom: 1px solid #e5e7eb;
-  background: #ffffff;
 }
 
 .report-card-header h5 {
   margin: 0 0 4px;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   color: #1f2937;
 }
 
 .report-card-header span {
-  font-size: 12px;
+  font-size: 13px;
   color: #6b7280;
 }
 
@@ -211,281 +222,219 @@
 }
 
 .report-card-header .btn {
-  font-size: 13px;
-  padding: 7px 13px;
+  white-space: nowrap;
 }
 
 
-/* =========================================================
+/* ============================================================
    TABLE WRAPPER
-========================================================= */
+============================================================ */
 
 .report-table-wrapper {
   width: 100%;
   overflow-x: auto;
   overflow-y: visible;
+  max-height: 650px;
 }
 
 
-/* =========================================================
-   TABLE
-========================================================= */
+/* ============================================================
+   REPORT TABLE
+============================================================ */
 
 .report-table {
   width: max-content;
   min-width: 100%;
   margin: 0;
-
   border-collapse: separate;
   border-spacing: 0;
-
   font-size: 12px;
-  color: #374151;
 }
 
-
-/* =========================================================
-   TABLE HEADER
-========================================================= */
-
-.report-table thead th {
-  text-align: center;
+.report-table th,
+.report-table td {
+  border-right: 1px solid #dee2e6;
+  border-bottom: 1px solid #dee2e6;
+  padding: 9px 10px;
   vertical-align: middle;
-
-  font-weight: 700;
-
-  border-right: 1px solid #d1d5db;
-  border-bottom: 1px solid #d1d5db;
-
   white-space: nowrap;
 }
 
 
-/* Main Header */
+/* ============================================================
+   MAIN HEADER
+============================================================ */
 
 .main-header-row th {
-  height: 55px;
-  padding: 8px 10px;
-
   background: #1f2937;
   color: #ffffff;
-
-  font-size: 12px;
+  text-align: center;
+  font-weight: 700;
+  height: 58px;
 }
 
-
-/* Group Headers */
-
-.group-header {
-  min-width: 170px;
-  background: #374151 !important;
-  color: #ffffff !important;
-
-  font-size: 12px;
-  line-height: 1.4;
+.main-header-row .group-header {
+  background: #374151;
+  font-size: 13px;
+  letter-spacing: 0.1px;
 }
 
-.group-header small {
-  display: inline-block;
-  margin-top: 3px;
+.main-header-row small {
   font-size: 10px;
   font-weight: 500;
   opacity: 0.85;
 }
 
 
-/* Sub Header */
+/* ============================================================
+   SUB HEADER
+============================================================ */
 
 .sub-header-row th {
-  min-width: 125px;
-  height: 48px;
-
-  padding: 7px 8px;
-
   background: #f3f4f6;
   color: #374151;
-
+  text-align: center;
   font-size: 11px;
-  line-height: 1.3;
+  font-weight: 700;
+  line-height: 1.25;
+  min-width: 95px;
+  height: 55px;
 }
 
 
-/* =========================================================
+/* ============================================================
    FIXED FIRST COLUMNS
-========================================================= */
+============================================================ */
 
 .fixed-header {
-  min-width: 90px;
-}
-
-.fixed-header:nth-child(2) {
-  min-width: 150px;
-}
-
-.fixed-header:nth-child(3) {
-  min-width: 130px;
-}
-
-.fixed-header:nth-child(4) {
-  min-width: 160px;
-}
-
-.fixed-header:nth-child(5) {
-  min-width: 150px;
+  background: #1f2937 !important;
+  color: #ffffff !important;
 }
 
 
-/* =========================================================
+/* ============================================================
    TABLE BODY
-========================================================= */
+============================================================ */
+
+.report-table tbody tr {
+  background: #ffffff;
+  transition: background 0.15s ease;
+}
+
+.report-table tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.report-table tbody tr:hover {
+  background: #eef2ff;
+}
 
 .report-table tbody td {
-  padding: 9px 10px;
-
-  border-right: 1px solid #e5e7eb;
-  border-bottom: 1px solid #e5e7eb;
-
-  vertical-align: middle;
-  white-space: nowrap;
-
-  background: #ffffff;
-}
-
-.report-table tbody tr:hover td {
-  background: #f8fafc;
+  color: #374151;
 }
 
 
-/* =========================================================
-   FIRST INFORMATION COLUMNS
-========================================================= */
-
-.report-table tbody td:nth-child(1) {
-  text-align: center;
-  font-weight: 600;
-}
-
-.report-table tbody td:nth-child(2),
-.report-table tbody td:nth-child(3),
-.report-table tbody td:nth-child(4),
-.report-table tbody td:nth-child(5) {
-  text-align: left;
-}
-
-
-/* =========================================================
-   NUMBER CELLS
-========================================================= */
+/* ============================================================
+   NUMBER / AMOUNT CELLS
+============================================================ */
 
 .number-cell {
-  text-align: center !important;
-  min-width: 110px;
+  text-align: center;
+  font-weight: 500;
 }
-
-
-/* =========================================================
-   AMOUNT CELLS
-========================================================= */
 
 .amount-cell {
-  text-align: right !important;
-  min-width: 135px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-weight: 500;
+  min-width: 125px;
 }
-
-
-/* =========================================================
-   TOTAL CELL
-========================================================= */
 
 .total-cell {
   font-weight: 700;
 }
 
 
-/* =========================================================
-   TOTAL ROW
-========================================================= */
-
-.total-row th,
-.total-row td {
-  padding: 11px 10px;
-
-  background: #e5e7eb !important;
-  color: #111827;
-
-  border-right: 1px solid #cbd5e1;
-  border-bottom: 1px solid #cbd5e1;
-
-  text-align: center;
-  white-space: nowrap;
-
-  font-weight: 700;
-}
-
-.total-row th:first-child {
-  text-align: left;
-}
-
-
-/* =========================================================
+/* ============================================================
    NO DATA
-========================================================= */
+============================================================ */
 
 .no-data {
-  height: 180px;
   text-align: center !important;
-  vertical-align: middle !important;
-
-  color: #9ca3af;
-  font-size: 14px;
+  padding: 55px 20px !important;
+  color: #9ca3af !important;
+  background: #ffffff !important;
 }
 
 .no-data i {
   display: block;
-  margin-bottom: 8px;
-  font-size: 32px;
-  color: #cbd5e1;
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.no-data div {
+  font-size: 14px;
 }
 
 
-/* =========================================================
+/* ============================================================
+   TOTAL ROW
+============================================================ */
+
+.total-row th,
+.total-row td {
+  background: #e5e7eb;
+  color: #111827;
+  font-weight: 700;
+  text-align: center;
+  border-top: 2px solid #9ca3af;
+}
+
+.total-row th:first-child {
+  text-align: right;
+}
+
+.total-row th:nth-child(n + 8) {
+  text-align: right;
+}
+
+
+/* ============================================================
    SCROLLBAR
-========================================================= */
+============================================================ */
 
 .report-table-wrapper::-webkit-scrollbar {
   height: 9px;
 }
 
 .report-table-wrapper::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f1f1f1;
 }
 
 .report-table-wrapper::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #9ca3af;
   border-radius: 10px;
 }
 
 .report-table-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #6b7280;
 }
 
 
-/* =========================================================
-   BUTTON
-========================================================= */
+/* ============================================================
+   BOOTSTRAP BUTTON
+============================================================ */
 
-.btn-success {
-  border-radius: 6px;
+.report-card-header .btn-success {
+  font-size: 13px;
+  padding: 8px 14px;
 }
 
 
-/* =========================================================
+/* ============================================================
    RESPONSIVE
-========================================================= */
+============================================================ */
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
 
   .summary-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -494,23 +443,54 @@
 }
 
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
 
   .report-page {
-    padding: 12px;
+    padding: 15px;
   }
 
-  .page-title {
-    font-size: 20px;
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .filter-row {
-    flex-direction: column;
     align-items: stretch;
   }
 
-  .filter-group,
-  .search-group {
+  .filter-group {
+    min-width: 220px;
+  }
+
+  .filter-actions {
+    align-items: flex-end;
+  }
+
+}
+
+
+@media (max-width: 576px) {
+
+  .report-page {
+    padding: 10px;
+  }
+
+  .page-title {
+    font-size: 21px;
+  }
+
+  .page-subtitle {
+    font-size: 12px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-card {
+    padding: 12px;
+  }
+
+  .filter-group {
     width: 100%;
     min-width: 100%;
   }
@@ -519,18 +499,13 @@
     width: 100%;
   }
 
-  .filter-actions button {
+  .filter-actions .btn {
     width: 100%;
-  }
-
-  .summary-grid {
-    grid-template-columns: 1fr;
   }
 
   .report-card-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
   }
 
   .report-card-header .btn {
