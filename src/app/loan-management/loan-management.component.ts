@@ -35,7 +35,7 @@ export class LoanManagementComponent implements OnInit {
   cmrcLeftAmount: number = 0;
 
   // =========================================================
-  // SELECTED IDS
+  // SELECTED
   // =========================================================
 
   selectedCmrcId: number | null = null;
@@ -58,13 +58,17 @@ export class LoanManagementComponent implements OnInit {
   globalSearch: string = '';
 
   // =========================================================
+  // LOAN DETAILS
+  // =========================================================
+
+  selectedLoanId: number | null = null;
+  selectedLoan: Loan | null = null;
+
+  // =========================================================
   // CL SCHEDULE
   // =========================================================
 
   showClSchedule: boolean = false;
-
-  selectedLoanId: number | null = null;
-  selectedLoan: Loan | null = null;
 
   // =========================================================
   // REPAYMENT
@@ -95,6 +99,30 @@ export class LoanManagementComponent implements OnInit {
   }
 
   // =========================================================
+  // CURRENT DATE
+  // =========================================================
+
+  getCurrentDate(): string {
+
+    const today = new Date();
+
+    const year =
+      today.getFullYear();
+
+    const month =
+      String(
+        today.getMonth() + 1
+      ).padStart(2, '0');
+
+    const day =
+      String(
+        today.getDate()
+      ).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
+
+  // =========================================================
   // LOAD CMRC
   // =========================================================
 
@@ -102,7 +130,7 @@ export class LoanManagementComponent implements OnInit {
 
     this.cmrcService.getAll().subscribe({
 
-      next: (data) => {
+      next: (data: Cmrc[]) => {
         this.cmrcList = data || [];
       },
 
@@ -120,7 +148,7 @@ export class LoanManagementComponent implements OnInit {
   }
 
   // =========================================================
-  // LOAD VO / ALF BY CMRC
+  // LOAD VO / ALF
   // =========================================================
 
   loadVoAlfByCmrc(): void {
@@ -148,31 +176,30 @@ export class LoanManagementComponent implements OnInit {
       return;
     }
 
-    // ---------------------------------------------------------
-    // LOAD VO / ALF
-    // ---------------------------------------------------------
+    // -------------------------------------------------------
+    // VO / ALF
+    // -------------------------------------------------------
 
     this.voAlfService
       .getByCmrcId(this.selectedCmrcId)
       .subscribe({
 
-        next: (data) => {
+        next: (data: VoAlf[]) => {
 
           this.voAlfList = data || [];
 
           this.totalReceivedFund =
             this.voAlfList.reduce(
-              (total, voAlf) =>
-                total + Number(voAlf.receivedFund || 0),
+              (total: number, voAlf: VoAlf) =>
+                total +
+                Number(
+                  voAlf.receivedFund || 0
+                ),
               0
             );
 
           this.calculateCmrcLeftAmount();
 
-          console.log(
-            'Total VO / ALF Received Fund:',
-            this.totalReceivedFund
-          );
         },
 
         error: (error) => {
@@ -190,9 +217,9 @@ export class LoanManagementComponent implements OnInit {
 
       });
 
-    // ---------------------------------------------------------
-    // LOAD CMRC BALANCE
-    // ---------------------------------------------------------
+    // -------------------------------------------------------
+    // CMRC BALANCE
+    // -------------------------------------------------------
 
     this.cmrcBalanceService
       .getByCmrcId(this.selectedCmrcId)
@@ -217,10 +244,6 @@ export class LoanManagementComponent implements OnInit {
 
           this.calculateCmrcLeftAmount();
 
-          console.log(
-            'CMRC Balance:',
-            this.cmrcBalance
-          );
         },
 
         error: (error) => {
@@ -276,7 +299,7 @@ export class LoanManagementComponent implements OnInit {
       .getByVoAlfId(this.selectedVoAlfId)
       .subscribe({
 
-        next: (data) => {
+        next: (data: Loan[]) => {
 
           this.loanList = data || [];
 
@@ -307,7 +330,8 @@ export class LoanManagementComponent implements OnInit {
 
     const cmrc =
       this.cmrcList.find(
-        c => c.id === this.selectedCmrcId
+        (c: Cmrc) =>
+          c.id === this.selectedCmrcId
       );
 
     return cmrc?.cmrcName || '';
@@ -321,21 +345,23 @@ export class LoanManagementComponent implements OnInit {
 
     const voAlf =
       this.voAlfList.find(
-        v => v.id === this.selectedVoAlfId
+        (v: VoAlf) =>
+          v.id === this.selectedVoAlfId
       );
 
     return voAlf?.voAlfName || '';
   }
 
   // =========================================================
-  // SELECTED VO / ALF RECEIVED FUND
+  // SELECTED VO / ALF FUND
   // =========================================================
 
   getSelectedVoAlfRecievedFund(): number {
 
     const voAlf =
       this.voAlfList.find(
-        v => v.id === this.selectedVoAlfId
+        (v: VoAlf) =>
+          v.id === this.selectedVoAlfId
       );
 
     return Number(
@@ -344,7 +370,7 @@ export class LoanManagementComponent implements OnInit {
   }
 
   // =========================================================
-  // OPEN ADD FORM
+  // OPEN ADD LOAN FORM
   // =========================================================
 
   openAddForm(): void {
@@ -359,16 +385,19 @@ export class LoanManagementComponent implements OnInit {
     }
 
     // Close other sections
-
     this.showClSchedule = false;
+
     this.selectedLoanId = null;
     this.selectedLoan = null;
 
     this.showRepayment = false;
+
     this.selectedRepaymentLoanId = null;
     this.selectedRepaymentLoan = null;
 
-    // New Loan
+    // -------------------------------------------------------
+    // NEW LOAN
+    // -------------------------------------------------------
 
     this.newLoan = {
 
@@ -378,6 +407,9 @@ export class LoanManagementComponent implements OnInit {
       groupName: '',
 
       womanName: '',
+
+      // Main repayment amount
+      loanAmount: 0,
 
       sanctionedAmount:
         undefined,
@@ -390,10 +422,14 @@ export class LoanManagementComponent implements OnInit {
 
       loanPurpose: '',
 
-      loanGivenDate: '',
+      loanGivenDate:
+        this.getCurrentDate(),
 
       repaymentPeriodMonths:
         undefined,
+
+      repaymentFrequency:
+        'MONTHLY',
 
       interestRate:
         undefined,
@@ -402,12 +438,13 @@ export class LoanManagementComponent implements OnInit {
         'FLAT',
 
       monthlyEmi:
-        undefined
+        undefined,
+
+      loanStatus:
+        'ACTIVE'
     };
 
     this.showForm = true;
-
-    // Scroll to form
 
     setTimeout(() => {
 
@@ -419,11 +456,8 @@ export class LoanManagementComponent implements OnInit {
       if (element) {
 
         element.scrollIntoView({
-
           behavior: 'smooth',
-
           block: 'start'
-
         });
 
       }
@@ -442,7 +476,14 @@ export class LoanManagementComponent implements OnInit {
     this.newLoan = {
 
       voAlfId:
-        this.selectedVoAlfId || 0
+        this.selectedVoAlfId || 0,
+
+      loanAmount:
+        0,
+
+      loanGivenDate:
+        this.getCurrentDate()
+
     };
   }
 
@@ -462,6 +503,72 @@ export class LoanManagementComponent implements OnInit {
     }
 
     // -------------------------------------------------------
+    // VALIDATION
+    // -------------------------------------------------------
+
+    if (
+      !this.newLoan.groupName ||
+      !this.newLoan.groupName.trim()
+    ) {
+
+      alert(
+        'Please enter Group Name'
+      );
+
+      return;
+    }
+
+    if (
+      !this.newLoan.womanName ||
+      !this.newLoan.womanName.trim()
+    ) {
+
+      alert(
+        'Please enter Woman Name'
+      );
+
+      return;
+    }
+
+    if (
+      !this.newLoan.sanctionedAmount ||
+      this.newLoan.sanctionedAmount <= 0
+    ) {
+
+      alert(
+        'Please enter valid Sanctioned Amount'
+      );
+
+      return;
+    }
+
+    if (
+      this.newLoan.repaymentPeriodMonths ===
+        undefined ||
+      this.newLoan.repaymentPeriodMonths <= 0
+    ) {
+
+      alert(
+        'Please enter Repayment Period'
+      );
+
+      return;
+    }
+
+    if (
+      this.newLoan.interestRate === undefined ||
+      this.newLoan.interestRate === null ||
+      this.newLoan.interestRate < 0
+    ) {
+
+      alert(
+        'Please enter valid Interest Rate'
+      );
+
+      return;
+    }
+
+    // -------------------------------------------------------
     // SET VO / ALF
     // -------------------------------------------------------
 
@@ -469,10 +576,51 @@ export class LoanManagementComponent implements OnInit {
       this.selectedVoAlfId;
 
     // -------------------------------------------------------
+    // DATE
+    // -------------------------------------------------------
+
+    if (!this.newLoan.loanGivenDate) {
+
+      this.newLoan.loanGivenDate =
+        this.getCurrentDate();
+    }
+
+    // -------------------------------------------------------
     // CALCULATE DISBURSED AMOUNT
     // -------------------------------------------------------
 
     this.calculateDisbursedAmount();
+
+    // =======================================================
+    // IMPORTANT
+    // =======================================================
+    // Repayment ke liye loanAmount = Disbursed Amount
+    // =======================================================
+
+    this.newLoan.loanAmount =
+      Number(
+        this.newLoan.disbursedAmount || 0
+      );
+
+    console.log(
+      'Sanctioned Amount:',
+      this.newLoan.sanctionedAmount
+    );
+
+    console.log(
+      'Processing Fee:',
+      this.newLoan.processingFee
+    );
+
+    console.log(
+      'Disbursed Amount:',
+      this.newLoan.disbursedAmount
+    );
+
+    console.log(
+      'Repayment Loan Amount:',
+      this.newLoan.loanAmount
+    );
 
     // -------------------------------------------------------
     // CALCULATE EMI
@@ -481,14 +629,19 @@ export class LoanManagementComponent implements OnInit {
     this.calculateEmi();
 
     // -------------------------------------------------------
-    // CREATE NEW LOAN
+    // CREATE
     // -------------------------------------------------------
 
     this.loanService
       .create(this.newLoan)
       .subscribe({
 
-        next: () => {
+        next: (data: Loan) => {
+
+          console.log(
+            'Created Loan:',
+            data
+          );
 
           alert(
             'Loan created successfully'
@@ -497,6 +650,7 @@ export class LoanManagementComponent implements OnInit {
           this.closeForm();
 
           this.loadLoans();
+
         },
 
         error: (error) => {
@@ -515,52 +669,7 @@ export class LoanManagementComponent implements OnInit {
   }
 
   // =========================================================
-  // DELETE LOAN
-  // =========================================================
-
-  deleteLoan(id: number) {
-
-  if (!confirm('Are you sure you want to delete this loan?')) {
-    return;
-  }
-
-  this.loanService.delete(id).subscribe({
-
-    next: () => {
-
-      alert('Loan deleted successfully.');
-
-      // Refresh loan table
-      this.loadLoans();
-
-    },
-
-    error: (error) => {
- this.loadLoans();
-      console.error('Delete loan error:', error);
-    }
-
-  });
-}
-  // =========================================================
-  // CALCULATE DISBURSED AMOUNT
-  // =========================================================
-  //
-  // BUSINESS RULE:
-  //
-  // Sanctioned Amount = Actual Loan Principal
-  //
-  // Processing Fee = Deduction
-  //
-  // Disbursed Amount =
-  // Sanctioned Amount - Processing Fee
-  //
-  // Example:
-  //
-  // Sanctioned = 450000
-  // Processing Fee = 2250
-  // Disbursed = 447750
-  //
+  // DISBURSED AMOUNT
   // =========================================================
 
   calculateDisbursedAmount(): void {
@@ -580,6 +689,9 @@ export class LoanManagementComponent implements OnInit {
       this.newLoan.disbursedAmount =
         0;
 
+      this.newLoan.loanAmount =
+        0;
+
       return;
     }
 
@@ -589,23 +701,29 @@ export class LoanManagementComponent implements OnInit {
         processingFee,
         0
       );
+
+    // IMPORTANT:
+    // loanAmount always follows disbursedAmount
+
+    this.newLoan.loanAmount =
+      Number(
+        this.newLoan.disbursedAmount || 0
+      );
   }
 
   // =========================================================
-  // CALCULATE EMI
-  // =========================================================
-  //
-  // EMI is calculated on SANCTIONED AMOUNT.
-  //
-  // NOT on DISBURSED AMOUNT.
-  //
+  // EMI CALCULATION
   // =========================================================
 
   calculateEmi(): void {
 
+    // IMPORTANT:
+    // EMI / repayment is based on loanAmount
+    // which is Disbursed Amount
+
     const principal =
       Number(
-        this.newLoan.sanctionedAmount || 0
+        this.newLoan.loanAmount || 0
       );
 
     const annualRate =
@@ -620,10 +738,6 @@ export class LoanManagementComponent implements OnInit {
 
     const type =
       this.newLoan.interestType;
-
-    // -------------------------------------------------------
-    // BASIC VALIDATION
-    // -------------------------------------------------------
 
     if (
       principal <= 0 ||
@@ -669,10 +783,6 @@ export class LoanManagementComponent implements OnInit {
       12 /
       100;
 
-    // -------------------------------------------------------
-    // ZERO INTEREST
-    // -------------------------------------------------------
-
     if (monthlyRate === 0) {
 
       this.newLoan.monthlyEmi =
@@ -681,10 +791,6 @@ export class LoanManagementComponent implements OnInit {
 
       return;
     }
-
-    // -------------------------------------------------------
-    // EMI FORMULA
-    // -------------------------------------------------------
 
     const factor =
       Math.pow(
@@ -700,6 +806,475 @@ export class LoanManagementComponent implements OnInit {
   }
 
   // =========================================================
+  // CLOSE LOAN DETAILS
+  // =========================================================
+
+  closeLoanDetails(): void {
+
+    this.selectedLoanId = null;
+    this.selectedLoan = null;
+  }
+
+  // =========================================================
+  // OPEN LOAN DETAILS
+  // =========================================================
+
+  openLoanDetails(loan: Loan): void {
+
+    if (!loan || !loan.id) {
+
+      alert(
+        'Loan ID not found'
+      );
+
+      return;
+    }
+
+    this.showForm = false;
+
+    this.showClSchedule = false;
+
+    this.showRepayment = false;
+
+    this.selectedLoanId =
+      loan.id;
+
+    this.selectedLoan = {
+      ...loan
+    };
+
+    this.selectedRepaymentLoanId =
+      null;
+
+    this.selectedRepaymentLoan =
+      null;
+
+    setTimeout(() => {
+
+      const element =
+        document.getElementById(
+          'loanDetailsSection'
+        );
+
+      if (element) {
+
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+
+      }
+
+    }, 100);
+  }
+
+  // =========================================================
+  // OPEN CL SCHEDULE
+  // =========================================================
+
+  openClSchedule(loan: Loan): void {
+
+    if (!loan.id) {
+
+      alert(
+        'Loan ID not found'
+      );
+
+      return;
+    }
+
+    this.showForm = false;
+
+    this.showRepayment = false;
+
+    this.selectedRepaymentLoanId =
+      null;
+
+    this.selectedRepaymentLoan =
+      null;
+
+    this.selectedLoanId =
+      loan.id;
+
+    this.selectedLoan = {
+      ...loan
+    };
+
+    this.showClSchedule = false;
+
+    setTimeout(() => {
+
+      this.showClSchedule = true;
+
+      setTimeout(() => {
+
+        const element =
+          document.getElementById(
+            'clScheduleSection'
+          );
+
+        if (element) {
+
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+
+        }
+
+      }, 50);
+
+    }, 0);
+  }
+
+  // =========================================================
+  // CLOSE CL SCHEDULE
+  // =========================================================
+
+  closeClSchedule(): void {
+
+    this.showClSchedule = false;
+
+    this.selectedLoanId = null;
+
+    this.selectedLoan = null;
+  }
+
+  // =========================================================
+  // OPEN REPAYMENT
+  // =========================================================
+
+  openRepayment(loan: Loan): void {
+
+    if (!loan.id) {
+
+      alert(
+        'Loan ID not found'
+      );
+
+      return;
+    }
+
+    this.showForm = false;
+
+    this.showClSchedule = false;
+
+    this.selectedLoanId = null;
+    this.selectedLoan = null;
+
+    this.showRepayment = false;
+
+    this.selectedRepaymentLoanId =
+      loan.id;
+
+    this.selectedRepaymentLoan = {
+      ...loan
+    };
+
+    setTimeout(() => {
+
+      this.showRepayment = true;
+
+      setTimeout(() => {
+
+        const element =
+          document.getElementById(
+            'repaymentSection'
+          );
+
+        if (element) {
+
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+
+        }
+
+      }, 50);
+
+    }, 0);
+  }
+
+ 
+
+  // =========================================================
+  // DELETE
+  // =========================================================
+
+  deleteLoan(id: number): void {
+
+    if (
+      !confirm(
+        'Are you sure you want to delete this loan?'
+      )
+    ) {
+
+      return;
+    }
+
+    this.loanService
+      .delete(id)
+      .subscribe({
+
+        next: () => {
+
+          alert(
+            'Loan deleted successfully.'
+          );
+
+          this.loadLoans();
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Delete loan error:',
+            error
+          );
+
+          this.loadLoans();
+        }
+
+      });
+  }
+
+  // =========================================================
+  // FILTER
+  // =========================================================
+
+  get filteredLoanList(): Loan[] {
+
+    const search =
+      this.globalSearch
+        .toLowerCase()
+        .trim();
+
+    if (!search) {
+      return this.loanList;
+    }
+
+    return this.loanList.filter(
+      (loan: Loan) =>
+
+        (loan.groupName || '')
+          .toLowerCase()
+          .includes(search)
+
+        ||
+
+        (loan.womanName || '')
+          .toLowerCase()
+          .includes(search)
+
+        ||
+
+        (loan.loanPurpose || '')
+          .toLowerCase()
+          .includes(search)
+
+        ||
+
+        String(
+          loan.loanAmount || ''
+        ).includes(search)
+
+        ||
+
+        String(
+          loan.sanctionedAmount || ''
+        ).includes(search)
+
+        ||
+
+        String(
+          loan.processingFee || ''
+        ).includes(search)
+
+        ||
+
+        String(
+          loan.disbursedAmount || ''
+        ).includes(search)
+
+        ||
+
+        String(
+          loan.monthlyEmi || ''
+        ).includes(search)
+
+        ||
+
+        String(
+          loan.repaymentPeriodMonths || ''
+        ).includes(search)
+
+        ||
+
+        String(
+          loan.interestRate || ''
+        ).includes(search)
+
+        ||
+
+        (loan.loanStatus || '')
+          .toLowerCase()
+          .includes(search)
+    );
+  }
+
+  // =========================================================
+  // TOTAL SANCTIONED
+  // =========================================================
+
+  getTotalSanctionedAmount(): number {
+
+    return this.filteredLoanList.reduce(
+
+      (total: number, loan: Loan) =>
+
+        total +
+        Number(
+          loan.sanctionedAmount || 0
+        ),
+
+      0
+    );
+  }
+
+  // =========================================================
+  // TOTAL PROCESSING FEE
+  // =========================================================
+
+  getTotalProcessingFee(): number {
+
+    return this.filteredLoanList.reduce(
+
+      (total: number, loan: Loan) =>
+
+        total +
+        Number(
+          loan.processingFee || 0
+        ),
+
+      0
+    );
+  }
+
+  // =========================================================
+  // TOTAL DISBURSED
+  // =========================================================
+
+  getTotalDisbursedAmount(): number {
+
+    return this.filteredLoanList.reduce(
+
+      (total: number, loan: Loan) =>
+
+        total +
+        Number(
+          loan.disbursedAmount || 0
+        ),
+
+      0
+    );
+  }
+
+  // =========================================================
+  // TOTAL EMI
+  // =========================================================
+
+  getTotalMonthlyEmi(): number {
+
+    return this.filteredLoanList.reduce(
+
+      (total: number, loan: Loan) =>
+
+        total +
+        Number(
+          loan.monthlyEmi || 0
+        ),
+
+      0
+    );
+  }
+
+  // =========================================================
+  // TOTAL INTEREST
+  // =========================================================
+
+  getTotalInterest(): number {
+
+    return this.filteredLoanList.reduce(
+
+      (total: number, loan: Loan) => {
+
+        const principal =
+          Number(
+            loan.loanAmount || 0
+          );
+
+        const emi =
+          Number(
+            loan.monthlyEmi || 0
+          );
+
+        const months =
+          Number(
+            loan.repaymentPeriodMonths || 0
+          );
+
+        const totalPayable =
+          emi * months;
+
+        const interest =
+          totalPayable -
+          principal;
+
+        return (
+          total +
+          Math.max(
+            interest,
+            0
+          )
+        );
+      },
+
+      0
+    );
+  }
+
+  // =========================================================
+  // TOTAL PAYABLE
+  // =========================================================
+
+  getTotalPayableAmount(): number {
+
+    return (
+      this.getTotalDisbursedAmount() +
+      this.getTotalInterest()
+    );
+  }
+
+  // =========================================================
+  // REMAINING VO / ALF FUND
+  // =========================================================
+
+  getRemainingAmount(): number {
+
+    const receivedFund =
+      this.getSelectedVoAlfRecievedFund();
+
+    const totalDisbursedAmount =
+      this.getTotalDisbursedAmount();
+
+    return (
+      receivedFund -
+      totalDisbursedAmount
+    );
+  }
+
+  // =========================================================
   // NUMBER TO WORDS
   // =========================================================
 
@@ -710,71 +1285,39 @@ export class LoanManagementComponent implements OnInit {
     }
 
     const ones = [
-
       '',
-
       'One',
-
       'Two',
-
       'Three',
-
       'Four',
-
       'Five',
-
       'Six',
-
       'Seven',
-
       'Eight',
-
       'Nine',
-
       'Ten',
-
       'Eleven',
-
       'Twelve',
-
       'Thirteen',
-
       'Fourteen',
-
       'Fifteen',
-
       'Sixteen',
-
       'Seventeen',
-
       'Eighteen',
-
       'Nineteen'
-
     ];
 
     const tens = [
-
       '',
-
       '',
-
       'Twenty',
-
       'Thirty',
-
       'Forty',
-
       'Fifty',
-
       'Sixty',
-
       'Seventy',
-
       'Eighty',
-
       'Ninety'
-
     ];
 
     const convertBelowThousand =
@@ -863,406 +1406,7 @@ export class LoanManagementComponent implements OnInit {
   }
 
   // =========================================================
-  // FILTERED LOAN LIST
-  // =========================================================
-
-  get filteredLoanList(): Loan[] {
-
-    const search =
-      this.globalSearch
-        .toLowerCase()
-        .trim();
-
-    if (!search) {
-
-      return this.loanList;
-    }
-
-    return this.loanList.filter(
-      loan =>
-
-        // Group
-        (loan.groupName || '')
-          .toLowerCase()
-          .includes(search)
-
-        ||
-
-        // Woman
-        (loan.womanName || '')
-          .toLowerCase()
-          .includes(search)
-
-        ||
-
-        // Purpose
-        (loan.loanPurpose || '')
-          .toLowerCase()
-          .includes(search)
-
-        ||
-
-        // Sanctioned Amount
-        String(
-          loan.sanctionedAmount || ''
-        ).includes(search)
-
-        ||
-
-        // Processing Fee
-        String(
-          loan.processingFee || ''
-        ).includes(search)
-
-        ||
-
-        // Disbursed Amount
-        String(
-          loan.disbursedAmount || ''
-        ).includes(search)
-
-        ||
-
-        // EMI
-        String(
-          loan.monthlyEmi || ''
-        ).includes(search)
-
-        ||
-
-        // Repayment Period
-        String(
-          loan.repaymentPeriodMonths || ''
-        ).includes(search)
-
-        ||
-
-        // Interest
-        String(
-          loan.interestRate || ''
-        ).includes(search)
-
-        ||
-
-        // Status
-        (loan.loanStatus || '')
-          .toLowerCase()
-          .includes(search)
-    );
-  }
-
-  // =========================================================
-  // TOTAL SANCTIONED AMOUNT
-  // =========================================================
-
-  getTotalSanctionedAmount(): number {
-
-    return this.filteredLoanList.reduce(
-
-      (total, loan) =>
-
-        total +
-        Number(
-          loan.sanctionedAmount || 0
-        ),
-
-      0
-    );
-  }
-
-  // =========================================================
-  // TOTAL PROCESSING FEE
-  // =========================================================
-
-  getTotalProcessingFee(): number {
-
-    return this.filteredLoanList.reduce(
-
-      (total, loan) =>
-
-        total +
-        Number(
-          loan.processingFee || 0
-        ),
-
-      0
-    );
-  }
-
-  // =========================================================
-  // TOTAL DISBURSED AMOUNT
-  // =========================================================
-
-  getTotalDisbursedAmount(): number {
-
-    return this.filteredLoanList.reduce(
-
-      (total, loan) =>
-
-        total +
-        Number(
-          loan.disbursedAmount || 0
-        ),
-
-      0
-    );
-  }
-
-  // =========================================================
-  // TOTAL MONTHLY EMI
-  // =========================================================
-
-  getTotalMonthlyEmi(): number {
-
-    return this.filteredLoanList.reduce(
-
-      (total, loan) =>
-
-        total +
-        Number(
-          loan.monthlyEmi || 0
-        ),
-
-      0
-    );
-  }
-
-  // =========================================================
-  // TOTAL INTEREST
-  // =========================================================
-
-  getTotalInterest(): number {
-
-    return this.filteredLoanList.reduce(
-
-      (total, loan) => {
-
-        const principal =
-          Number(
-            loan.sanctionedAmount || 0
-          );
-
-        const emi =
-          Number(
-            loan.monthlyEmi || 0
-          );
-
-        const months =
-          Number(
-            loan.repaymentPeriodMonths || 0
-          );
-
-        const totalPayable =
-          emi * months;
-
-        const interest =
-          totalPayable -
-          principal;
-
-        return (
-          total +
-          Math.max(
-            interest,
-            0
-          )
-        );
-      },
-
-      0
-    );
-  }
-
-  // =========================================================
-  // TOTAL PAYABLE AMOUNT
-  // =========================================================
-
-  getTotalPayableAmount(): number {
-
-    return (
-
-      this.getTotalSanctionedAmount() +
-
-      this.getTotalInterest()
-
-    );
-  }
-
-  // =========================================================
-  // REMAINING VO / ALF FUND
-  // =========================================================
-
-  getRemainingAmount(): number {
-
-    const receivedFund =
-      this.getSelectedVoAlfRecievedFund();
-
-    const totalSanctionedAmount =
-      this.getTotalSanctionedAmount();
-
-    return (
-      receivedFund -
-      totalSanctionedAmount
-    );
-  }
-
-  // =========================================================
-  // OPEN CL SCHEDULE
-  // =========================================================
-
-  openClSchedule(loan: Loan): void {
-
-  if (!loan.id) {
-    alert('Loan ID not found');
-    return;
-  }
-
-  // Close repayment and form
-  this.showRepayment = false;
-  this.showForm = false;
-
-  this.selectedRepaymentLoanId = null;
-  this.selectedRepaymentLoan = null;
-
-  // -------------------------------------------------------
-  // FORCE CL SCHEDULE COMPONENT RESET
-  // -------------------------------------------------------
-
-  this.showClSchedule = false;
-
-  this.selectedLoanId = null;
-  this.selectedLoan = null;
-
-  // -------------------------------------------------------
-  // SET SELECTED LOAN
-  // -------------------------------------------------------
-
-  this.selectedLoanId = loan.id;
-
-  this.selectedLoan = {
-    ...loan
-  };
-
-  // -------------------------------------------------------
-  // OPEN CL SCHEDULE AGAIN
-  // -------------------------------------------------------
-
-  setTimeout(() => {
-
-    this.showClSchedule = true;
-
-    setTimeout(() => {
-
-      const element =
-        document.getElementById('clScheduleSection');
-
-      if (element) {
-
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-
-      }
-
-    }, 50);
-
-  }, 0);
-}
-
-  // =========================================================
-  // CLOSE CL SCHEDULE
-  // =========================================================
-
-  closeClSchedule(): void {
-
-    this.showClSchedule = false;
-
-    this.selectedLoanId = null;
-
-    this.selectedLoan = null;
-  }
-
-  // =========================================================
-  // OPEN REPAYMENT
-  // =========================================================
-
-  openRepayment(loan: Loan): void {
-
-  if (!loan.id) {
-    alert('Loan ID not found');
-    return;
-  }
-
-  // Close CL Schedule
-  this.showClSchedule = false;
-  this.showForm = false;
-
-  this.selectedLoanId = null;
-  this.selectedLoan = null;
-
-  // -------------------------------------------------------
-  // FORCE REPAYMENT COMPONENT RESET
-  // -------------------------------------------------------
-
-  this.showRepayment = false;
-
-  this.selectedRepaymentLoanId = null;
-  this.selectedRepaymentLoan = null;
-
-  // -------------------------------------------------------
-  // SET NEW LOAN
-  // -------------------------------------------------------
-
-  this.selectedRepaymentLoanId = loan.id;
-
-  this.selectedRepaymentLoan = {
-    ...loan
-  };
-
-  // -------------------------------------------------------
-  // OPEN REPAYMENT AGAIN
-  // -------------------------------------------------------
-
-  setTimeout(() => {
-
-    this.showRepayment = true;
-
-    setTimeout(() => {
-
-      const element =
-        document.getElementById('repaymentSection');
-
-      if (element) {
-
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-
-      }
-
-    }, 50);
-
-  }, 0);
-}
-
-  // =========================================================
-  // CLOSE REPAYMENT
-  // =========================================================
-
-  closeRepayment(): void {
-
-    this.showRepayment = false;
-
-    this.selectedRepaymentLoanId =
-      null;
-
-    this.selectedRepaymentLoan =
-      null;
-  }
-
-  // =========================================================
-  // EXPORT TO EXCEL
+  // EXPORT EXCEL
   // =========================================================
 
   exportToExcel(): void {
@@ -1294,13 +1438,9 @@ export class LoanManagementComponent implements OnInit {
     const voAlfName =
       this.getSelectedVoAlfName();
 
-    // =======================================================
-    // EXCEL DETAIL DATA
-    // =======================================================
-
     const excelData =
       this.filteredLoanList.map(
-        (loan, index) => ({
+        (loan: Loan, index: number) => ({
 
           'Sr. No.':
             index + 1,
@@ -1316,6 +1456,11 @@ export class LoanManagementComponent implements OnInit {
 
           'Woman Name':
             loan.womanName || '',
+
+          'Loan Amount':
+            Number(
+              loan.loanAmount || 0
+            ),
 
           'Sanctioned Amount':
             Number(
@@ -1343,6 +1488,9 @@ export class LoanManagementComponent implements OnInit {
               loan.repaymentPeriodMonths || 0
             ),
 
+          'Repayment Frequency':
+            loan.repaymentFrequency || '',
+
           'Interest Rate (%)':
             Number(
               loan.interestRate || 0
@@ -1362,41 +1510,11 @@ export class LoanManagementComponent implements OnInit {
         })
       );
 
-    // =======================================================
-    // TOTALS
-    // =======================================================
-
-    const totalSanctionedAmount =
-      this.getTotalSanctionedAmount();
-
-    const totalProcessingFee =
-      this.getTotalProcessingFee();
-
-    const totalDisbursedAmount =
-      this.getTotalDisbursedAmount();
-
-    const totalMonthlyEmi =
-      this.getTotalMonthlyEmi();
-
-    const totalInterest =
-      this.getTotalInterest();
-
-    const totalPayableAmount =
-      this.getTotalPayableAmount();
-
-    // =======================================================
-    // CREATE WORKSHEET
-    // =======================================================
-
     const worksheet:
       XLSX.WorkSheet =
       XLSX.utils.json_to_sheet(
         excelData
       );
-
-    // =======================================================
-    // ADD SUMMARY
-    // =======================================================
 
     XLSX.utils.sheet_add_aoa(
 
@@ -1424,33 +1542,45 @@ export class LoanManagementComponent implements OnInit {
         ],
 
         [
+          'Total Loan Amount',
+          this.filteredLoanList.reduce(
+            (total, loan) =>
+              total +
+              Number(
+                loan.loanAmount || 0
+              ),
+            0
+          )
+        ],
+
+        [
           'Total Sanctioned Amount',
-          totalSanctionedAmount
+          this.getTotalSanctionedAmount()
         ],
 
         [
           'Total Processing Fee',
-          totalProcessingFee
+          this.getTotalProcessingFee()
         ],
 
         [
           'Total Disbursed Amount',
-          totalDisbursedAmount
+          this.getTotalDisbursedAmount()
         ],
 
         [
           'Total Monthly EMI',
-          totalMonthlyEmi
+          this.getTotalMonthlyEmi()
         ],
 
         [
           'Total Interest',
-          totalInterest
+          this.getTotalInterest()
         ],
 
         [
           'Total Payable Amount',
-          totalPayableAmount
+          this.getTotalPayableAmount()
         ]
 
       ],
@@ -1459,82 +1589,70 @@ export class LoanManagementComponent implements OnInit {
         origin:
           `A${excelData.length + 3}`
       }
-    );
 
-    // =======================================================
-    // COLUMN WIDTH
-    // =======================================================
+    );
 
     worksheet['!cols'] = [
 
       { wch: 10 },
-
       { wch: 20 },
-
       { wch: 20 },
-
       { wch: 18 },
-
       { wch: 22 },
-
-      { wch: 20 },
-
       { wch: 18 },
-
       { wch: 20 },
-
+      { wch: 18 },
+      { wch: 20 },
       { wch: 25 },
-
       { wch: 18 },
-
       { wch: 24 },
-
+      { wch: 20 },
       { wch: 18 },
-
       { wch: 18 },
-
       { wch: 18 },
-
       { wch: 15 }
 
     ];
-
-    // =======================================================
-    // CREATE WORKBOOK
-    // =======================================================
 
     const workbook:
       XLSX.WorkBook =
       XLSX.utils.book_new();
 
     XLSX.utils.book_append_sheet(
-
       workbook,
-
       worksheet,
-
       'Loan Details'
-
     );
 
-    // =======================================================
-    // FILE NAME
-    // =======================================================
+    const safeCmrcName =
+      cmrcName.replace(
+        /[^a-zA-Z0-9]/g,
+        '_'
+      );
+
+    const safeVoAlfName =
+      voAlfName.replace(
+        /[^a-zA-Z0-9]/g,
+        '_'
+      );
 
     const fileName =
-      `${cmrcName}_${voAlfName}_Loan_Report.xlsx`;
-
-    // =======================================================
-    // DOWNLOAD
-    // =======================================================
+      `${safeCmrcName}_${safeVoAlfName}_Loan_Report.xlsx`;
 
     XLSX.writeFile(
-
       workbook,
-
       fileName
-
     );
   }
-
+  closeRepayment(): void {
+  this.showRepayment = false;
+  this.selectedRepaymentLoanId = null;
+  this.selectedRepaymentLoan = null;
+}
+getTotalLoanAmount(): number {
+  return this.filteredLoanList.reduce(
+    (total, loan) => total + Number(loan.loanAmount || 0),
+    0
+  );
+}
 }

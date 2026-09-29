@@ -1,31 +1,28 @@
-<!-- =========================================================
-     LOAN MANAGEMENT
-========================================================= -->
-
 <div class="container-fluid loan-management-page">
 
-  <!-- =======================================================
+  <!-- =====================================================
        PAGE HEADER
-  ======================================================== -->
+  ====================================================== -->
 
   <div class="page-header d-flex justify-content-between align-items-center mb-3">
 
     <div>
       <h2 class="mb-1">
+        <i class="bi bi-cash-stack me-2"></i>
         Loan Management
       </h2>
 
       <p class="text-muted mb-0">
-        Manage loans, loan terms, EMI and repayments
+        Manage loans, disbursement, EMI and repayments
       </p>
     </div>
 
   </div>
 
 
-  <!-- =======================================================
+  <!-- =====================================================
        FILTER CARD
-  ======================================================== -->
+  ====================================================== -->
 
   <div class="card shadow-sm mb-3">
 
@@ -99,71 +96,15 @@
             VO / ALF Received Fund
           </label>
 
-          <div class="form-control bg-light fw-bold">
-            ₹ {{ getSelectedVoAlfRecievedFund() | number:'1.2-2' }}
-          </div>
+          <div class="fund-info-box">
 
-        </div>
+            <span class="fund-label">
+              Available Fund
+            </span>
 
-      </div>
-
-
-      <!-- =====================================================
-           BALANCE SUMMARY
-      ====================================================== -->
-
-      <div
-        class="row g-3 mt-2"
-        *ngIf="selectedCmrcId">
-
-        <!-- CMRC BALANCE -->
-        <div class="col-md-4">
-
-          <div class="balance-card">
-
-            <div class="balance-title">
-              CMRC Balance
-            </div>
-
-            <div class="balance-value">
-              ₹ {{ cmrcBalance | number:'1.2-2' }}
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- TOTAL RECEIVED -->
-        <div class="col-md-4">
-
-          <div class="balance-card">
-
-            <div class="balance-title">
-              Total VO / ALF Received Fund
-            </div>
-
-            <div class="balance-value">
-              ₹ {{ totalReceivedFund | number:'1.2-2' }}
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- CMRC LEFT -->
-        <div class="col-md-4">
-
-          <div class="balance-card">
-
-            <div class="balance-title">
-              CMRC Left Amount
-            </div>
-
-            <div class="balance-value">
-              ₹ {{ cmrcLeftAmount | number:'1.2-2' }}
-            </div>
+            <strong>
+              ₹{{ getSelectedVoAlfRecievedFund() | number:'1.2-2' }}
+            </strong>
 
           </div>
 
@@ -176,65 +117,175 @@
   </div>
 
 
-  <!-- =======================================================
-       LOAN TOOLBAR
-  ======================================================== -->
+  <!-- =====================================================
+       BALANCE SUMMARY
+  ====================================================== -->
 
   <div
-    class="card shadow-sm mb-3"
-    *ngIf="selectedVoAlfId">
+    class="row g-3 mb-3"
+    *ngIf="selectedCmrcId">
 
-    <div class="card-body">
+    <!-- CMRC BALANCE -->
+    <div class="col-md-4">
 
-      <div class="row align-items-center g-2">
+      <div class="summary-card">
+
+        <div class="summary-icon">
+          <i class="bi bi-bank"></i>
+        </div>
+
+        <div>
+
+          <span class="summary-label">
+            CMRC Balance
+          </span>
+
+          <h4>
+            ₹{{ cmrcBalance | number:'1.2-2' }}
+          </h4>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- RECEIVED FUND -->
+    <div class="col-md-4">
+
+      <div class="summary-card">
+
+        <div class="summary-icon">
+          <i class="bi bi-wallet2"></i>
+        </div>
+
+        <div>
+
+          <span class="summary-label">
+            Total VO / ALF Received Fund
+          </span>
+
+          <h4>
+            ₹{{ totalReceivedFund | number:'1.2-2' }}
+          </h4>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- LEFT AMOUNT -->
+    <div class="col-md-4">
+
+      <div class="summary-card">
+
+        <div class="summary-icon">
+          <i class="bi bi-piggy-bank"></i>
+        </div>
+
+        <div>
+
+          <span class="summary-label">
+            CMRC Left Amount
+          </span>
+
+          <h4>
+            ₹{{ cmrcLeftAmount | number:'1.2-2' }}
+          </h4>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       LOAN TOOLBAR
+  ====================================================== -->
+
+  <!-- =====================================================
+     LOAN TOOLBAR
+====================================================== -->
+
+<div
+  class="card shadow-sm mb-3"
+  *ngIf="selectedVoAlfId">
+
+  <div class="card-body">
+
+    <div class="loan-toolbar">
+
+      <!-- LEFT SIDE -->
+      <div class="d-flex align-items-center gap-3 flex-grow-1">
 
         <!-- SEARCH -->
-        <div class="col-md-6">
 
-          <div class="input-group">
+        <div class="search-box">
 
-            <span class="input-group-text">
-              🔍
-            </span>
+          <i class="bi bi-search"></i>
 
-            <input
-              type="text"
-              class="form-control"
-              [(ngModel)]="globalSearch"
-              placeholder="Search group, woman, amount, purpose, EMI...">
-
-          </div>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search group, woman, amount, purpose..."
+            [(ngModel)]="globalSearch">
 
         </div>
 
 
-        <!-- TOTAL LOAN -->
-        <div class="col-md-3 text-md-end">
+        <!-- TOTAL LOANS -->
 
-          <span class="text-muted">
-            Total Loan:
+        <div class="loan-count">
+
+          <span>
+            Total Loans
           </span>
 
-          <strong class="ms-1">
-            ₹ {{ getTotalSanctionedAmount() | number:'1.2-2' }}
+          <strong>
+            {{ filteredLoanList.length }}
           </strong>
 
         </div>
 
+      </div>
 
-        <!-- ADD BUTTON -->
-        <div class="col-md-3 text-md-end">
 
-          <button
-            type="button"
-            class="btn btn-primary btn-sm"
-            (click)="openAddForm()">
+      <!-- RIGHT SIDE BUTTONS -->
 
-            + Add Loan
+      <div class="d-flex align-items-center gap-2">
 
-          </button>
+        <!-- ADD LOAN -->
 
-        </div>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="openAddForm()">
+
+          <i class="bi bi-plus-lg me-1"></i>
+
+          Add Loan
+
+        </button>
+
+
+        <!-- EXPORT EXCEL -->
+
+        <button
+          type="button"
+          class="btn btn-success"
+          (click)="exportToExcel()">
+
+          <i class="bi bi-file-earmark-excel me-1"></i>
+
+          Export Excel
+
+        </button>
 
       </div>
 
@@ -242,10 +293,11 @@
 
   </div>
 
+</div>
 
-  <!-- =======================================================
-       LOAN FORM
-  ======================================================== -->
+  <!-- =====================================================
+       ADD LOAN FORM
+  ====================================================== -->
 
   <div
     id="loanFormSection"
@@ -254,29 +306,35 @@
 
     <!-- FORM HEADER -->
 
-    <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="form-header">
 
       <div>
 
-        <h5 class="mb-0">
+        <h5 class="mb-1">
+
+          <i class="bi bi-plus-circle me-2"></i>
+
           Add New Loan
+
         </h5>
 
-        <small class="text-muted">
-
+        <small>
           {{ getSelectedCmrcName() }}
           /
           {{ getSelectedVoAlfName() }}
-
         </small>
 
       </div>
 
-
       <button
         type="button"
-        class="btn-close"
+        class="btn btn-sm btn-outline-secondary"
         (click)="closeForm()">
+
+        <i class="bi bi-x-lg"></i>
+
+        Close
+
       </button>
 
     </div>
@@ -284,345 +342,72 @@
 
     <div class="card-body">
 
-      <!-- ===================================================
-           LOAN INFORMATION
-      ==================================================== -->
+      <!-- =================================================
+           BASIC INFORMATION
+      ================================================== -->
 
-      <h6 class="section-title mb-3">
-        Loan Information
-      </h6>
+      <div class="form-section">
 
-
-      <div class="row g-3">
-
-        <!-- GROUP NAME -->
-
-        <div class="col-md-6">
-
-          <label class="form-label">
-            Group Name
-            <span class="text-danger">*</span>
-          </label>
-
-          <input
-            type="text"
-            class="form-control"
-            [(ngModel)]="newLoan.groupName"
-            name="groupName"
-            placeholder="Enter group name">
-
-        </div>
+        <h6 class="form-section-title">
+          <i class="bi bi-person-vcard me-2"></i>
+          Beneficiary Information
+        </h6>
 
 
-        <!-- WOMAN NAME -->
+        <div class="row g-3">
 
-        <div class="col-md-6">
+          <!-- GROUP -->
 
-          <label class="form-label">
-            Woman Name
-            <span class="text-danger">*</span>
-          </label>
+          <div class="col-md-4">
 
-          <input
-            type="text"
-            class="form-control"
-            [(ngModel)]="newLoan.womanName"
-            name="womanName"
-            placeholder="Enter woman name">
-
-        </div>
-
-
-        <!-- LOAN PURPOSE -->
-
-        <div class="col-md-6">
-
-          <label class="form-label">
-            Loan Purpose
-          </label>
-
-          <input
-            type="text"
-            class="form-control"
-            [(ngModel)]="newLoan.loanPurpose"
-            name="loanPurpose"
-            placeholder="Enter loan purpose">
-
-        </div>
-
-
-        <!-- SANCTIONED AMOUNT -->
-
-        <div class="col-md-6">
-
-          <label class="form-label">
-
-            Sanctioned Amount
-
-            <span class="text-danger">
-              *
-            </span>
-
-          </label>
-
-          <div class="input-group">
-
-            <span class="input-group-text">
-              ₹
-            </span>
+            <label class="form-label">
+              Group Name
+              <span class="text-danger">*</span>
+            </label>
 
             <input
-              type="number"
+              type="text"
               class="form-control"
-              [(ngModel)]="newLoan.sanctionedAmount"
-              name="sanctionedAmount"
-              min="0"
-              placeholder="Enter sanctioned amount"
-              (input)="calculateDisbursedAmount()"
-              required>
+              [(ngModel)]="newLoan.groupName"
+              name="groupName"
+              placeholder="Enter group name">
 
           </div>
 
-        </div>
 
+          <!-- WOMAN -->
 
-        <!-- PROCESSING FEE -->
+          <div class="col-md-4">
 
-        <div class="col-md-6">
-
-          <label class="form-label">
-            Processing Fee
-          </label>
-
-          <div class="input-group">
-
-            <span class="input-group-text">
-              ₹
-            </span>
+            <label class="form-label">
+              Woman Name
+              <span class="text-danger">*</span>
+            </label>
 
             <input
-              type="number"
+              type="text"
               class="form-control"
-              [(ngModel)]="newLoan.processingFee"
-              name="processingFee"
-              min="0"
-              placeholder="Enter processing fee"
-              (input)="calculateDisbursedAmount()">
+              [(ngModel)]="newLoan.womanName"
+              name="womanName"
+              placeholder="Enter woman name">
 
           </div>
 
-        </div>
 
+          <!-- PURPOSE -->
 
-        <!-- DISBURSED AMOUNT -->
+          <div class="col-md-4">
 
-        <div class="col-md-6">
-
-          <label class="form-label">
-            Disbursed Amount
-          </label>
-
-          <div class="input-group">
-
-            <span class="input-group-text">
-              ₹
-            </span>
+            <label class="form-label">
+              Loan Purpose
+            </label>
 
             <input
-              type="number"
-              class="form-control fw-bold"
-              [(ngModel)]="newLoan.disbursedAmount"
-              name="disbursedAmount"
-              readonly>
-
-          </div>
-
-          <small class="text-muted">
-
-            Sanctioned Amount − Processing Fee
-
-          </small>
-
-        </div>
-
-
-        <!-- LOAN GIVEN DATE -->
-
-        <div class="col-md-6">
-
-          <label class="form-label">
-            Loan Given Date
-          </label>
-
-          <input
-            type="date"
-            class="form-control"
-            [(ngModel)]="newLoan.loanGivenDate"
-            name="loanGivenDate">
-
-        </div>
-
-      </div>
-
-
-      <!-- ===================================================
-           LOAN TERMS
-      ==================================================== -->
-
-      <hr class="my-4">
-
-
-      <h6 class="section-title mb-3">
-        Loan Terms
-      </h6>
-
-
-      <div class="row g-3">
-
-        <!-- REPAYMENT PERIOD -->
-
-        <div class="col-md-4">
-
-          <label class="form-label">
-            Repayment Period
-          </label>
-
-          <div class="input-group">
-
-            <input
-              type="number"
+              type="text"
               class="form-control"
-              [(ngModel)]="newLoan.repaymentPeriodMonths"
-              name="repaymentPeriodMonths"
-              min="1"
-              placeholder="Months"
-              (input)="calculateEmi()">
-
-            <span class="input-group-text">
-              Months
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <!-- REPAYMENT FREQUENCY -->
-
-        <div class="col-md-4">
-
-          <label class="form-label">
-            Repayment Frequency
-          </label>
-
-          <select
-            class="form-select"
-            name="repaymentFrequency">
-
-            <option value="MONTHLY">
-              Monthly
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <!-- INTEREST TYPE -->
-
-        <div class="col-md-4">
-
-          <label class="form-label">
-            Interest Type
-          </label>
-
-          <select
-            class="form-select"
-            [(ngModel)]="newLoan.interestType"
-            name="interestType"
-            (change)="calculateEmi()">
-
-            <option value="FLAT">
-              Flat
-            </option>
-
-            <option value="REDUCING">
-              Reducing Balance
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <!-- INTEREST RATE -->
-
-        <div class="col-md-4">
-
-          <label class="form-label">
-            Interest Rate (%)
-          </label>
-
-          <div class="input-group">
-
-            <input
-              type="number"
-              class="form-control"
-              [(ngModel)]="newLoan.interestRate"
-              name="interestRate"
-              min="0"
-              step="0.01"
-              placeholder="Enter interest rate"
-              (input)="calculateEmi()">
-
-            <span class="input-group-text">
-              %
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <!-- MONTHLY EMI -->
-
-        <div class="col-md-4">
-
-          <label class="form-label">
-            Monthly EMI
-          </label>
-
-          <div class="input-group">
-
-            <span class="input-group-text">
-              ₹
-            </span>
-
-            <input
-              type="number"
-              class="form-control fw-bold"
-              [(ngModel)]="newLoan.monthlyEmi"
-              name="monthlyEmi"
-              readonly>
-
-          </div>
-
-        </div>
-
-
-        <!-- TOTAL INSTALLMENTS -->
-
-        <div class="col-md-4">
-
-          <label class="form-label">
-            Total Installments
-          </label>
-
-          <div class="form-control bg-light">
-
-            {{
-              newLoan.repaymentPeriodMonths || 0
-            }}
+              [(ngModel)]="newLoan.loanPurpose"
+              name="loanPurpose"
+              placeholder="Enter loan purpose">
 
           </div>
 
@@ -631,102 +416,178 @@
       </div>
 
 
-      <!-- ===================================================
-           LOAN SUMMARY
-      ==================================================== -->
+      <!-- =================================================
+           LOAN AMOUNT
+      ================================================== -->
 
-      <hr class="my-4">
+      <div class="form-section">
+
+        <h6 class="form-section-title">
+          <i class="bi bi-currency-rupee me-2"></i>
+          Loan Amount Details
+        </h6>
 
 
-      <h6 class="section-title mb-3">
-        Loan Summary
-      </h6>
+        <div class="row g-3">
 
+          <!-- SANCTIONED -->
 
-      <div class="row g-3">
+          <div class="col-md-4">
 
-        <!-- SANCTIONED -->
+            <label class="form-label">
+              Sanctioned Amount
+              <span class="text-danger">*</span>
+            </label>
 
-        <div class="col-md-3">
+            <div class="input-group">
 
-          <div class="summary-box">
+              <span class="input-group-text">
+                ₹
+              </span>
 
-            <small>
-              Sanctioned
-            </small>
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="newLoan.sanctionedAmount"
+                name="sanctionedAmount"
+                min="0"
+                placeholder="0"
+                (input)="calculateDisbursedAmount(); calculateEmi()">
 
-            <strong>
-              ₹ {{
-                newLoan.sanctionedAmount || 0
-                | number:'1.2-2'
-              }}
-            </strong>
+            </div>
 
           </div>
 
-        </div>
 
+          <!-- PROCESSING FEE -->
 
-        <!-- PROCESSING FEE -->
+          <div class="col-md-4">
 
-        <div class="col-md-3">
-
-          <div class="summary-box">
-
-            <small>
+            <label class="form-label">
               Processing Fee
-            </small>
+            </label>
 
-            <strong>
-              ₹ {{
-                newLoan.processingFee || 0
-                | number:'1.2-2'
-              }}
-            </strong>
+            <div class="input-group">
 
-          </div>
+              <span class="input-group-text">
+                ₹
+              </span>
 
-        </div>
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="newLoan.processingFee"
+                name="processingFee"
+                min="0"
+                placeholder="0"
+                (input)="calculateDisbursedAmount(); calculateEmi()">
 
-
-        <!-- DISBURSED -->
-
-        <div class="col-md-3">
-
-          <div class="summary-box">
-
-            <small>
-              Disbursed
-            </small>
-
-            <strong>
-              ₹ {{
-                newLoan.disbursedAmount || 0
-                | number:'1.2-2'
-              }}
-            </strong>
+            </div>
 
           </div>
 
-        </div>
 
+          <!-- DISBURSED -->
 
-        <!-- EMI -->
+          <div class="col-md-4">
 
-        <div class="col-md-3">
+            <label class="form-label">
+              Disbursed Amount
+            </label>
 
-          <div class="summary-box">
+            <div class="input-group">
 
-            <small>
-              Monthly EMI
+              <span class="input-group-text">
+                ₹
+              </span>
+
+              <input
+                type="number"
+                class="form-control"
+                [value]="newLoan.disbursedAmount || 0"
+                readonly>
+
+            </div>
+
+            <small class="text-muted">
+              Sanctioned Amount − Processing Fee
             </small>
 
-            <strong>
-              ₹ {{
-                newLoan.monthlyEmi || 0
-                | number:'1.2-2'
-              }}
-            </strong>
+          </div>
+
+
+          <!-- REPAYMENT LOAN AMOUNT -->
+
+          <div class="col-md-4">
+
+            <label class="form-label">
+              Repayment Loan Amount
+            </label>
+
+            <div class="input-group">
+
+              <span class="input-group-text">
+                ₹
+              </span>
+
+              <input
+                type="number"
+                class="form-control"
+                [value]="newLoan.loanAmount || 0"
+                readonly>
+
+            </div>
+
+            <small class="text-success">
+              Same as Disbursed Amount
+            </small>
+
+          </div>
+
+
+          <!-- DATE -->
+
+          <div class="col-md-4">
+
+            <label class="form-label">
+              Loan Given Date
+            </label>
+
+            <input
+              type="date"
+              class="form-control"
+              [(ngModel)]="newLoan.loanGivenDate"
+              name="loanGivenDate">
+
+          </div>
+
+
+          <!-- STATUS -->
+
+          <div class="col-md-4">
+
+            <label class="form-label">
+              Loan Status
+            </label>
+
+            <select
+              class="form-select"
+              [(ngModel)]="newLoan.loanStatus"
+              name="loanStatus">
+
+              <option value="ACTIVE">
+                Active
+              </option>
+
+              <option value="CLOSED">
+                Closed
+              </option>
+
+              <option value="PENDING">
+                Pending
+              </option>
+
+            </select>
 
           </div>
 
@@ -735,28 +596,290 @@
       </div>
 
 
-      <!-- ===================================================
-           FORM ACTIONS
-      ==================================================== -->
+      <!-- =================================================
+           REPAYMENT DETAILS
+      ================================================== -->
 
-      <div class="text-end mt-4">
+      <div class="form-section">
+
+        <h6 class="form-section-title">
+          <i class="bi bi-calendar-check me-2"></i>
+          Repayment & Interest
+        </h6>
+
+
+        <div class="row g-3">
+
+          <!-- PERIOD -->
+
+          <div class="col-md-3">
+
+            <label class="form-label">
+              Repayment Period
+              <span class="text-danger">*</span>
+            </label>
+
+            <div class="input-group">
+
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="newLoan.repaymentPeriodMonths"
+                name="repaymentPeriodMonths"
+                min="1"
+                placeholder="Months"
+                (input)="calculateEmi()">
+
+              <span class="input-group-text">
+                Months
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <!-- FREQUENCY -->
+
+          <div class="col-md-3">
+
+            <label class="form-label">
+              Repayment Frequency
+            </label>
+
+            <select
+              class="form-select"
+              [(ngModel)]="newLoan.repaymentFrequency"
+              name="repaymentFrequency">
+
+              <option value="MONTHLY">
+                Monthly
+              </option>
+
+              <option value="QUARTERLY">
+                Quarterly
+              </option>
+
+              <option value="HALF_YEARLY">
+                Half Yearly
+              </option>
+
+              <option value="YEARLY">
+                Yearly
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <!-- INTEREST TYPE -->
+
+          <div class="col-md-3">
+
+            <label class="form-label">
+              Interest Type
+            </label>
+
+            <select
+              class="form-select"
+              [(ngModel)]="newLoan.interestType"
+              name="interestType"
+              (change)="calculateEmi()">
+
+              <option value="FLAT">
+                Flat
+              </option>
+
+              <option value="REDUCING">
+                Reducing Balance
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <!-- RATE -->
+
+          <div class="col-md-3">
+
+            <label class="form-label">
+              Interest Rate (%)
+              <span class="text-danger">*</span>
+            </label>
+
+            <div class="input-group">
+
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="newLoan.interestRate"
+                name="interestRate"
+                min="0"
+                step="0.01"
+                placeholder="0"
+                (input)="calculateEmi()">
+
+              <span class="input-group-text">
+                %
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <!-- EMI -->
+
+          <div class="col-md-4">
+
+            <label class="form-label">
+              Monthly EMI
+            </label>
+
+            <div class="input-group">
+
+              <span class="input-group-text">
+                ₹
+              </span>
+
+              <input
+                type="number"
+                class="form-control"
+                [value]="newLoan.monthlyEmi || 0"
+                readonly>
+
+            </div>
+
+          </div>
+
+
+          <!-- TOTAL INSTALLMENTS -->
+
+          <div class="col-md-4">
+
+            <label class="form-label">
+              Total Installments
+            </label>
+
+            <input
+              type="text"
+              class="form-control"
+              [value]="newLoan.repaymentPeriodMonths || 0"
+              readonly>
+
+          </div>
+
+
+          <!-- ESTIMATED PAYABLE -->
+
+          <div class="col-md-4">
+
+            <label class="form-label">
+              Estimated Total Payable
+            </label>
+
+            <input
+              type="text"
+              class="form-control"
+              [value]="
+                ((newLoan.monthlyEmi || 0) *
+                (newLoan.repaymentPeriodMonths || 0))
+                | number:'1.2-2'
+              "
+              readonly>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           CALCULATION STRIP
+      ================================================== -->
+
+      <div class="calculation-strip">
+
+        <div>
+
+          <span>
+            Sanctioned
+          </span>
+
+          <strong>
+            ₹{{ (newLoan.sanctionedAmount || 0) | number:'1.2-2' }}
+          </strong>
+
+        </div>
+
+
+        <div class="operator">
+          −
+        </div>
+
+
+        <div>
+
+          <span>
+            Processing Fee
+          </span>
+
+          <strong>
+            ₹{{ (newLoan.processingFee || 0) | number:'1.2-2' }}
+          </strong>
+
+        </div>
+
+
+        <div class="operator">
+          =
+        </div>
+
+
+        <div class="highlight">
+
+          <span>
+            Disbursed / Loan Amount
+          </span>
+
+          <strong>
+            ₹{{ (newLoan.disbursedAmount || 0) | number:'1.2-2' }}
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           FORM ACTIONS
+      ================================================== -->
+
+      <div class="form-actions mt-4">
 
         <button
           type="button"
-          class="btn btn-secondary me-2"
-          (click)="closeForm()">
+          class="btn btn-success"
+          (click)="saveLoan()">
 
-          Cancel
+          <i class="bi bi-check-circle me-1"></i>
+
+          Save Loan
 
         </button>
 
 
         <button
           type="button"
-          class="btn btn-primary"
-          (click)="saveLoan()">
+          class="btn btn-outline-secondary"
+          (click)="closeForm()">
 
-          Save Loan
+          <i class="bi bi-x-circle me-1"></i>
+
+          Cancel
 
         </button>
 
@@ -767,44 +890,28 @@
   </div>
 
 
-  <!-- =======================================================
-       LOAN LIST
-  ======================================================== -->
+  <!-- =====================================================
+       LOAN SUMMARY
+  ====================================================== -->
 
   <div
-    class="card shadow-sm"
-    *ngIf="selectedVoAlfId">
+    class="row g-3 mb-3"
+    *ngIf="selectedVoAlfId && loanList.length > 0">
 
-    <div class="card-header">
+    <!-- TOTAL LOAN -->
+    <div class="col-md-3">
 
-      <div
-        class="d-flex justify-content-between align-items-center">
-
-        <div>
-
-          <h5 class="mb-1">
-            Loan List
-          </h5>
-
-          <small class="text-muted">
-
-            {{ getSelectedCmrcName() }}
-            /
-            {{ getSelectedVoAlfName() }}
-
-          </small>
-
-        </div>
-
+      <div class="summary-card">
 
         <div>
 
-          <span class="badge bg-primary">
-
-            {{ filteredLoanList.length }}
-            Loans
-
+          <span class="summary-label">
+            Total Loan Amount
           </span>
+
+          <h4>
+            ₹{{ getTotalLoanAmount() | number:'1.2-2' }}
+          </h4>
 
         </div>
 
@@ -813,68 +920,119 @@
     </div>
 
 
+    <!-- TOTAL SANCTIONED -->
+    <div class="col-md-3">
+
+      <div class="summary-card">
+
+        <div>
+
+          <span class="summary-label">
+            Total Sanctioned
+          </span>
+
+          <h4>
+            ₹{{ getTotalSanctionedAmount() | number:'1.2-2' }}
+          </h4>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- TOTAL DISBURSED -->
+    <div class="col-md-3">
+
+      <div class="summary-card">
+
+        <div>
+
+          <span class="summary-label">
+            Total Disbursed
+          </span>
+
+          <h4>
+            ₹{{ getTotalDisbursedAmount() | number:'1.2-2' }}
+          </h4>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- REMAINING FUND -->
+    <div class="col-md-3">
+
+      <div class="summary-card">
+
+        <div>
+
+          <span class="summary-label">
+            Remaining Fund
+          </span>
+
+          <h4>
+            ₹{{ getRemainingAmount() | number:'1.2-2' }}
+          </h4>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       LOAN TABLE
+  ====================================================== -->
+
+  <div
+    class="card shadow-sm mb-4"
+    *ngIf="selectedVoAlfId">
+
     <div class="card-body p-0">
 
       <div class="table-responsive">
 
-        <table
-          class="table table-bordered table-hover align-middle mb-0">
+        <table class="table loan-table mb-0">
 
-          <thead class="table-light">
+          <thead>
 
             <tr>
 
-              <th>
-                Sr. No.
-              </th>
+              <th>#</th>
 
-              <th>
-                Group Name
-              </th>
+              <th>Group Name</th>
 
-              <th>
-                Woman Name
-              </th>
+              <th>Woman Name</th>
 
-              <th class="text-end">
-                Sanctioned Amount
-              </th>
+              <th>Loan Amount</th>
 
-              <th class="text-end">
-                Processing Fee
-              </th>
+              <th>Sanctioned</th>
 
-              <th class="text-end">
-                Disbursed Amount
-              </th>
+              <th>Processing Fee</th>
 
-              <th class="text-end">
-                Monthly EMI
-              </th>
+              <th>Disbursed</th>
 
-              <th>
-                Loan Purpose
-              </th>
+              <th>Monthly EMI</th>
 
-              <th>
-                Loan Date
-              </th>
+              <th>Purpose</th>
 
-              <th>
-                Repayment Period
-              </th>
+              <th>Loan Date</th>
 
-              <th>
-                Interest Rate
-              </th>
+              <th>Period</th>
 
-              <th>
-                Loan Status
-              </th>
+              <th>Interest</th>
 
-              <th>
-                Actions
-              </th>
+              <th>Status</th>
+
+              <th>Actions</th>
 
             </tr>
 
@@ -883,135 +1041,115 @@
 
           <tbody>
 
-            <!-- DATA -->
-
             <tr
               *ngFor="
                 let loan of filteredLoanList;
                 let i = index
               ">
 
-              <!-- SR NO -->
-
+              <!-- # -->
               <td>
                 {{ i + 1 }}
               </td>
 
 
               <!-- GROUP -->
-
               <td>
-                {{ loan.groupName || '-' }}
+                <strong>
+                  {{ loan.groupName || '-' }}
+                </strong>
               </td>
 
 
               <!-- WOMAN -->
-
               <td>
                 {{ loan.womanName || '-' }}
               </td>
 
 
+              <!-- LOAN AMOUNT -->
+              <td class="amount-cell">
+
+                ₹{{ (loan.loanAmount || 0) | number:'1.2-2' }}
+
+              </td>
+
+
               <!-- SANCTIONED -->
+              <td class="amount-cell">
 
-              <td class="text-end">
-
-                ₹ {{
-                  loan.sanctionedAmount || 0
-                  | number:'1.2-2'
-                }}
+                ₹{{ (loan.sanctionedAmount || 0) | number:'1.2-2' }}
 
               </td>
 
 
               <!-- PROCESSING FEE -->
+              <td class="amount-cell">
 
-              <td class="text-end">
-
-                ₹ {{
-                  loan.processingFee || 0
-                  | number:'1.2-2'
-                }}
+                ₹{{ (loan.processingFee || 0) | number:'1.2-2' }}
 
               </td>
 
 
               <!-- DISBURSED -->
+              <td class="amount-cell">
 
-              <td class="text-end fw-semibold">
-
-                ₹ {{
-                  loan.disbursedAmount || 0
-                  | number:'1.2-2'
-                }}
+                ₹{{ (loan.disbursedAmount || 0) | number:'1.2-2' }}
 
               </td>
 
 
               <!-- EMI -->
+              <td class="amount-cell">
 
-              <td class="text-end">
-
-                ₹ {{
-                  loan.monthlyEmi || 0
-                  | number:'1.2-2'
-                }}
+                ₹{{ (loan.monthlyEmi || 0) | number:'1.2-2' }}
 
               </td>
 
 
               <!-- PURPOSE -->
-
               <td>
                 {{ loan.loanPurpose || '-' }}
               </td>
 
 
               <!-- DATE -->
-
               <td>
                 {{ loan.loanGivenDate || '-' }}
               </td>
 
 
               <!-- PERIOD -->
-
               <td>
-
-                {{
-                  loan.repaymentPeriodMonths || 0
-                }}
+                {{ loan.repaymentPeriodMonths || 0 }}
                 Months
-
               </td>
 
 
               <!-- INTEREST -->
-
               <td>
 
-                {{
-                  loan.interestRate || 0
-                }}%
+                {{ loan.interestRate || 0 }}%
+
+                <small class="d-block text-muted">
+                  {{ loan.interestType || '-' }}
+                </small>
 
               </td>
 
 
               <!-- STATUS -->
-
               <td>
 
                 <span
-                  class="badge"
-                  [ngClass]="
-                    loan.loanStatus === 'CLOSED'
-                      ? 'bg-success'
-                      : 'bg-warning text-dark'
-                  ">
+                  class="status-badge"
+                  [ngClass]="{
+                    'status-active': loan.loanStatus === 'ACTIVE',
+                    'status-closed': loan.loanStatus === 'CLOSED',
+                    'status-pending': loan.loanStatus === 'PENDING'
+                  }">
 
-                  {{
-                    loan.loanStatus || 'ACTIVE'
-                  }}
+                  {{ loan.loanStatus || 'ACTIVE' }}
 
                 </span>
 
@@ -1019,20 +1157,32 @@
 
 
               <!-- ACTIONS -->
-
               <td>
 
                 <div class="action-buttons">
+
+                  <!-- DETAILS -->
+
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    title="Loan Details"
+                    (click)="openLoanDetails(loan)">
+
+                    <i class="bi bi-eye"></i>
+
+                  </button>
+
 
                   <!-- CL SCHEDULE -->
 
                   <button
                     type="button"
                     class="btn btn-sm btn-outline-info"
-                    (click)="openClSchedule(loan)"
-                    title="CL Schedule">
+                    title="CL Schedule"
+                    (click)="openClSchedule(loan)">
 
-                    CL Schedule
+                    <i class="bi bi-calendar3"></i>
 
                   </button>
 
@@ -1042,10 +1192,10 @@
                   <button
                     type="button"
                     class="btn btn-sm btn-outline-success"
-                    (click)="openRepayment(loan)"
-                    title="Repayment">
+                    title="Repayment"
+                    (click)="openRepayment(loan)">
 
-                    Repayment
+                    <i class="bi bi-cash-coin"></i>
 
                   </button>
 
@@ -1055,10 +1205,10 @@
                   <button
                     type="button"
                     class="btn btn-sm btn-outline-danger"
-                    (click)="deleteLoan(loan.id!)"
-                    title="Delete Loan">
+                    title="Delete"
+                    (click)="deleteLoan(loan.id!)">
 
-                    Delete
+                    <i class="bi bi-trash"></i>
 
                   </button>
 
@@ -1069,18 +1219,24 @@
             </tr>
 
 
-            <!-- NO RECORD -->
+            <!-- NO DATA -->
 
             <tr
-              *ngIf="
-                filteredLoanList.length === 0
-              ">
+              *ngIf="filteredLoanList.length === 0">
 
               <td
-                colspan="13"
-                class="text-center py-4 text-muted">
+                colspan="14"
+                class="text-center py-5">
 
-                No loan records found.
+                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+
+                <strong>
+                  No loan records found
+                </strong>
+
+                <div class="text-muted">
+                  Add a new loan or change your search.
+                </div>
 
               </td>
 
@@ -1089,73 +1245,66 @@
           </tbody>
 
 
-          <!-- TABLE FOOTER -->
+          <!-- =================================================
+               TABLE FOOTER
+          ================================================== -->
 
           <tfoot
             *ngIf="filteredLoanList.length > 0">
 
-            <tr class="table-light fw-bold">
+            <tr>
 
-              <td
-                colspan="3"
-                class="text-end">
-
+              <th colspan="3">
                 Total
+              </th>
 
-              </td>
+
+              <!-- TOTAL LOAN AMOUNT -->
+
+              <th class="amount-cell">
+
+                ₹{{ getTotalLoanAmount() | number:'1.2-2' }}
+
+              </th>
 
 
               <!-- TOTAL SANCTIONED -->
 
-              <td class="text-end">
+              <th class="amount-cell">
 
-                ₹ {{
-                  getTotalSanctionedAmount()
-                  | number:'1.2-2'
-                }}
+                ₹{{ getTotalSanctionedAmount() | number:'1.2-2' }}
 
-              </td>
+              </th>
 
 
               <!-- TOTAL PROCESSING FEE -->
 
-              <td class="text-end">
+              <th class="amount-cell">
 
-                ₹ {{
-                  getTotalProcessingFee()
-                  | number:'1.2-2'
-                }}
+                ₹{{ getTotalProcessingFee() | number:'1.2-2' }}
 
-              </td>
+              </th>
 
 
               <!-- TOTAL DISBURSED -->
 
-              <td class="text-end">
+              <th class="amount-cell">
 
-                ₹ {{
-                  getTotalDisbursedAmount()
-                  | number:'1.2-2'
-                }}
+                ₹{{ getTotalDisbursedAmount() | number:'1.2-2' }}
 
-              </td>
+              </th>
 
 
               <!-- TOTAL EMI -->
 
-              <td class="text-end">
+              <th class="amount-cell">
 
-                ₹ {{
-                  getTotalMonthlyEmi()
-                  | number:'1.2-2'
-                }}
+                ₹{{ getTotalMonthlyEmi() | number:'1.2-2' }}
 
-              </td>
+              </th>
 
 
-              <!-- REMAINING COLUMNS -->
-
-              <td colspan="6"></td>
+              <th colspan="6"></th>
 
             </tr>
 
@@ -1170,47 +1319,317 @@
   </div>
 
 
-  <!-- =======================================================
-       CL SCHEDULE SECTION
-  ======================================================== -->
+  <!-- =====================================================
+       LOAN DETAILS
+  ====================================================== -->
 
   <div
-    id="clScheduleSection"
-    class="mt-4"
-    *ngIf="showClSchedule && selectedLoan">
+    id="loanDetailsSection"
+    class="card shadow-sm mb-4"
+    *ngIf="selectedLoan">
 
-    <div class="card shadow-sm">
+    <div class="form-header">
 
-      <div class="card-header d-flex justify-content-between align-items-center">
+      <div>
 
-        <h5 class="mb-0">
-          CL Schedule
+        <h5 class="mb-1">
+
+          <i class="bi bi-file-earmark-text me-2"></i>
+
+          Loan Details
+
         </h5>
 
-
-        <button
-          type="button"
-          class="btn btn-sm btn-outline-secondary"
-          (click)="closeClSchedule()">
-
-          Close
-
-        </button>
+        <small class="text-muted">
+          Loan #{{ selectedLoan.id }}
+        </small>
 
       </div>
 
 
-      <div class="card-body">
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        (click)="closeLoanDetails()">
 
-        <!-- LOAN SUMMARY -->
+        <i class="bi bi-x-lg"></i>
+
+        Close
+
+      </button>
+
+    </div>
 
 
-        <!-- CL SCHEDULE COMPONENT -->
+    <div class="card-body">
 
-        <app-cl-schedule
-          [loanId]="selectedLoanId">
+      <div class="row g-3">
 
-        </app-cl-schedule>
+        <!-- GROUP -->
+
+        <div class="col-md-3">
+
+          <div class="detail-item">
+
+            <span>
+              Group Name
+            </span>
+
+            <strong>
+              {{ selectedLoan.groupName || '-' }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- WOMAN -->
+
+        <div class="col-md-3">
+
+          <div class="detail-item">
+
+            <span>
+              Woman Name
+            </span>
+
+            <strong>
+              {{ selectedLoan.womanName || '-' }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- LOAN AMOUNT -->
+
+        <div class="col-md-3">
+
+          <div class="detail-item">
+
+            <span>
+              Loan Amount
+            </span>
+
+            <strong>
+              ₹{{ (selectedLoan.loanAmount || 0) | number:'1.2-2' }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- SANCTIONED -->
+
+        <div class="col-md-3">
+
+          <div class="detail-item">
+
+            <span>
+              Sanctioned Amount
+            </span>
+
+            <strong>
+              ₹{{ (selectedLoan.sanctionedAmount || 0) | number:'1.2-2' }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- PROCESSING -->
+
+        <div class="col-md-3">
+
+          <div class="detail-item">
+
+            <span>
+              Processing Fee
+            </span>
+
+            <strong>
+              ₹{{ (selectedLoan.processingFee || 0) | number:'1.2-2' }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- DISBURSED -->
+
+        <div class="col-md-3">
+
+          <div class="detail-item">
+
+            <span>
+              Disbursed Amount
+            </span>
+
+            <strong>
+              ₹{{ (selectedLoan.disbursedAmount || 0) | number:'1.2-2' }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- EMI -->
+
+        <div class="col-md-3">
+
+          <div class="detail-item">
+
+            <span>
+              Monthly EMI
+            </span>
+
+            <strong>
+              ₹{{ (selectedLoan.monthlyEmi || 0) | number:'1.2-2' }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- INTEREST RATE -->
+
+        <div class="col-md-3">
+
+          <div class="detail-item">
+
+            <span>
+              Interest Rate
+            </span>
+
+            <strong>
+              {{ selectedLoan.interestRate || 0 }}%
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- INTEREST TYPE -->
+
+        <div class="col-md-3">
+
+          <div class="detail-item">
+
+            <span>
+              Interest Type
+            </span>
+
+            <strong>
+              {{ selectedLoan.interestType || '-' }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- PERIOD -->
+
+        <div class="col-md-3">
+
+          <div class="detail-item">
+
+            <span>
+              Repayment Period
+            </span>
+
+            <strong>
+              {{ selectedLoan.repaymentPeriodMonths || 0 }}
+              Months
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- FREQUENCY -->
+
+        <div class="col-md-3">
+
+          <div class="detail-item">
+
+            <span>
+              Repayment Frequency
+            </span>
+
+            <strong>
+              {{ selectedLoan.repaymentFrequency || '-' }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- DATE -->
+
+        <div class="col-md-3">
+
+          <div class="detail-item">
+
+            <span>
+              Loan Given Date
+            </span>
+
+            <strong>
+              {{ selectedLoan.loanGivenDate || '-' }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- PURPOSE -->
+
+        <div class="col-md-3">
+
+          <div class="detail-item">
+
+            <span>
+              Loan Purpose
+            </span>
+
+            <strong>
+              {{ selectedLoan.loanPurpose || '-' }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- STATUS -->
+
+        <div class="col-md-3">
+
+          <div class="detail-item">
+
+            <span>
+              Loan Status
+            </span>
+
+            <strong>
+              {{ selectedLoan.loanStatus || '-' }}
+            </strong>
+
+          </div>
+
+        </div>
 
       </div>
 
@@ -1219,170 +1638,65 @@
   </div>
 
 
-  <!-- =======================================================
-       REPAYMENT SECTION
-  ======================================================== -->
+  <!-- =====================================================
+       CL SCHEDULE
+  ====================================================== -->
+
+  <div
+    id="clScheduleSection"
+    class="mb-4"
+    *ngIf="showClSchedule && selectedLoanId">
+
+    <app-cl-schedule
+      [loanId]="selectedLoanId">
+    </app-cl-schedule>
+
+
+    <div class="text-end mt-2">
+
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        (click)="closeClSchedule()">
+
+        <i class="bi bi-x-circle me-1"></i>
+
+        Close CL Schedule
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       REPAYMENT
+  ====================================================== -->
 
   <div
     id="repaymentSection"
-    class="mt-4"
-    *ngIf="
-      showRepayment &&
-      selectedRepaymentLoan
-    ">
+    class="mb-4"
+    *ngIf="showRepayment && selectedRepaymentLoanId">
 
-    <div class="card shadow-sm">
-
-      <div class="card-header d-flex justify-content-between align-items-center">
-
-        <h5 class="mb-0">
-          Repayment Management
-        </h5>
+    <app-repayment-management
+      [loanId]="selectedRepaymentLoanId"
+      [loan]="selectedRepaymentLoan">
+    </app-repayment-management>
 
 
-        <button
-          type="button"
-          class="btn btn-sm btn-outline-secondary"
-          (click)="closeRepayment()">
+    <div class="text-end mt-2">
 
-          Close
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        (click)="closeRepayment()">
 
-        </button>
+        <i class="bi bi-x-circle me-1"></i>
 
-      </div>
+        Close Repayment
 
-
-      <div class="card-body">
-
-        <!-- REPAYMENT LOAN SUMMARY -->
-
-        <div class="row g-3 mb-3">
-
-          <div class="col-md-2">
-
-            <div class="summary-box">
-
-              <small>
-                Loan #
-              </small>
-
-              <strong>
-                {{ selectedRepaymentLoan.id }}
-              </strong>
-
-            </div>
-
-          </div>
-
-
-          <div class="col-md-2">
-
-            <div class="summary-box">
-
-              <small>
-                Group Name
-              </small>
-
-              <strong>
-                {{
-                  selectedRepaymentLoan.groupName || '-'
-                }}
-              </strong>
-
-            </div>
-
-          </div>
-
-
-          <div class="col-md-2">
-
-            <div class="summary-box">
-
-              <small>
-                Woman Name
-              </small>
-
-              <strong>
-                {{
-                  selectedRepaymentLoan.womanName || '-'
-                }}
-              </strong>
-
-            </div>
-
-          </div>
-
-
-          <div class="col-md-2">
-
-            <div class="summary-box">
-
-              <small>
-                Loan Amount
-              </small>
-
-              <strong>
-                ₹ {{
-                  selectedRepaymentLoan.sanctionedAmount || 0
-                  | number:'1.2-2'
-                }}
-              </strong>
-
-            </div>
-
-          </div>
-
-
-          <div class="col-md-2">
-
-            <div class="summary-box">
-
-              <small>
-                Monthly EMI
-              </small>
-
-              <strong>
-                ₹ {{
-                  selectedRepaymentLoan.monthlyEmi || 0
-                  | number:'1.2-2'
-                }}
-              </strong>
-
-            </div>
-
-          </div>
-
-
-          <div class="col-md-2">
-
-            <div class="summary-box">
-
-              <small>
-                Interest Rate
-              </small>
-
-              <strong>
-                {{
-                  selectedRepaymentLoan.interestRate || 0
-                }}%
-              </strong>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- REPAYMENT COMPONENT -->
-
-        <app-repayment-management
-          [loanId]="selectedRepaymentLoanId"
-          [loan]="selectedRepaymentLoan">
-
-        </app-repayment-management>
-
-      </div>
+      </button>
 
     </div>
 

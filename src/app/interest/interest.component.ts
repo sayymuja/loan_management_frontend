@@ -14,11 +14,13 @@ import {
   LoanService,
   Loan
 } from '../services/loan.service';
+
 import * as XLSX from 'xlsx';
+
 
 /* =========================================================
    INTEREST RECORD
-   ========================================================= */
+========================================================= */
 
 interface InterestRecord {
 
@@ -40,7 +42,11 @@ interface InterestRecord {
 
   groupName: string;
 
+  // Actual disbursed loan amount
   loanAmount: number;
+
+  // Original sanctioned loan amount
+  sanctionedAmount: number;
 
   loanGivenDate?: string;
 
@@ -176,24 +182,17 @@ export class InterestComponent implements OnInit {
   onCmrcChange(): void {
 
     // Reset VO / ALF
-
     this.voAlfList = [];
 
-
     // Reset loans
-
     this.loansByVoAlf = {};
 
-
     // Reset records
-
     this.interestRecords = [];
 
     this.filteredInterestRecords = [];
 
-
     // Reset filters
-
     this.availableYears = [];
 
     this.availableInterestRates = [];
@@ -206,7 +205,6 @@ export class InterestComponent implements OnInit {
 
 
     // No CMRC selected
-
     if (
       this.selectedCmrcId === null ||
       this.selectedCmrcId === undefined
@@ -218,7 +216,6 @@ export class InterestComponent implements OnInit {
 
 
     // Load VO / ALF
-
     this.loadVoAlf();
 
   }
@@ -580,10 +577,26 @@ export class InterestComponent implements OnInit {
               groupName:
                 loan.groupName || '-',
 
+
+              // =============================================
+              // ACTUAL DISBURSED LOAN AMOUNT
+              // =============================================
+
               loanAmount:
                 Number(
                   loan.loanAmount || 0
                 ),
+
+
+              // =============================================
+              // SANCTIONED AMOUNT
+              // =============================================
+
+              sanctionedAmount:
+                Number(
+                  loan.sanctionedAmount || 0
+                ),
+
 
               loanGivenDate:
                 loan.loanGivenDate,
@@ -676,100 +689,121 @@ export class InterestComponent implements OnInit {
 
   applyFilters(): void {
 
-    const search =
-      this.searchText
-        ? this.searchText
-            .trim()
-            .toLowerCase()
-        : '';
+    let records =
+      [...this.interestRecords];
 
+
+    // =======================================================
+    // ONLY CLOSED LOANS
+    // =======================================================
+
+    records =
+      records.filter(
+        (record: InterestRecord) =>
+          (
+            record.loanStatus || ''
+          )
+            .toUpperCase() ===
+          'CLOSED'
+      );
+
+
+    // =======================================================
+    // SEARCH FILTER
+    // =======================================================
+
+    if (
+      this.searchText &&
+      this.searchText.trim()
+    ) {
+
+      const search =
+        this.searchText
+          .trim()
+          .toLowerCase();
+
+
+      records =
+        records.filter(
+          (record: InterestRecord) =>
+
+            (record.womanName || '')
+              .toLowerCase()
+              .includes(search)
+
+            ||
+
+            (record.groupName || '')
+              .toLowerCase()
+              .includes(search)
+
+            ||
+
+            (record.voAlfName || '')
+              .toLowerCase()
+              .includes(search)
+
+            ||
+
+            (record.villageName || '')
+              .toLowerCase()
+              .includes(search)
+
+            ||
+
+            (record.cmrcName || '')
+              .toLowerCase()
+              .includes(search)
+
+        );
+
+    }
+
+
+    // =======================================================
+    // FINANCIAL YEAR FILTER
+    // =======================================================
+
+    if (
+      this.selectedYear !== null &&
+      this.selectedYear !== undefined
+    ) {
+
+      records =
+        records.filter(
+          (record: InterestRecord) =>
+            record.financialYear ===
+            this.selectedYear
+        );
+
+    }
+
+
+    // =======================================================
+    // INTEREST RATE FILTER
+    // =======================================================
+
+    if (
+      this.selectedInterestRate !== null &&
+      this.selectedInterestRate !== undefined
+    ) {
+
+      records =
+        records.filter(
+          (record: InterestRecord) =>
+            record.interestRate ===
+            this.selectedInterestRate
+        );
+
+    }
+
+
+    // =======================================================
+    // FINAL RESULT
+    // =======================================================
 
     this.filteredInterestRecords =
-      this.interestRecords.filter(
-        (
-          record: InterestRecord
-        ) => {
-
-
-          // ================================================
-          // SEARCH FILTER
-          // ================================================
-
-          if (search) {
-
-            const searchableText = [
-
-              record.cmrcName,
-
-              record.voAlfName,
-
-              record.villageName,
-
-              record.womanName,
-
-              record.groupName,
-
-              record.loanStatus || '',
-
-              this.getFinancialYearLabel(
-                record.financialYear
-              ),
-
-              record.interestRate !== null
-                ? String(record.interestRate)
-                : ''
-
-            ]
-              .join(' ')
-              .toLowerCase();
-
-
-            if (
-              !searchableText.includes(search)
-            ) {
-
-              return false;
-
-            }
-
-          }
-
-
-          // ================================================
-          // FINANCIAL YEAR
-          // ================================================
-
-          if (
-            this.selectedYear !== null &&
-            Number(record.financialYear) !==
-            Number(this.selectedYear)
-          ) {
-
-            return false;
-
-          }
-
-
-          // ================================================
-          // INTEREST RATE
-          // ================================================
-
-          if (
-            this.selectedInterestRate !== null &&
-            Number(record.interestRate) !==
-            Number(this.selectedInterestRate)
-          ) {
-
-            return false;
-
-          }
-
-
-          return true;
-
-        }
-
-      );
+      records;
 
   }
 
@@ -809,8 +843,10 @@ export class InterestComponent implements OnInit {
     this.selectedInterestRate = null;
 
 
-    this.filteredInterestRecords =
-      [...this.interestRecords];
+    // IMPORTANT:
+    // Use applyFilters so CLOSED-only filter remains active.
+
+    this.applyFilters();
 
   }
 
@@ -944,6 +980,7 @@ export class InterestComponent implements OnInit {
   ): number {
 
     return this.filteredInterestRecords
+
       .filter(
         (
           record: InterestRecord
@@ -951,6 +988,7 @@ export class InterestComponent implements OnInit {
           Number(record.voAlfId) ===
           Number(voAlfId)
       )
+
       .reduce(
         (
           total: number,
@@ -984,11 +1022,13 @@ export class InterestComponent implements OnInit {
 
   // =========================================================
   // TOTAL LOAN AMOUNT
+  // SANCTIONED AMOUNT
   // =========================================================
 
   getTotalLoanAmount(): number {
 
     return this.filteredInterestRecords
+
       .reduce(
         (
           total: number,
@@ -998,7 +1038,7 @@ export class InterestComponent implements OnInit {
           return (
             total +
             Number(
-              record.loanAmount || 0
+              record.sanctionedAmount || 0
             )
           );
 
@@ -1016,6 +1056,7 @@ export class InterestComponent implements OnInit {
   getTotalInterest(): number {
 
     return this.filteredInterestRecords
+
       .reduce(
         (
           total: number,
@@ -1043,15 +1084,18 @@ export class InterestComponent implements OnInit {
   getActiveLoans(): number {
 
     return this.filteredInterestRecords
+
       .filter(
         (
           record: InterestRecord
         ) =>
           (
             record.loanStatus || ''
-          ).toUpperCase() ===
+          )
+            .toUpperCase() ===
           'ACTIVE'
       )
+
       .length;
 
   }
@@ -1064,15 +1108,18 @@ export class InterestComponent implements OnInit {
   getClosedLoans(): number {
 
     return this.filteredInterestRecords
+
       .filter(
         (
           record: InterestRecord
         ) =>
           (
             record.loanStatus || ''
-          ).toUpperCase() ===
+          )
+            .toUpperCase() ===
           'CLOSED'
       )
+
       .length;
 
   }
@@ -1102,8 +1149,10 @@ export class InterestComponent implements OnInit {
 
     for (
       let i = index + 1;
+
       i <
       this.filteredInterestRecords.length;
+
       i++
     ) {
 
@@ -1178,7 +1227,9 @@ export class InterestComponent implements OnInit {
 
     for (
       let i = 0;
+
       i <= index;
+
       i++
     ) {
 
@@ -1224,165 +1275,185 @@ export class InterestComponent implements OnInit {
     return index % 8;
 
   }
-// =========================================================
-// EXPORT INTEREST DETAILS TO EXCEL
-// =========================================================
-
-exportToExcel(): void {
-
-  if (
-    !this.filteredInterestRecords ||
-    this.filteredInterestRecords.length === 0
-  ) {
-    alert('No interest data available to export.');
-    return;
-  }
 
 
-  const excelData = this.filteredInterestRecords.map(
-    (
-      record: InterestRecord,
-      index: number
-    ) => {
+  // =========================================================
+  // EXPORT INTEREST DETAILS TO EXCEL
+  // =========================================================
 
-      return {
+  exportToExcel(): void {
 
-        'Sr. No.':
-          index + 1,
+    if (
+      !this.filteredInterestRecords ||
+      this.filteredInterestRecords.length === 0
+    ) {
 
-        'CMRC Name':
-          record.cmrcName,
+      alert(
+        'No interest data available to export.'
+      );
 
-        'VO / ALF Name':
-          record.voAlfName,
-
-        'Village':
-          record.villageName,
-
-        'Woman Name':
-          record.womanName,
-
-        'Women Count':
-          record.womenCount,
-
-        'Group Name':
-          record.groupName,
-
-        'VO / ALF Received Amount':
-          Number(record.receivedFund || 0),
-
-        'Financial Year':
-          this.getFinancialYearLabel(
-            record.financialYear
-          ),
-
-        'Interest Rate':
-          record.interestRate !== null
-            ? record.interestRate + '%'
-            : '-',
-
-        'Loan Amount':
-          Number(record.loanAmount || 0),
-
-        'Interest Received':
-          Number(
-            record.totalInterestReceived || 0
-          ),
-
-        'Loan Status':
-          record.loanStatus || '-',
-
-        'VO / ALF Interest Received':
-          Number(
-            record.totalInterestReceived || 0
-          )
-
-      };
+      return;
 
     }
-  );
 
 
-  // =======================================================
-  // CREATE WORKSHEET
-  // =======================================================
+    const excelData =
+      this.filteredInterestRecords.map(
+        (
+          record: InterestRecord,
+          index: number
+        ) => {
 
-  const worksheet: XLSX.WorkSheet =
-    XLSX.utils.json_to_sheet(
-      excelData
+          return {
+
+            'Sr. No.':
+              index + 1,
+
+            'CMRC Name':
+              record.cmrcName,
+
+            'VO / ALF Name':
+              record.voAlfName,
+
+            'Village':
+              record.villageName,
+
+            'Woman Name':
+              record.womanName,
+
+            'Women Count':
+              record.womenCount,
+
+            'Group Name':
+              record.groupName,
+
+            'VO / ALF Received Amount':
+              Number(
+                record.receivedFund || 0
+              ),
+
+            'Financial Year':
+              this.getFinancialYearLabel(
+                record.financialYear
+              ),
+
+            'Interest Rate':
+              record.interestRate !== null
+                ? record.interestRate + '%'
+                : '-',
+
+            // IMPORTANT:
+            // Loan Amount = Sanctioned Amount
+            'Loan Amount':
+              Number(
+                record.sanctionedAmount || 0
+              ),
+
+            'Interest Received':
+              Number(
+                record.totalInterestReceived || 0
+              ),
+
+            'Loan Status':
+              record.loanStatus || '-',
+
+            'VO / ALF Interest Received':
+              Number(
+                this.getVoAlfFilteredInterest(
+                  record.voAlfId
+                )
+              )
+
+          };
+
+        }
+      );
+
+
+    // =======================================================
+    // CREATE WORKSHEET
+    // =======================================================
+
+    const worksheet: XLSX.WorkSheet =
+      XLSX.utils.json_to_sheet(
+        excelData
+      );
+
+
+    // =======================================================
+    // COLUMN WIDTH
+    // =======================================================
+
+    worksheet['!cols'] = [
+
+      { wch: 10 },
+      { wch: 22 },
+      { wch: 25 },
+      { wch: 20 },
+      { wch: 25 },
+      { wch: 14 },
+      { wch: 20 },
+      { wch: 24 },
+      { wch: 18 },
+      { wch: 16 },
+      { wch: 18 },
+      { wch: 20 },
+      { wch: 16 },
+      { wch: 25 }
+
+    ];
+
+
+    // =======================================================
+    // CREATE WORKBOOK
+    // =======================================================
+
+    const workbook: XLSX.WorkBook =
+      XLSX.utils.book_new();
+
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      'Interest Details'
     );
 
 
-  // =======================================================
-  // COLUMN WIDTH
-  // =======================================================
+    // =======================================================
+    // FILE NAME
+    // =======================================================
 
-  worksheet['!cols'] = [
-
-    { wch: 10 },
-    { wch: 22 },
-    { wch: 25 },
-    { wch: 20 },
-    { wch: 25 },
-    { wch: 14 },
-    { wch: 20 },
-    { wch: 24 },
-    { wch: 18 },
-    { wch: 16 },
-    { wch: 18 },
-    { wch: 20 },
-    { wch: 16 },
-    { wch: 25 }
-
-  ];
+    const selectedCmrc =
+      this.cmrcList.find(
+        cmrc =>
+          Number(cmrc.id) ===
+          Number(this.selectedCmrcId)
+      );
 
 
-  // =======================================================
-  // CREATE WORKBOOK
-  // =======================================================
-
-  const workbook: XLSX.WorkBook =
-    XLSX.utils.book_new();
-
-
-  XLSX.utils.book_append_sheet(
-    workbook,
-    worksheet,
-    'Interest Details'
-  );
+    const cmrcName =
+      selectedCmrc?.cmrcName
+        ? selectedCmrc.cmrcName
+            .replace(
+              /[^a-zA-Z0-9]/g,
+              '_'
+            )
+        : 'CMRC';
 
 
-  // =======================================================
-  // FILE NAME
-  // =======================================================
+    const fileName =
+      `Interest_Details_${cmrcName}.xlsx`;
 
-  const selectedCmrc =
-    this.cmrcList.find(
-      cmrc =>
-        Number(cmrc.id) ===
-        Number(this.selectedCmrcId)
+
+    // =======================================================
+    // DOWNLOAD EXCEL
+    // =======================================================
+
+    XLSX.writeFile(
+      workbook,
+      fileName
     );
 
+  }
 
-  const cmrcName =
-    selectedCmrc?.cmrcName
-      ? selectedCmrc.cmrcName
-          .replace(/[^a-zA-Z0-9]/g, '_')
-      : 'CMRC';
-
-
-  const fileName =
-    `Interest_Details_${cmrcName}.xlsx`;
-
-
-  // =======================================================
-  // DOWNLOAD EXCEL
-  // =======================================================
-
-  XLSX.writeFile(
-    workbook,
-    fileName
-  );
-
-}
 }

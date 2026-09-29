@@ -3,25 +3,35 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Loan {
+
   id?: number;
-  serialNo?: number;
 
   voAlfId: number;
 
   groupName?: string;
   womanName?: string;
+
+  // Main repayment loan amount
   loanAmount?: number;
+
+  sanctionedAmount?: number;
+  processingFee?: number;
+  disbursedAmount?: number;
+
   loanPurpose?: string;
   loanGivenDate?: string;
+
   repaymentPeriodMonths?: number;
+  repaymentFrequency?: string;
+
   interestRate?: number;
   interestType?: string;
+
   monthlyEmi?: number;
-   loanStatus?: string;
+
+  loanStatus?: string;
+
   totalInterestReceived?: number;
-  sanctionedAmount?: number;
-processingFee?: number;
-disbursedAmount?: number;
 }
 
 @Injectable({

@@ -1,0 +1,251 @@
+/* ================================
+   VO / ALF MANAGEMENT
+   ================================ */
+
+:host {
+  display: block;
+}
+
+/* Page Header */
+.page-header {
+  padding: 10px 0;
+}
+
+.page-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #212529;
+}
+
+.page-header p {
+  font-size: 14px;
+}
+
+/* ================================
+   Cards
+   ================================ */
+
+.card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 14px 18px;
+  font-weight: 600;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+/* ================================
+   Form
+   ================================ */
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.form-control,
+.form-select {
+  min-height: 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.12);
+}
+
+.form-control::placeholder {
+  color: #9ca3af;
+}
+
+/* Readonly CMRC */
+.form-control[readonly] {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+}
+
+/* ================================
+   Buttons
+   ================================ */
+
+.btn {
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  padding: 9px 16px;
+}
+
+.btn-success,
+.btn-secondary {
+  padding: 8px 16px;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Action buttons */
+.btn-sm {
+  width: 34px;
+  height: 32px;
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ================================
+   Table
+   ================================ */
+
+.table {
+  font-size: 14px;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 12px 14px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.table tbody td {
+  padding: 12px 14px;
+  vertical-align: middle;
+}
+
+.table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* VO / ALF name */
+.table tbody td.fw-semibold {
+  color: #1f2937;
+}
+
+/* Amount */
+.table tbody td.text-end {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ================================
+   Badge
+   ================================ */
+
+.badge {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 20px;
+}
+
+/* ================================
+   Empty State
+   ================================ */
+
+.table tbody tr td.text-muted {
+  color: #6b7280 !important;
+}
+
+.table tbody tr td.text-muted .bi {
+  color: #9ca3af;
+}
+
+/* ================================
+   Form Action Area
+   ================================ */
+
+.d-flex.justify-content-end {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 16px;
+}
+
+/* ================================
+   Responsive
+   ================================ */
+
+@media (max-width: 768px) {
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 15px;
+  }
+
+  .page-header h2 {
+    font-size: 21px;
+  }
+
+  .page-header .btn {
+    width: 100%;
+  }
+
+  .card-body {
+    padding: 15px;
+  }
+
+  .table {
+    min-width: 700px;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  .d-flex.justify-content-end {
+    flex-direction: column;
+  }
+
+  .d-flex.justify-content-end .btn {
+    width: 100%;
+  }
+}
+
+/* ================================
+   Small Screen
+   ================================ */
+
+@media (max-width: 576px) {
+
+  .page-header h2 {
+    font-size: 19px;
+  }
+
+  .page-header p {
+    font-size: 13px;
+  }
+
+  .card-header {
+    padding: 12px 14px;
+  }
+
+  .card-body {
+    padding: 12px;
+  }
+
+}

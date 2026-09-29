@@ -1,0 +1,540 @@
+/* =========================================================
+   PAGE
+========================================================= */
+
+.report-page {
+  width: 100%;
+  padding: 20px;
+  background: #f5f7fb;
+  min-height: calc(100vh - 60px);
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.page-subtitle {
+  margin: 5px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+
+/* =========================================================
+   FILTER CARD
+========================================================= */
+
+.filter-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.filter-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  min-width: 190px;
+}
+
+.search-group {
+  flex: 1;
+  min-width: 260px;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.filter-group .form-select,
+.filter-group .form-control {
+  height: 38px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+.filter-group .form-select:focus,
+.filter-group .form-control:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 0.15rem rgba(99, 102, 241, 0.12);
+}
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+}
+
+.filter-actions button {
+  height: 38px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   SUMMARY CARDS
+========================================================= */
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.summary-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 85px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.summary-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.summary-label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 3px;
+}
+
+.summary-value {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.loading-container {
+  min-height: 250px;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  color: #6b7280;
+  font-size: 14px;
+}
+
+
+/* =========================================================
+   REPORT CARD
+========================================================= */
+
+.report-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.report-card-header {
+  min-height: 70px;
+  padding: 15px 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.report-card-header h5 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.report-card-header span {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.report-card-header strong {
+  color: #374151;
+}
+
+.report-card-header .btn {
+  font-size: 13px;
+  padding: 7px 13px;
+}
+
+
+/* =========================================================
+   TABLE WRAPPER
+========================================================= */
+
+.report-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.report-table {
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+
+  border-collapse: separate;
+  border-spacing: 0;
+
+  font-size: 12px;
+  color: #374151;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+========================================================= */
+
+.report-table thead th {
+  text-align: center;
+  vertical-align: middle;
+
+  font-weight: 700;
+
+  border-right: 1px solid #d1d5db;
+  border-bottom: 1px solid #d1d5db;
+
+  white-space: nowrap;
+}
+
+
+/* Main Header */
+
+.main-header-row th {
+  height: 55px;
+  padding: 8px 10px;
+
+  background: #1f2937;
+  color: #ffffff;
+
+  font-size: 12px;
+}
+
+
+/* Group Headers */
+
+.group-header {
+  min-width: 170px;
+  background: #374151 !important;
+  color: #ffffff !important;
+
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.group-header small {
+  display: inline-block;
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+
+/* Sub Header */
+
+.sub-header-row th {
+  min-width: 125px;
+  height: 48px;
+
+  padding: 7px 8px;
+
+  background: #f3f4f6;
+  color: #374151;
+
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+
+/* =========================================================
+   FIXED FIRST COLUMNS
+========================================================= */
+
+.fixed-header {
+  min-width: 90px;
+}
+
+.fixed-header:nth-child(2) {
+  min-width: 150px;
+}
+
+.fixed-header:nth-child(3) {
+  min-width: 130px;
+}
+
+.fixed-header:nth-child(4) {
+  min-width: 160px;
+}
+
+.fixed-header:nth-child(5) {
+  min-width: 150px;
+}
+
+
+/* =========================================================
+   TABLE BODY
+========================================================= */
+
+.report-table tbody td {
+  padding: 9px 10px;
+
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+
+  vertical-align: middle;
+  white-space: nowrap;
+
+  background: #ffffff;
+}
+
+.report-table tbody tr:hover td {
+  background: #f8fafc;
+}
+
+
+/* =========================================================
+   FIRST INFORMATION COLUMNS
+========================================================= */
+
+.report-table tbody td:nth-child(1) {
+  text-align: center;
+  font-weight: 600;
+}
+
+.report-table tbody td:nth-child(2),
+.report-table tbody td:nth-child(3),
+.report-table tbody td:nth-child(4),
+.report-table tbody td:nth-child(5) {
+  text-align: left;
+}
+
+
+/* =========================================================
+   NUMBER CELLS
+========================================================= */
+
+.number-cell {
+  text-align: center !important;
+  min-width: 110px;
+}
+
+
+/* =========================================================
+   AMOUNT CELLS
+========================================================= */
+
+.amount-cell {
+  text-align: right !important;
+  min-width: 135px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* =========================================================
+   TOTAL CELL
+========================================================= */
+
+.total-cell {
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   TOTAL ROW
+========================================================= */
+
+.total-row th,
+.total-row td {
+  padding: 11px 10px;
+
+  background: #e5e7eb !important;
+  color: #111827;
+
+  border-right: 1px solid #cbd5e1;
+  border-bottom: 1px solid #cbd5e1;
+
+  text-align: center;
+  white-space: nowrap;
+
+  font-weight: 700;
+}
+
+.total-row th:first-child {
+  text-align: left;
+}
+
+
+/* =========================================================
+   NO DATA
+========================================================= */
+
+.no-data {
+  height: 180px;
+  text-align: center !important;
+  vertical-align: middle !important;
+
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.no-data i {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 32px;
+  color: #cbd5e1;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+.report-table-wrapper::-webkit-scrollbar {
+  height: 9px;
+}
+
+.report-table-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.report-table-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.report-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+/* =========================================================
+   BUTTON
+========================================================= */
+
+.btn-success {
+  border-radius: 6px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1200px) {
+
+  .summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+}
+
+
+@media (max-width: 768px) {
+
+  .report-page {
+    padding: 12px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group,
+  .search-group {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .filter-actions {
+    width: 100%;
+  }
+
+  .filter-actions button {
+    width: 100%;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .report-card-header .btn {
+    width: 100%;
+  }
+
+}

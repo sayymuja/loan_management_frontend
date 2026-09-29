@@ -1,11 +1,12 @@
 /* =========================================================
-   LOAN PAGE
+   LOAN MANAGEMENT PAGE
 ========================================================= */
 
-.loan-page {
+.loan-management-page {
+  width: 100%;
+  min-height: 100%;
   padding: 20px;
-  background: #f5f7fb;
-  min-height: 100vh;
+  background: #f8f9fa;
 }
 
 
@@ -14,465 +15,1186 @@
 ========================================================= */
 
 .page-header {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
-.page-header h2 {
+.page-title {
   margin: 0;
-  font-weight: 600;
   color: #212529;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
 }
 
-.page-header p {
+.page-subtitle {
   margin: 5px 0 0;
   color: #6c757d;
+  font-size: 13px;
 }
 
 
 /* =========================================================
-   FILTER CARD
+   COMMON CARD
 ========================================================= */
 
-.filter-card {
-  border: none;
-  border-radius: 10px;
-  padding: 20px;
-}
-
-
-/* =========================================================
-   SELECTED INFORMATION
-========================================================= */
-
-.selected-info {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.selected-info > div {
+.card {
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
   background: #ffffff;
-  border: 1px solid #e3e7ed;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
-.selected-info small {
-  display: block;
-  color: #6c757d;
-  font-size: 12px;
-  margin-bottom: 6px;
-}
-
-.selected-info strong {
-  display: block;
-  font-size: 17px;
-  color: #212529;
-}
-
-
-/* =========================================================
-   TABLE CARD
-========================================================= */
-
-.table-card {
-  border: none;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.table-card .card-header {
+.card-header {
   background: #ffffff;
   border-bottom: 1px solid #e9ecef;
-  padding: 16px 20px;
-}
-
-.table-card .card-header h5 {
-  margin: 0;
-  font-weight: 600;
-}
-
-.table-card .card-header span {
-  font-size: 13px;
-  color: #6c757d;
 }
 
 
 /* =========================================================
-   TABLE
+   FORM CONTROLS
 ========================================================= */
 
-.table {
-  margin-bottom: 0;
-}
+.form-label {
+  display: block;
+  margin-bottom: 6px;
 
-.table thead th {
-  background: #f8f9fa;
   color: #495057;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  white-space: nowrap;
-  vertical-align: middle;
 }
 
-.table tbody td {
-  font-size: 13px;
-  vertical-align: middle;
-  white-space: nowrap;
-}
+.form-control,
+.form-select {
+  min-height: 38px;
 
-.amount-cell {
-  font-weight: 600;
-  text-align: right;
-}
-
-.action-cell {
-  white-space: nowrap;
-}
-
-
-/* =========================================================
-   EMPTY STATE
-========================================================= */
-
-.empty-state {
-  padding: 50px 20px !important;
-  color: #6c757d;
-}
-
-.empty-state i {
-  font-size: 35px;
-  display: block;
-  margin-bottom: 10px;
-}
-
-.empty-state p {
-  margin-bottom: 15px;
-}
-
-
-/* =========================================================
-   LOAN SUMMARY
-========================================================= */
-
-.loan-summary {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 12px;
-  padding: 0 20px 18px;
-}
-
-.summary-item {
-  background: #f8f9fa;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 12px;
-}
-
-.summary-item small {
-  display: block;
-  color: #6c757d;
-  font-size: 11px;
-  margin-bottom: 4px;
-}
-
-.summary-item strong {
-  display: block;
-  font-size: 14px;
-  color: #212529;
-}
-
-
-/* =========================================================
-   FORM OVERLAY
-========================================================= */
-
-.form-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  z-index: 1050;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 20px;
-}
-
-
-/* =========================================================
-   FORM MODAL
-========================================================= */
-
-.form-modal {
-  width: 100%;
-  max-width: 900px;
-  max-height: 92vh;
-
+  color: #343a40;
   background: #ffffff;
-  border-radius: 12px;
+
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+
+  font-size: 13px;
+}
+
+.form-control::placeholder {
+  color: #adb5bd;
+  font-size: 12px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #86b7fe;
+
+  box-shadow:
+    0 0 0 0.15rem
+    rgba(13, 110, 253, 0.12);
+}
+
+.input-group-text {
+  min-height: 38px;
+
+  background: #f8f9fa;
+  border-color: #ced4da;
+
+  color: #6c757d;
+  font-size: 12px;
+}
+
+
+/* =========================================================
+   VO / ALF RECEIVED FUND
+========================================================= */
+
+.fund-info-box {
+  width: 100%;
+  min-height: 66px;
+
+  padding: 10px 14px;
 
   display: flex;
   flex-direction: column;
+  justify-content: center;
 
-  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.25);
+  background: #f8f9fa;
 
-  overflow: hidden;
+  border: 1px solid #dee2e6;
+  border-radius: 7px;
+}
+
+.fund-label {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: #6c757d;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.fund-info-box strong {
+  color: #212529;
+
+  font-size: 17px;
+  font-weight: 700;
+
+  font-variant-numeric: tabular-nums;
 }
 
 
 /* =========================================================
-   FORM HEADER
+   SUMMARY CARDS
 ========================================================= */
 
-.form-header {
+.summary-card {
+  width: 100%;
+  min-height: 88px;
+
+  padding: 15px 16px;
+
   display: flex;
-  justify-content: space-between;
   align-items: center;
 
-  padding: 18px 22px;
+  gap: 13px;
 
-  border-bottom: 1px solid #e9ecef;
   background: #ffffff;
-}
 
-.form-header h4 {
-  margin: 0;
-  font-weight: 600;
-}
-
-.form-header small {
-  color: #6c757d;
-}
-
-
-/* =========================================================
-   FORM BODY
-========================================================= */
-
-.form-body {
-  padding: 22px;
-  overflow-y: auto;
-}
-
-.form-body .form-label {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 6px;
-  color: #343a40;
-}
-
-.form-body .form-control,
-.form-body .form-select {
-  min-height: 42px;
-  border-color: #ced4da;
-  border-radius: 6px;
-}
-
-.form-body .form-control:focus,
-.form-body .form-select:focus {
-  border-color: #86b7fe;
-  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.12);
-}
-
-
-/* =========================================================
-   REQUIRED
-========================================================= */
-
-.required {
-  color: #dc3545;
-  margin-left: 2px;
-}
-
-
-/* =========================================================
-   CURRENCY
-========================================================= */
-
-.currency-symbol {
-  min-width: 45px;
-  justify-content: center;
-  font-weight: 600;
-  background: #f8f9fa;
-}
-
-
-/* =========================================================
-   AMOUNT IN WORDS
-========================================================= */
-
-.amount-words {
-  margin-left: 8px;
-  font-size: 11px;
-  font-weight: 400;
-  color: #6c757d;
-}
-
-
-/* =========================================================
-   FORM TEXT
-========================================================= */
-
-.form-text {
-  font-size: 11px;
-  color: #6c757d;
-  margin-top: 4px;
-}
-
-
-/* =========================================================
-   EMI FIELD
-========================================================= */
-
-.emi-field {
-  background: #f8f9fa;
-  font-weight: 600;
-}
-
-
-/* =========================================================
-   LOAN FORM SUMMARY
-========================================================= */
-
-.loan-form-summary {
-  margin-top: 8px;
-
-  border: 1px solid #dfe3e8;
-  border-radius: 10px;
-
-  background: #f8f9fb;
-
-  overflow: hidden;
-}
-
-.summary-title {
-  padding: 12px 15px;
-
-  font-size: 14px;
-  font-weight: 600;
-
-  background: #eef2f7;
-  border-bottom: 1px solid #dfe3e8;
-}
-
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-
-  padding: 15px;
-}
-
-.summary-box {
-  background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
 
-  padding: 12px;
+  box-shadow:
+    0 2px 6px
+    rgba(0, 0, 0, 0.035);
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.summary-box span {
+.summary-card:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 4px 10px
+    rgba(0, 0, 0, 0.06);
+}
+
+.summary-icon {
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f1f3f5;
+
+  border-radius: 8px;
+
+  color: #495057;
+  font-size: 18px;
+}
+
+.summary-card span {
   display: block;
 
-  font-size: 11px;
+  margin-bottom: 4px;
+
   color: #6c757d;
 
-  margin-bottom: 5px;
+  font-size: 10px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
-.summary-box strong {
+.summary-card strong {
+  display: block;
+
+  color: #212529;
+
+  font-size: 17px;
+  font-weight: 700;
+
+  line-height: 1.2;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.negative-value {
+  color: #dc3545 !important;
+}
+
+
+/* =========================================================
+   LOAN TOOLBAR
+========================================================= */
+
+.loan-toolbar {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+}
+
+.section-title {
+  margin: 0;
+
+  color: #212529;
+
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.section-subtitle {
+  margin: 4px 0 0;
+
+  color: #6c757d;
+
+  font-size: 12px;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.search-box {
+  position: relative;
+
+  width: 240px;
+}
+
+.search-box i {
+  position: absolute;
+
+  left: 11px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: #868e96;
+
+  font-size: 13px;
+
+  pointer-events: none;
+}
+
+.search-box .form-control {
+  padding-left: 32px;
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.btn {
+  border-radius: 6px;
+
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.btn-primary {
+  min-height: 38px;
+}
+
+.btn-outline-success,
+.btn-outline-primary,
+.btn-outline-info,
+.btn-outline-danger {
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   ADD LOAN FORM HEADER
+========================================================= */
+
+.form-header {
+  min-height: 58px;
+
+  padding: 12px 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-header h5 {
+  margin: 0;
+
+  color: #212529;
+
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.form-header h5 i {
+  color: #495057;
+}
+
+.form-header small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #6c757d;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   FORM SECTION
+========================================================= */
+
+.form-section {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+
+  border-bottom: 1px solid #eeeeee;
+}
+
+.form-section:last-of-type {
+  border-bottom: none;
+}
+
+.form-section-title {
+  margin-bottom: 15px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  color: #343a40;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-section-title i {
+  color: #6c757d;
+
   font-size: 15px;
+}
+
+
+/* =========================================================
+   CALCULATED FIELD
+========================================================= */
+
+.calculated-field {
+  background: #f8f9fa !important;
+
+  color: #343a40 !important;
+
+  font-weight: 600;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   FINANCIAL CALCULATION STRIP
+========================================================= */
+
+.calculation-strip {
+  margin-top: 18px;
+
+  padding: 12px 15px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+
+  background: #f8f9fa;
+
+  border: 1px solid #e9ecef;
+  border-radius: 7px;
+}
+
+.calculation-strip > div:not(.operator) {
+  display: flex;
+  flex-direction: column;
+}
+
+.calculation-strip span {
+  color: #6c757d;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+
+.calculation-strip strong {
+  margin-top: 3px;
+
+  color: #212529;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.calculation-strip .operator {
+  color: #adb5bd;
+
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.calculation-strip .highlight {
+  padding: 7px 13px;
+
+  background: #ffffff;
+
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+}
+
+
+/* =========================================================
+   LOAN CALCULATION SUMMARY
+========================================================= */
+
+.loan-calculation-summary {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 12px;
+
+  margin-top: 5px;
+  margin-bottom: 20px;
+}
+
+.mini-summary {
+  min-height: 68px;
+
+  padding: 12px 15px;
+
+  background: #f8f9fa;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+}
+
+.mini-summary span {
+  display: block;
+
+  color: #6c757d;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+
+.mini-summary strong {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #212529;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.mini-summary.total {
+  background: #f1f3f5;
+}
+
+.mini-summary.total strong {
+  font-size: 17px;
+}
+
+
+/* =========================================================
+   FORM ACTIONS
+========================================================= */
+
+.form-actions {
+  padding-top: 4px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 8px;
+}
+
+.form-actions .btn {
+  min-width: 95px;
+  min-height: 36px;
+}
+
+
+/* =========================================================
+   LOAN TABLE HEADER
+========================================================= */
+
+.table-header {
+  min-height: 60px;
+
+  padding: 12px 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+}
+
+.table-header h5 {
+  margin: 0;
+
+  color: #212529;
+
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.table-header small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #6c757d;
+
+  font-size: 11px;
+}
+
+.table-total {
+  color: #6c757d;
+
+  font-size: 11px;
+
+  white-space: nowrap;
+}
+
+.table-total strong {
+  margin-left: 3px;
+
+  color: #212529;
+
+  font-size: 14px;
+
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* =========================================================
+   LOAN TABLE
+========================================================= */
+
+.table-responsive {
+  width: 100%;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scrollbar-width: thin;
+}
+
+.loan-table {
+  width: 100%;
+
+  min-width: 1600px;
+
+  margin: 0;
+
+  border-collapse: separate;
+  border-spacing: 0;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+========================================================= */
+
+.loan-table thead th {
+  padding: 11px 9px;
+
+  background: #f8f9fa;
+
+  color: #495057;
+
+  border-top: none;
+  border-bottom: 1px solid #dee2e6;
+  border-right: 1px solid #eeeeee;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  text-align: center;
+  vertical-align: middle;
+
+  position: sticky;
+  top: 0;
+
+  z-index: 2;
+}
+
+.loan-table thead th:last-child {
+  border-right: none;
+}
+
+
+/* =========================================================
+   TABLE BODY
+========================================================= */
+
+.loan-table tbody td {
+  padding: 10px 9px;
+
+  color: #343a40;
+
+  border-bottom: 1px solid #eeeeee;
+  border-right: 1px solid #f0f0f0;
+
+  font-size: 12px;
+
+  vertical-align: middle;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.loan-table tbody td:last-child {
+  border-right: none;
+}
+
+.loan-table tbody tr:hover td {
+  background: #f8f9fa;
+}
+
+
+/* =========================================================
+   SERIAL NUMBER
+========================================================= */
+
+.serial-cell {
+  width: 50px;
+  min-width: 50px;
+
+  text-align: center;
+
+  color: #212529 !important;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   TABLE COLUMN WIDTHS
+========================================================= */
+
+.loan-table th:nth-child(2),
+.loan-table td:nth-child(2) {
+  min-width: 150px;
+}
+
+.loan-table th:nth-child(3),
+.loan-table td:nth-child(3) {
+  min-width: 170px;
+}
+
+.loan-table th:nth-child(4),
+.loan-table td:nth-child(4) {
+  min-width: 160px;
+}
+
+.loan-table th:nth-child(5),
+.loan-table td:nth-child(5) {
+  min-width: 110px;
+}
+
+.loan-table th:nth-child(6),
+.loan-table td:nth-child(6) {
+  min-width: 135px;
+}
+
+.loan-table th:nth-child(7),
+.loan-table td:nth-child(7) {
+  min-width: 125px;
+}
+
+.loan-table th:nth-child(8),
+.loan-table td:nth-child(8) {
+  min-width: 135px;
+}
+
+.loan-table th:nth-child(9),
+.loan-table td:nth-child(9) {
+  min-width: 120px;
+}
+
+.loan-table th:nth-child(10),
+.loan-table td:nth-child(10) {
+  min-width: 90px;
+}
+
+.loan-table th:nth-child(11),
+.loan-table td:nth-child(11) {
+  min-width: 90px;
+}
+
+.loan-table th:nth-child(12),
+.loan-table td:nth-child(12) {
+  min-width: 100px;
+}
+
+.loan-table th:nth-child(13),
+.loan-table td:nth-child(13) {
+  min-width: 170px;
+}
+
+
+/* =========================================================
+   TABLE AMOUNTS
+========================================================= */
+
+.amount {
+  text-align: right;
+
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.loan-table td.fw-semibold {
   color: #212529;
 }
 
 
 /* =========================================================
-   FORM FOOTER
+   PERIOD
 ========================================================= */
 
-.form-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
+.loan-table td small {
+  margin-left: 2px;
 
-  padding: 15px 22px;
+  color: #868e96;
 
-  border-top: 1px solid #e9ecef;
-  background: #ffffff;
+  font-size: 9px;
 }
 
 
 /* =========================================================
-   RESPONSIVE
+   STATUS BADGE
 ========================================================= */
 
-@media (max-width: 1200px) {
+.status-badge {
+  display: inline-block;
 
-  .selected-info {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  min-width: 58px;
 
-  .loan-summary {
-    grid-template-columns: repeat(3, 1fr);
+  padding: 4px 9px;
+
+  border-radius: 20px;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  text-align: center;
+}
+
+.status-active {
+  background: #e8f5e9;
+
+  color: #198754;
+}
+
+.status-closed {
+  background: #e9ecef;
+
+  color: #495057;
+}
+
+
+/* =========================================================
+   TABLE ACTION BUTTONS
+========================================================= */
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+}
+
+.action-buttons .btn {
+  width: 31px;
+  height: 31px;
+
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 5px;
+}
+
+.action-buttons .btn i {
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   TABLE FOOTER
+========================================================= */
+
+.loan-table tfoot th {
+  padding: 11px 9px;
+
+  background: #f8f9fa;
+
+  color: #212529;
+
+  border-top: 2px solid #adb5bd;
+  border-bottom: none;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* =========================================================
+   NO DATA
+========================================================= */
+
+.no-data {
+  padding: 45px 20px !important;
+
+  background: #ffffff !important;
+
+  color: #6c757d !important;
+
+  text-align: center;
+}
+
+.no-data i {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #adb5bd;
+
+  font-size: 28px;
+}
+
+.no-data strong {
+  display: block;
+
+  color: #495057;
+
+  font-size: 13px;
+}
+
+.no-data small {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #868e96;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   LOAN DETAILS
+========================================================= */
+
+.detail-header {
+  min-height: 58px;
+
+  padding: 12px 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.detail-header h5 {
+  margin: 0;
+
+  color: #212529;
+
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.detail-header small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #6c757d;
+
+  font-size: 11px;
+}
+
+.detail-item {
+  min-height: 65px;
+
+  padding: 11px 13px;
+
+  background: #f8f9fa;
+
+  border: 1px solid #eeeeee;
+  border-radius: 7px;
+}
+
+.detail-item span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #6c757d;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+
+.detail-item strong {
+  display: block;
+
+  color: #212529;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* =========================================================
+   CL SCHEDULE / REPAYMENT CLOSE
+========================================================= */
+
+.close-section-button {
+  margin-top: 10px;
+
+  display: flex;
+  justify-content: flex-end;
+}
+
+.close-section-button .btn {
+  min-height: 34px;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+.table-responsive::-webkit-scrollbar {
+  height: 7px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f3f5;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #ced4da;
+
+  border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #adb5bd;
+}
+
+
+/* =========================================================
+   LARGE SCREEN
+========================================================= */
+
+@media (max-width: 1400px) {
+
+  .loan-table {
+    min-width: 1550px;
   }
 
 }
 
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  .loan-toolbar {
+    align-items: flex-start;
+  }
+
+  .toolbar-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .search-box {
+    width: 220px;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
 
 @media (max-width: 768px) {
 
-  .loan-page {
+  .loan-management-page {
     padding: 12px;
   }
 
-  .selected-info {
-    grid-template-columns: repeat(2, 1fr);
+  .page-title {
+    font-size: 20px;
   }
 
-  .loan-summary {
-    grid-template-columns: repeat(2, 1fr);
+  .page-subtitle {
+    font-size: 12px;
   }
 
-  .summary-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .loan-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  .form-overlay {
-    padding: 10px;
+  .toolbar-actions {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 8px;
   }
 
-  .form-modal {
-    max-height: 95vh;
+  .search-box {
+    width: 100%;
+
+    grid-column: 1 / -1;
+  }
+
+  .toolbar-actions .btn {
+    width: 100%;
+  }
+
+  .calculation-strip {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .loan-calculation-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .table-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .table-total {
+    align-self: flex-start;
   }
 
 }
 
 
-@media (max-width: 576px) {
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
 
-  .selected-info {
-    grid-template-columns: 1fr;
+@media (max-width: 480px) {
+
+  .loan-management-page {
+    padding: 10px;
   }
 
-  .loan-summary {
-    grid-template-columns: 1fr;
+  .summary-card {
+    min-height: 76px;
+
+    padding: 12px;
   }
 
-  .summary-grid {
-    grid-template-columns: 1fr;
+  .summary-icon {
+    width: 36px;
+    height: 36px;
+
+    font-size: 15px;
   }
 
-  .form-footer {
-    flex-direction: column-reverse;
+  .summary-card strong {
+    font-size: 14px;
   }
 
-  .form-footer button {
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions .btn {
     width: 100%;
+  }
+
+  .toolbar-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .search-box {
+    grid-column: auto;
+  }
+
+  .calculation-strip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .calculation-strip .operator {
+    display: none;
+  }
+
+  .detail-item {
+    min-height: 58px;
   }
 
 }

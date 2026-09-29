@@ -317,13 +317,13 @@ export class BankBalanceComponent implements OnInit {
               (loans || []).forEach(
                 (loan: Loan) => {
 
-                  const loanAmount =
-                    Number(
-                      loan.loanAmount || 0
-                    );
+                 const sanctionedAmount =
+  Number(
+    loan.sanctionedAmount || 0
+  );
 
-                  totalLoanAmount +=
-                    loanAmount;
+totalLoanAmount +=
+  sanctionedAmount;
 
                   // -----------------------------------------
                   // LOAN DATE
@@ -375,7 +375,7 @@ export class BankBalanceComponent implements OnInit {
                   this.monthlyLoanTotals[
                     voAlfId
                   ][monthKey] +=
-                    loanAmount;
+                    sanctionedAmount;
 
                   // -----------------------------------------
                   // ALL MONTHS

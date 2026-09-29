@@ -1,0 +1,906 @@
+<div class="report-page">
+
+  <!-- =====================================================
+       PAGE HEADER
+  ====================================================== -->
+  <div class="page-header">
+
+    <div>
+      <h2 class="page-title">
+        Fund & Loan Report
+      </h2>
+
+      <p class="page-subtitle">
+        CMRC / VO / ALF yearly fund, loan, repayment and interest report
+      </p>
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       FILTER CARD
+  ====================================================== -->
+  <div class="filter-card">
+
+    <div class="filter-row">
+
+      <!-- Financial Year -->
+      <div class="filter-group">
+
+        <label>
+          Financial Year
+        </label>
+
+        <select
+          class="form-select"
+          [(ngModel)]="selectedYear"
+          (change)="onYearChange()">
+
+          <option [ngValue]="null">
+            All Years
+          </option>
+
+          <option
+            *ngFor="let year of availableYears"
+            [ngValue]="year">
+
+            {{ year }}-{{ (year + 1).toString().slice(-2) }}
+
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- CMRC -->
+      <div class="filter-group">
+
+        <label>
+          CMRC
+        </label>
+
+        <select
+          class="form-select"
+          [(ngModel)]="selectedCmrcId"
+          (change)="onCmrcChange()">
+
+          <option [ngValue]="null">
+            All CMRC
+          </option>
+
+          <option
+            *ngFor="let cmrc of cmrcList"
+            [ngValue]="cmrc.id">
+
+            {{ cmrc.cmrcName }}
+
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- Search -->
+      <div class="filter-group search-group">
+
+        <label>
+          Search
+        </label>
+
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="searchText"
+          (input)="applyFilters()"
+          placeholder="Search CMRC, Village, VO / ALF..." />
+
+      </div>
+
+
+      <!-- Clear -->
+      <div class="filter-actions">
+
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="clearFilters()">
+
+          <i class="bi bi-x-circle"></i>
+          Clear
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       SUMMARY CARDS
+  ====================================================== -->
+  <div class="summary-grid">
+
+    <!-- Total Groups -->
+    <div class="summary-card">
+
+      <div class="summary-icon">
+        <i class="bi bi-people"></i>
+      </div>
+
+      <div>
+
+        <span class="summary-label">
+          Total Groups
+        </span>
+
+        <strong class="summary-value">
+          {{ getTotalGroups() }}
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <!-- Total Women -->
+    <div class="summary-card">
+
+      <div class="summary-icon">
+        <i class="bi bi-person"></i>
+      </div>
+
+      <div>
+
+        <span class="summary-label">
+          Total Women
+        </span>
+
+        <strong class="summary-value">
+          {{ getTotalWomen() }}
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <!-- Total Distributed -->
+    <div class="summary-card">
+
+      <div class="summary-icon">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+
+      <div>
+
+        <span class="summary-label">
+          Total Distributed
+        </span>
+
+        <strong class="summary-value">
+          ₹{{ getTotalDistributedAmount() | number:'1.2-2' }}
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <!-- Total Repaid -->
+    <div class="summary-card">
+
+      <div class="summary-icon">
+        <i class="bi bi-arrow-repeat"></i>
+      </div>
+
+      <div>
+
+        <span class="summary-label">
+          Total Repaid
+        </span>
+
+        <strong class="summary-value">
+          ₹{{ getTotalRepaidAmount() | number:'1.2-2' }}
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <!-- Interest -->
+    <div class="summary-card">
+
+      <div class="summary-icon">
+        <i class="bi bi-percent"></i>
+      </div>
+
+      <div>
+
+        <span class="summary-label">
+          Interest Received
+        </span>
+
+        <strong class="summary-value">
+          ₹{{ getTotalInterestReceived() | number:'1.2-2' }}
+        </strong>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       LOADING
+  ====================================================== -->
+  <div
+    class="loading-container"
+    *ngIf="loading">
+
+    <div
+      class="spinner-border"
+      role="status">
+
+    </div>
+
+    <span>
+      Loading report...
+    </span>
+
+  </div>
+
+
+  <!-- =====================================================
+       REPORT TABLE
+  ====================================================== -->
+  <div
+    class="report-card"
+    *ngIf="!loading">
+
+    <div class="report-card-header">
+
+      <div>
+
+        <h5>
+          Yearly Fund & Loan Report
+        </h5>
+
+        <span>
+          Financial Year:
+          <strong>
+            {{
+              selectedYear === null
+                ? 'All Years'
+                : selectedYear + '-' +
+                  (selectedYear + 1).toString().slice(-2)
+            }}
+          </strong>
+        </span>
+
+      </div>
+
+
+      <!-- Export -->
+      <button
+        type="button"
+        class="btn btn-success"
+        (click)="exportToExcel()">
+
+        <i class="bi bi-file-earmark-excel"></i>
+        Export Excel
+
+      </button>
+
+    </div>
+
+
+    <!-- ===================================================
+         HORIZONTAL SCROLL
+    ==================================================== -->
+    <div class="table-responsive report-table-wrapper">
+
+      <table class="table report-table">
+
+        <!-- =================================================
+             TABLE HEADER - ROW 1
+        ================================================== -->
+        <thead>
+
+          <tr class="main-header-row">
+
+            <th
+              rowspan="2"
+              class="fixed-header">
+
+              Sr. No.
+
+            </th>
+
+
+            <th
+              rowspan="2"
+              class="fixed-header">
+
+              CMRC Name
+
+            </th>
+
+
+            <th
+              rowspan="2"
+              class="fixed-header">
+
+              Village Name
+
+            </th>
+
+
+            <th
+              rowspan="2"
+              class="fixed-header">
+
+              VO / ALF Name
+
+            </th>
+
+
+            <th
+              rowspan="2"
+              class="fixed-header">
+
+              VO / ALF
+              <br>
+              Account No.
+
+            </th>
+
+
+            <!-- Funds Received -->
+            <th
+              colspan="4"
+              class="group-header">
+
+              Funds Received
+
+            </th>
+
+
+            <!-- Funds Distributed -->
+            <th
+              colspan="4"
+              class="group-header">
+
+              Funds Distributed
+
+            </th>
+
+
+            <!-- Funds Repaid -->
+            <th
+              colspan="4"
+              class="group-header">
+
+              Funds Repaid
+
+            </th>
+
+
+            <!-- Re-loan -->
+            <th
+              colspan="4"
+              class="group-header">
+
+              Re-loan Information
+              <br>
+              <small>2025-26</small>
+
+            </th>
+
+
+            <!-- Current Status -->
+            <th
+              colspan="7"
+              class="group-header">
+
+              Current Status -
+              Interest Received by VO
+
+            </th>
+
+          </tr>
+
+
+          <!-- =================================================
+               TABLE HEADER - ROW 2
+          ================================================== -->
+
+          <tr class="sub-header-row">
+
+            <!-- Funds Received -->
+
+            <th>
+              Group Count
+            </th>
+
+            <th>
+              Number of Women
+            </th>
+
+            <th>
+              Group Amount
+            </th>
+
+            <th>
+              Women Amount
+            </th>
+
+
+            <!-- Funds Distributed -->
+
+            <th>
+              Group Count
+            </th>
+
+            <th>
+              Number of Women
+            </th>
+
+            <th>
+              Group Amount
+            </th>
+
+            <th>
+              Women Amount
+            </th>
+
+
+            <!-- Funds Repaid -->
+
+            <th>
+              Group Count
+            </th>
+
+            <th>
+              Number of Women
+            </th>
+
+            <th>
+              Group Amount
+            </th>
+
+            <th>
+              Women Amount
+            </th>
+
+
+            <!-- Re-loan -->
+
+            <th>
+              Group Count
+            </th>
+
+            <th>
+              Number of Women
+            </th>
+
+            <th>
+              Group Amount
+            </th>
+
+            <th>
+              Women Amount
+            </th>
+
+
+            <!-- Current Status -->
+
+            <th>
+              Group Count
+            </th>
+
+            <th>
+              Number of Women
+            </th>
+
+            <th>
+              Group Amount
+            </th>
+
+            <th>
+              Women Amount
+            </th>
+
+            <th>
+              Ultra-Poor
+            </th>
+
+            <th>
+              Women Trapped
+              <br>
+              in Debt Cycle
+            </th>
+
+            <th>
+              Total
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <!-- =================================================
+             TABLE BODY
+        ================================================== -->
+
+        <tbody>
+
+          <!-- Data -->
+          <tr
+            *ngFor="
+              let record of filteredReportRecords;
+              let i = index
+            ">
+
+
+            <!-- Sr No -->
+            <td>
+              {{ i + 1 }}
+            </td>
+
+
+            <!-- CMRC -->
+            <td>
+              {{ record.cmrcName || '-' }}
+            </td>
+
+
+            <!-- Village -->
+            <td>
+              {{ record.villageName || '-' }}
+            </td>
+
+
+            <!-- VO / ALF -->
+            <td>
+              {{ record.voAlfName || '-' }}
+            </td>
+
+
+            <!-- Account -->
+            <td>
+              {{ record.accountNo || '-' }}
+            </td>
+
+
+            <!-- =================================================
+                 FUNDS RECEIVED
+            ================================================== -->
+
+            <td class="number-cell">
+              {{ record.fundsReceived?.groupCount || 0 }}
+            </td>
+
+            <td class="number-cell">
+              {{ record.fundsReceived?.womenCount || 0 }}
+            </td>
+
+            <td class="amount-cell">
+              ₹{{
+                record.fundsReceived?.groupAmount || 0
+                  | number:'1.2-2'
+              }}
+            </td>
+
+            <td class="amount-cell">
+              ₹{{
+                record.fundsReceived?.womenAmount || 0
+                  | number:'1.2-2'
+              }}
+            </td>
+
+
+            <!-- =================================================
+                 FUNDS DISTRIBUTED
+            ================================================== -->
+
+            <td class="number-cell">
+              {{ record.fundsDistributed?.groupCount || 0 }}
+            </td>
+
+            <td class="number-cell">
+              {{ record.fundsDistributed?.womenCount || 0 }}
+            </td>
+
+            <td class="amount-cell">
+              ₹{{
+                record.fundsDistributed?.groupAmount || 0
+                  | number:'1.2-2'
+              }}
+            </td>
+
+            <td class="amount-cell">
+              ₹{{
+                record.fundsDistributed?.womenAmount || 0
+                  | number:'1.2-2'
+              }}
+            </td>
+
+
+            <!-- =================================================
+                 FUNDS REPAID
+            ================================================== -->
+
+            <td class="number-cell">
+              {{ record.fundsRepaid?.groupCount || 0 }}
+            </td>
+
+            <td class="number-cell">
+              {{ record.fundsRepaid?.womenCount || 0 }}
+            </td>
+
+            <td class="amount-cell">
+              ₹{{
+                record.fundsRepaid?.groupAmount || 0
+                  | number:'1.2-2'
+              }}
+            </td>
+
+            <td class="amount-cell">
+              ₹{{
+                record.fundsRepaid?.womenAmount || 0
+                  | number:'1.2-2'
+              }}
+            </td>
+
+
+            <!-- =================================================
+                 RE-LOAN 2025-26
+            ================================================== -->
+
+            <td class="number-cell">
+              {{ record.reLoan?.groupCount || 0 }}
+            </td>
+
+            <td class="number-cell">
+              {{ record.reLoan?.womenCount || 0 }}
+            </td>
+
+            <td class="amount-cell">
+              ₹{{
+                record.reLoan?.groupAmount || 0
+                  | number:'1.2-2'
+              }}
+            </td>
+
+            <td class="amount-cell">
+              ₹{{
+                record.reLoan?.womenAmount || 0
+                  | number:'1.2-2'
+              }}
+            </td>
+
+
+            <!-- =================================================
+                 CURRENT STATUS
+            ================================================== -->
+
+            <td class="number-cell">
+              {{ record.currentStatus?.groupCount || 0 }}
+            </td>
+
+            <td class="number-cell">
+              {{ record.currentStatus?.womenCount || 0 }}
+            </td>
+
+            <td class="amount-cell">
+              ₹{{
+                record.currentStatus?.groupAmount || 0
+                  | number:'1.2-2'
+              }}
+            </td>
+
+            <td class="amount-cell">
+              ₹{{
+                record.currentStatus?.womenAmount || 0
+                  | number:'1.2-2'
+              }}
+            </td>
+
+            <td class="number-cell">
+              {{ record.currentStatus?.ultraPoor || 0 }}
+            </td>
+
+            <td class="number-cell">
+              {{
+                record.currentStatus?.debtCycleWomen || 0
+              }}
+            </td>
+
+            <td class="amount-cell total-cell">
+              ₹{{
+                record.currentStatus?.total || 0
+                  | number:'1.2-2'
+              }}
+            </td>
+
+          </tr>
+
+
+          <!-- =================================================
+               NO DATA
+          ================================================== -->
+
+          <tr
+            *ngIf="
+              filteredReportRecords.length === 0
+            ">
+
+            <td
+              colspan="32"
+              class="no-data">
+
+              <i class="bi bi-inbox"></i>
+
+              <div>
+                No report data available
+              </div>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+
+        <!-- =================================================
+             TOTAL ROW
+        ================================================== -->
+
+        <tfoot
+          *ngIf="
+            filteredReportRecords.length > 0
+          ">
+
+          <tr class="total-row">
+
+            <th colspan="5">
+              Grand Total
+            </th>
+
+
+            <!-- Funds Received -->
+
+            <th>
+              {{ getTotalReceivedGroupCount() }}
+            </th>
+
+            <th>
+              {{ getTotalReceivedWomen() }}
+            </th>
+
+            <th>
+              ₹{{ getTotalReceivedGroupAmount()
+                | number:'1.2-2' }}
+            </th>
+
+            <th>
+              ₹{{ getTotalReceivedWomenAmount()
+                | number:'1.2-2' }}
+            </th>
+
+
+            <!-- Funds Distributed -->
+
+            <th>
+              {{ getTotalDistributedGroupCount() }}
+            </th>
+
+            <th>
+              {{ getTotalDistributedWomen() }}
+            </th>
+
+            <th>
+              ₹{{ getTotalDistributedGroupAmount()
+                | number:'1.2-2' }}
+            </th>
+
+            <th>
+              ₹{{ getTotalDistributedWomenAmount()
+                | number:'1.2-2' }}
+            </th>
+
+
+            <!-- Funds Repaid -->
+
+            <th>
+              {{ getTotalRepaidGroupCount() }}
+            </th>
+
+            <th>
+              {{ getTotalRepaidWomen() }}
+            </th>
+
+            <th>
+              ₹{{ getTotalRepaidGroupAmount()
+                | number:'1.2-2' }}
+            </th>
+
+            <th>
+              ₹{{ getTotalRepaidWomenAmount()
+                | number:'1.2-2' }}
+            </th>
+
+
+            <!-- Re-loan -->
+
+            <th>
+              {{ getTotalReLoanGroupCount() }}
+            </th>
+
+            <th>
+              {{ getTotalReLoanWomen() }}
+            </th>
+
+            <th>
+              ₹{{ getTotalReLoanGroupAmount()
+                | number:'1.2-2' }}
+            </th>
+
+            <th>
+              ₹{{ getTotalReLoanWomenAmount()
+                | number:'1.2-2' }}
+            </th>
+
+
+            <!-- Current Status -->
+
+            <th>
+              {{ getTotalCurrentGroupCount() }}
+            </th>
+
+            <th>
+              {{ getTotalCurrentWomen() }}
+            </th>
+
+            <th>
+              ₹{{ getTotalCurrentGroupAmount()
+                | number:'1.2-2' }}
+            </th>
+
+            <th>
+              ₹{{ getTotalCurrentWomenAmount()
+                | number:'1.2-2' }}
+            </th>
+
+            <th>
+              {{ getTotalUltraPoor() }}
+            </th>
+
+            <th>
+              {{ getTotalDebtCycleWomen() }}
+            </th>
+
+            <th>
+              ₹{{ getGrandTotal()
+                | number:'1.2-2' }}
+            </th>
+
+          </tr>
+
+        </tfoot>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>

@@ -13,6 +13,7 @@ import { RepaymentManagementComponent } from './repayment-management/repayment-m
 import { ClScheduleComponent } from './cl-schedule/cl-schedule.component';
 import { BankBalanceComponent } from './bank-balance/bank-balance.component';
 import { InterestComponent } from './interest/interest.component';
+import { ReportComponent } from './report/report.component';
 
 const routes: Routes = [
   {
@@ -71,6 +72,11 @@ const routes: Routes = [
   {
     path: 'interest',
     component: InterestComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'reports',
+    component: ReportComponent,
     canActivate: [AuthGuard]
   },
   
