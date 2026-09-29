@@ -14,15 +14,22 @@ import {
   LoanService,
   Loan
 } from '../services/loan.service';
+import * as XLSX from 'xlsx';
 
+/* =========================================================
+   INTEREST RECORD
+   ========================================================= */
 
 interface InterestRecord {
 
   voAlfId: number;
+
   cmrcId: number;
 
   cmrcName: string;
+
   voAlfName: string;
+
   villageName: string;
 
   receivedFund: number;
@@ -30,6 +37,7 @@ interface InterestRecord {
   loanId?: number;
 
   womanName: string;
+
   groupName: string;
 
   loanAmount: number;
@@ -57,13 +65,12 @@ interface InterestRecord {
 })
 export class InterestComponent implements OnInit {
 
+
   // =========================================================
   // DATA
   // =========================================================
 
   cmrcList: Cmrc[] = [];
-
-  selectedCmrcId: number | null = null;
 
   voAlfList: VoAlf[] = [];
 
@@ -74,6 +81,20 @@ export class InterestComponent implements OnInit {
   interestRecords: InterestRecord[] = [];
 
   filteredInterestRecords: InterestRecord[] = [];
+
+
+  // =========================================================
+  // SELECTED CMRC
+  // =========================================================
+
+  selectedCmrcId: number | null = null;
+
+
+  // =========================================================
+  // SEARCH
+  // =========================================================
+
+  searchText: string = '';
 
 
   // =========================================================
@@ -95,6 +116,10 @@ export class InterestComponent implements OnInit {
 
   loading = false;
 
+
+  // =========================================================
+  // CONSTRUCTOR
+  // =========================================================
 
   constructor(
     private cmrcService: CmrcService,
@@ -124,7 +149,7 @@ export class InterestComponent implements OnInit {
 
       next: (data: Cmrc[]) => {
 
-        this.cmrcList = data;
+        this.cmrcList = data || [];
 
       },
 
@@ -134,6 +159,8 @@ export class InterestComponent implements OnInit {
           'CMRC API Error:',
           error
         );
+
+        this.cmrcList = [];
 
       }
 
@@ -148,13 +175,24 @@ export class InterestComponent implements OnInit {
 
   onCmrcChange(): void {
 
+    // Reset VO / ALF
+
     this.voAlfList = [];
 
+
+    // Reset loans
+
     this.loansByVoAlf = {};
+
+
+    // Reset records
 
     this.interestRecords = [];
 
     this.filteredInterestRecords = [];
+
+
+    // Reset filters
 
     this.availableYears = [];
 
@@ -164,6 +202,10 @@ export class InterestComponent implements OnInit {
 
     this.selectedInterestRate = null;
 
+    this.searchText = '';
+
+
+    // No CMRC selected
 
     if (
       this.selectedCmrcId === null ||
@@ -174,6 +216,8 @@ export class InterestComponent implements OnInit {
 
     }
 
+
+    // Load VO / ALF
 
     this.loadVoAlf();
 
@@ -205,7 +249,7 @@ export class InterestComponent implements OnInit {
 
         next: (data: VoAlf[]) => {
 
-          this.voAlfList = data;
+          this.voAlfList = data || [];
 
           this.loadLoans();
 
@@ -261,12 +305,18 @@ export class InterestComponent implements OnInit {
     this.voAlfList.forEach(
       (voAlf: VoAlf) => {
 
+
+        // ---------------------------------------------------
+        // VO / ALF ID CHECK
+        // ---------------------------------------------------
+
         if (
           voAlf.id === undefined ||
           voAlf.id === null
         ) {
 
           completedRequests++;
+
 
           if (
             completedRequests ===
@@ -286,6 +336,10 @@ export class InterestComponent implements OnInit {
           voAlf.id;
 
 
+        // ---------------------------------------------------
+        // LOAD LOANS
+        // ---------------------------------------------------
+
         this.loanService
           .getByVoAlfId(voAlfId)
           .subscribe({
@@ -293,7 +347,7 @@ export class InterestComponent implements OnInit {
             next: (loans: Loan[]) => {
 
               this.loansByVoAlf[voAlfId] =
-                loans;
+                loans || [];
 
 
               completedRequests++;
@@ -310,6 +364,7 @@ export class InterestComponent implements OnInit {
 
             },
 
+
             error: (error) => {
 
               console.error(
@@ -319,7 +374,8 @@ export class InterestComponent implements OnInit {
               );
 
 
-              this.loansByVoAlf[voAlfId] = [];
+              this.loansByVoAlf[voAlfId] =
+                [];
 
 
               completedRequests++;
@@ -358,8 +414,13 @@ export class InterestComponent implements OnInit {
     this.availableInterestRates = [];
 
 
+    // =======================================================
+    // LOOP VO / ALF
+    // =======================================================
+
     this.voAlfList.forEach(
       (voAlf: VoAlf) => {
+
 
         if (
           voAlf.id === undefined ||
@@ -379,9 +440,9 @@ export class InterestComponent implements OnInit {
           this.loansByVoAlf[voAlfId] || [];
 
 
-        // =====================================================
+        // ===================================================
         // VO / ALF TOTAL INTEREST
-        // =====================================================
+        // ===================================================
 
         const voAlfTotalInterest =
           loans.reduce(
@@ -400,28 +461,33 @@ export class InterestComponent implements OnInit {
           );
 
 
-        // =====================================================
+        // ===================================================
         // WOMEN COUNT
-        // =====================================================
+        // ===================================================
 
         const womenCount =
           loans.length;
 
 
-        // =====================================================
-        // EACH WOMAN / LOAN
-        // =====================================================
+        // ===================================================
+        // LOOP EACH LOAN / WOMAN
+        // ===================================================
 
         loans.forEach(
           (loan: Loan) => {
+
+
+            // ------------------------------------------------
+            // FINANCIAL YEAR
+            // ------------------------------------------------
 
             const financialYear =
               this.getLoanYear(loan);
 
 
-            // =================================================
+            // ------------------------------------------------
             // INTEREST RATE
-            // =================================================
+            // ------------------------------------------------
 
             let interestRate:
               number | null = null;
@@ -440,9 +506,9 @@ export class InterestComponent implements OnInit {
             }
 
 
-            // =================================================
-            // AVAILABLE FINANCIAL YEARS
-            // =================================================
+            // ------------------------------------------------
+            // AVAILABLE YEARS
+            // ------------------------------------------------
 
             if (
               financialYear !== null &&
@@ -458,9 +524,9 @@ export class InterestComponent implements OnInit {
             }
 
 
-            // =================================================
+            // ------------------------------------------------
             // AVAILABLE INTEREST RATES
-            // =================================================
+            // ------------------------------------------------
 
             if (
               interestRate !== null &&
@@ -476,9 +542,9 @@ export class InterestComponent implements OnInit {
             }
 
 
-            // =================================================
+            // ------------------------------------------------
             // CREATE RECORD
-            // =================================================
+            // ------------------------------------------------
 
             const record:
               InterestRecord = {
@@ -558,9 +624,9 @@ export class InterestComponent implements OnInit {
     );
 
 
-    // =========================================================
-    // SORT FILTER VALUES
-    // =========================================================
+    // =======================================================
+    // SORT FINANCIAL YEARS
+    // =======================================================
 
     this.availableYears.sort(
       (
@@ -570,6 +636,10 @@ export class InterestComponent implements OnInit {
     );
 
 
+    // =======================================================
+    // SORT INTEREST RATES
+    // =======================================================
+
     this.availableInterestRates.sort(
       (
         a: number,
@@ -578,13 +648,16 @@ export class InterestComponent implements OnInit {
     );
 
 
-    // =========================================================
+    // =======================================================
     // INITIAL FILTER
-    // =========================================================
+    // =======================================================
 
-    this.filteredInterestRecords =
-      [...this.interestRecords];
+    this.applyFilters();
 
+
+    // =======================================================
+    // LOADING COMPLETE
+    // =======================================================
 
     this.loading = false;
 
@@ -593,6 +666,110 @@ export class InterestComponent implements OnInit {
       'Interest Records:',
       this.interestRecords
     );
+
+  }
+
+
+  // =========================================================
+  // SEARCH / FILTER
+  // =========================================================
+
+  applyFilters(): void {
+
+    const search =
+      this.searchText
+        ? this.searchText
+            .trim()
+            .toLowerCase()
+        : '';
+
+
+    this.filteredInterestRecords =
+      this.interestRecords.filter(
+        (
+          record: InterestRecord
+        ) => {
+
+
+          // ================================================
+          // SEARCH FILTER
+          // ================================================
+
+          if (search) {
+
+            const searchableText = [
+
+              record.cmrcName,
+
+              record.voAlfName,
+
+              record.villageName,
+
+              record.womanName,
+
+              record.groupName,
+
+              record.loanStatus || '',
+
+              this.getFinancialYearLabel(
+                record.financialYear
+              ),
+
+              record.interestRate !== null
+                ? String(record.interestRate)
+                : ''
+
+            ]
+              .join(' ')
+              .toLowerCase();
+
+
+            if (
+              !searchableText.includes(search)
+            ) {
+
+              return false;
+
+            }
+
+          }
+
+
+          // ================================================
+          // FINANCIAL YEAR
+          // ================================================
+
+          if (
+            this.selectedYear !== null &&
+            Number(record.financialYear) !==
+            Number(this.selectedYear)
+          ) {
+
+            return false;
+
+          }
+
+
+          // ================================================
+          // INTEREST RATE
+          // ================================================
+
+          if (
+            this.selectedInterestRate !== null &&
+            Number(record.interestRate) !==
+            Number(this.selectedInterestRate)
+          ) {
+
+            return false;
+
+          }
+
+
+          return true;
+
+        }
+
+      );
 
   }
 
@@ -620,65 +797,17 @@ export class InterestComponent implements OnInit {
 
 
   // =========================================================
-  // APPLY FILTERS
-  // =========================================================
-
-  applyFilters(): void {
-
-    this.filteredInterestRecords =
-      this.interestRecords.filter(
-        (
-          record: InterestRecord
-        ) => {
-
-          // -----------------------------------------------
-          // FINANCIAL YEAR
-          // -----------------------------------------------
-
-          if (
-            this.selectedYear !== null &&
-            Number(record.financialYear) !==
-            Number(this.selectedYear)
-          ) {
-
-            return false;
-
-          }
-
-
-          // -----------------------------------------------
-          // INTEREST RATE
-          // -----------------------------------------------
-
-          if (
-            this.selectedInterestRate !== null &&
-            Number(record.interestRate) !==
-            Number(this.selectedInterestRate)
-          ) {
-
-            return false;
-
-          }
-
-
-          return true;
-
-        }
-
-      );
-
-  }
-
-
-  // =========================================================
   // CLEAR FILTERS
   // =========================================================
 
   clearFilters(): void {
 
+    this.searchText = '';
+
     this.selectedYear = null;
 
     this.selectedInterestRate = null;
+
 
     this.filteredInterestRecords =
       [...this.interestRecords];
@@ -687,7 +816,7 @@ export class InterestComponent implements OnInit {
 
 
   // =========================================================
-  // CMRC NAME
+  // GET CMRC NAME
   // =========================================================
 
   getCmrcName(
@@ -706,7 +835,9 @@ export class InterestComponent implements OnInit {
 
     const cmrc =
       this.cmrcList.find(
-        c => c.id === cmrcId
+        c =>
+          Number(c.id) ===
+          Number(cmrcId)
       );
 
 
@@ -737,6 +868,17 @@ export class InterestComponent implements OnInit {
       );
 
 
+    if (
+      isNaN(
+        date.getTime()
+      )
+    ) {
+
+      return null;
+
+    }
+
+
     const year =
       date.getFullYear();
 
@@ -744,8 +886,6 @@ export class InterestComponent implements OnInit {
     const month =
       date.getMonth() + 1;
 
-
-    // April to March financial year
 
     return month >= 4
       ? year
@@ -808,7 +948,8 @@ export class InterestComponent implements OnInit {
         (
           record: InterestRecord
         ) =>
-          record.voAlfId === voAlfId
+          Number(record.voAlfId) ===
+          Number(voAlfId)
       )
       .reduce(
         (
@@ -896,6 +1037,48 @@ export class InterestComponent implements OnInit {
 
 
   // =========================================================
+  // ACTIVE LOANS
+  // =========================================================
+
+  getActiveLoans(): number {
+
+    return this.filteredInterestRecords
+      .filter(
+        (
+          record: InterestRecord
+        ) =>
+          (
+            record.loanStatus || ''
+          ).toUpperCase() ===
+          'ACTIVE'
+      )
+      .length;
+
+  }
+
+
+  // =========================================================
+  // CLOSED LOANS
+  // =========================================================
+
+  getClosedLoans(): number {
+
+    return this.filteredInterestRecords
+      .filter(
+        (
+          record: InterestRecord
+        ) =>
+          (
+            record.loanStatus || ''
+          ).toUpperCase() ===
+          'CLOSED'
+      )
+      .length;
+
+  }
+
+
+  // =========================================================
   // GROUP ROWSPAN
   // =========================================================
 
@@ -929,8 +1112,8 @@ export class InterestComponent implements OnInit {
 
 
       if (
-        next.voAlfId ===
-        current.voAlfId
+        Number(next.voAlfId) ===
+        Number(current.voAlfId)
       ) {
 
         count++;
@@ -975,8 +1158,8 @@ export class InterestComponent implements OnInit {
 
 
     return (
-      current.voAlfId !==
-      previous.voAlfId
+      Number(current.voAlfId) !==
+      Number(previous.voAlfId)
     );
 
   }
@@ -1026,7 +1209,8 @@ export class InterestComponent implements OnInit {
     const index =
       this.voAlfList.findIndex(
         voAlf =>
-          voAlf.id === voAlfId
+          Number(voAlf.id) ===
+          Number(voAlfId)
       );
 
 
@@ -1040,5 +1224,165 @@ export class InterestComponent implements OnInit {
     return index % 8;
 
   }
+// =========================================================
+// EXPORT INTEREST DETAILS TO EXCEL
+// =========================================================
 
+exportToExcel(): void {
+
+  if (
+    !this.filteredInterestRecords ||
+    this.filteredInterestRecords.length === 0
+  ) {
+    alert('No interest data available to export.');
+    return;
+  }
+
+
+  const excelData = this.filteredInterestRecords.map(
+    (
+      record: InterestRecord,
+      index: number
+    ) => {
+
+      return {
+
+        'Sr. No.':
+          index + 1,
+
+        'CMRC Name':
+          record.cmrcName,
+
+        'VO / ALF Name':
+          record.voAlfName,
+
+        'Village':
+          record.villageName,
+
+        'Woman Name':
+          record.womanName,
+
+        'Women Count':
+          record.womenCount,
+
+        'Group Name':
+          record.groupName,
+
+        'VO / ALF Received Amount':
+          Number(record.receivedFund || 0),
+
+        'Financial Year':
+          this.getFinancialYearLabel(
+            record.financialYear
+          ),
+
+        'Interest Rate':
+          record.interestRate !== null
+            ? record.interestRate + '%'
+            : '-',
+
+        'Loan Amount':
+          Number(record.loanAmount || 0),
+
+        'Interest Received':
+          Number(
+            record.totalInterestReceived || 0
+          ),
+
+        'Loan Status':
+          record.loanStatus || '-',
+
+        'VO / ALF Interest Received':
+          Number(
+            record.totalInterestReceived || 0
+          )
+
+      };
+
+    }
+  );
+
+
+  // =======================================================
+  // CREATE WORKSHEET
+  // =======================================================
+
+  const worksheet: XLSX.WorkSheet =
+    XLSX.utils.json_to_sheet(
+      excelData
+    );
+
+
+  // =======================================================
+  // COLUMN WIDTH
+  // =======================================================
+
+  worksheet['!cols'] = [
+
+    { wch: 10 },
+    { wch: 22 },
+    { wch: 25 },
+    { wch: 20 },
+    { wch: 25 },
+    { wch: 14 },
+    { wch: 20 },
+    { wch: 24 },
+    { wch: 18 },
+    { wch: 16 },
+    { wch: 18 },
+    { wch: 20 },
+    { wch: 16 },
+    { wch: 25 }
+
+  ];
+
+
+  // =======================================================
+  // CREATE WORKBOOK
+  // =======================================================
+
+  const workbook: XLSX.WorkBook =
+    XLSX.utils.book_new();
+
+
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    'Interest Details'
+  );
+
+
+  // =======================================================
+  // FILE NAME
+  // =======================================================
+
+  const selectedCmrc =
+    this.cmrcList.find(
+      cmrc =>
+        Number(cmrc.id) ===
+        Number(this.selectedCmrcId)
+    );
+
+
+  const cmrcName =
+    selectedCmrc?.cmrcName
+      ? selectedCmrc.cmrcName
+          .replace(/[^a-zA-Z0-9]/g, '_')
+      : 'CMRC';
+
+
+  const fileName =
+    `Interest_Details_${cmrcName}.xlsx`;
+
+
+  // =======================================================
+  // DOWNLOAD EXCEL
+  // =======================================================
+
+  XLSX.writeFile(
+    workbook,
+    fileName
+  );
+
+}
 }

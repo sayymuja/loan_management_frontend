@@ -20,6 +20,8 @@ import {
   Loan
 } from '../services/loan.service';
 
+import * as XLSX from 'xlsx';
+
 
 @Component({
   selector: 'app-bank-balance',
@@ -28,66 +30,76 @@ import {
 })
 export class BankBalanceComponent implements OnInit {
 
-  // =========================================
+  // =========================================================
   // LOAN TOTALS
-  // =========================================
+  // =========================================================
 
   loanTotals: {
     [voAlfId: number]: number;
   } = {};
 
-
+  // Month-wise loan expense
   monthlyLoanTotals: {
     [voAlfId: number]: {
       [month: string]: number;
     };
   } = {};
 
-
-  // =========================================
+  // =========================================================
   // MONTHS
-  // =========================================
+  // =========================================================
 
   allLoanMonths: string[] = [];
 
   loanMonths: string[] = [];
 
-
-  // =========================================
-  // YEARS
-  // =========================================
+  // =========================================================
+  // FINANCIAL YEAR
+  // =========================================================
 
   availableYears: number[] = [];
 
+  /**
+   * null = All
+   *
+   * Example:
+   * 2025 = Financial Year 2025-26
+   */
   selectedYear: number | null = null;
 
+  // =========================================================
+  // SEARCH
+  // =========================================================
 
-  // =========================================
+  searchText = '';
+
+  // =========================================================
   // CMRC / VO ALF
-  // =========================================
+  // =========================================================
 
   cmrcList: Cmrc[] = [];
 
   voAlfList: VoAlf[] = [];
 
-
-  // =========================================
+  // =========================================================
   // CMRC BALANCE
-  // =========================================
+  // =========================================================
 
   cmrcBalance = 0;
 
   selectedCmrcId: number | null = null;
 
-
-  // =========================================
+  // =========================================================
   // LOADING
-  // =========================================
+  // =========================================================
 
   loadingVoAlf = false;
 
   loadingBalance = false;
 
+  // =========================================================
+  // CONSTRUCTOR
+  // =========================================================
 
   constructor(
     private cmrcService: CmrcService,
@@ -96,21 +108,17 @@ export class BankBalanceComponent implements OnInit {
     private loanService: LoanService
   ) {}
 
-
-  // =========================================
+  // =========================================================
   // INIT
-  // =========================================
+  // =========================================================
 
   ngOnInit(): void {
-
     this.loadCmrc();
-
   }
 
-
-  // =========================================
+  // =========================================================
   // LOAD CMRC
-  // =========================================
+  // =========================================================
 
   loadCmrc(): void {
 
@@ -118,7 +126,7 @@ export class BankBalanceComponent implements OnInit {
 
       next: (data: Cmrc[]) => {
 
-        this.cmrcList = data;
+        this.cmrcList = data || [];
 
       },
 
@@ -129,16 +137,15 @@ export class BankBalanceComponent implements OnInit {
           error
         );
 
+        this.cmrcList = [];
       }
 
     });
-
   }
 
-
-  // =========================================
+  // =========================================================
   // LOAD BANK BALANCE
-  // =========================================
+  // =========================================================
 
   loadBankBalance(): void {
 
@@ -158,20 +165,20 @@ export class BankBalanceComponent implements OnInit {
 
     this.selectedYear = null;
 
+    this.searchText = '';
 
-    if (!this.selectedCmrcId) {
-
+    if (
+      this.selectedCmrcId === null ||
+      this.selectedCmrcId === undefined
+    ) {
       return;
-
     }
 
-
-    // =======================================
+    // -------------------------------------------------------
     // LOAD VO / ALF
-    // =======================================
+    // -------------------------------------------------------
 
     this.loadingVoAlf = true;
-
 
     this.voAlfService
       .getByCmrcId(this.selectedCmrcId)
@@ -179,12 +186,11 @@ export class BankBalanceComponent implements OnInit {
 
         next: (data: VoAlf[]) => {
 
-          this.voAlfList = data;
+          this.voAlfList = data || [];
 
           this.loadingVoAlf = false;
 
           this.loadLoanTotals();
-
         },
 
         error: (error) => {
@@ -194,19 +200,18 @@ export class BankBalanceComponent implements OnInit {
             error
           );
 
-          this.loadingVoAlf = false;
+          this.voAlfList = [];
 
+          this.loadingVoAlf = false;
         }
 
       });
 
-
-    // =======================================
+    // -------------------------------------------------------
     // LOAD CMRC BALANCE
-    // =======================================
+    // -------------------------------------------------------
 
     this.loadingBalance = true;
-
 
     this.cmrcBalanceService
       .getByCmrcId(this.selectedCmrcId)
@@ -230,12 +235,9 @@ export class BankBalanceComponent implements OnInit {
           } else {
 
             this.cmrcBalance = 0;
-
           }
 
-
           this.loadingBalance = false;
-
         },
 
         error: (error) => {
@@ -248,17 +250,14 @@ export class BankBalanceComponent implements OnInit {
           this.cmrcBalance = 0;
 
           this.loadingBalance = false;
-
         }
 
       });
-
   }
 
-
-  // =========================================
+  // =========================================================
   // LOAD LOAN TOTALS
-  // =========================================
+  // =========================================================
 
   loadLoanTotals(): void {
 
@@ -272,20 +271,36 @@ export class BankBalanceComponent implements OnInit {
 
     this.availableYears = [];
 
+    if (
+      this.voAlfList.length === 0
+    ) {
+      return;
+    }
 
-    this.voAlfList.forEach(
+    const validVoAlfList =
+      this.voAlfList.filter(
+        (voAlf: VoAlf) =>
+          voAlf.id !== undefined &&
+          voAlf.id !== null
+      );
+
+    if (
+      validVoAlfList.length === 0
+    ) {
+      this.finishLoanLoading();
+      return;
+    }
+
+    let completedRequests = 0;
+
+    const totalRequests =
+      validVoAlfList.length;
+
+    validVoAlfList.forEach(
       (voAlf: VoAlf) => {
 
-        if (!voAlf.id) {
-
-          return;
-
-        }
-
-
         const voAlfId =
-          voAlf.id;
-
+          voAlf.id!;
 
         this.loanService
           .getByVoAlfId(voAlfId)
@@ -293,13 +308,13 @@ export class BankBalanceComponent implements OnInit {
 
             next: (loans: Loan[]) => {
 
-              this.monthlyLoanTotals[voAlfId] = {};
-
+              this.monthlyLoanTotals[
+                voAlfId
+              ] = {};
 
               let totalLoanAmount = 0;
 
-
-              loans.forEach(
+              (loans || []).forEach(
                 (loan: Loan) => {
 
                   const loanAmount =
@@ -307,39 +322,44 @@ export class BankBalanceComponent implements OnInit {
                       loan.loanAmount || 0
                     );
 
-
                   totalLoanAmount +=
                     loanAmount;
 
+                  // -----------------------------------------
+                  // LOAN DATE
+                  // -----------------------------------------
 
-                  if (!loan.loanGivenDate) {
-
+                  if (
+                    !loan.loanGivenDate
+                  ) {
                     return;
-
                   }
 
-
                   const date =
-                    new Date(
+                    this.parseDate(
                       loan.loanGivenDate
                     );
 
+                  if (
+                    !date
+                  ) {
+                    return;
+                  }
 
                   const year =
                     date.getFullYear();
-
 
                   const month =
                     String(
                       date.getMonth() + 1
                     ).padStart(2, '0');
 
-
                   const monthKey =
                     `${year}-${month}`;
 
-
-                  // Monthly total
+                  // -----------------------------------------
+                  // MONTHLY LOAN EXPENSE
+                  // -----------------------------------------
 
                   if (
                     this.monthlyLoanTotals[
@@ -350,16 +370,16 @@ export class BankBalanceComponent implements OnInit {
                     this.monthlyLoanTotals[
                       voAlfId
                     ][monthKey] = 0;
-
                   }
-
 
                   this.monthlyLoanTotals[
                     voAlfId
-                  ][monthKey] += loanAmount;
+                  ][monthKey] +=
+                    loanAmount;
 
-
-                  // All months
+                  // -----------------------------------------
+                  // ALL MONTHS
+                  // -----------------------------------------
 
                   if (
                     !this.allLoanMonths.includes(
@@ -370,57 +390,24 @@ export class BankBalanceComponent implements OnInit {
                     this.allLoanMonths.push(
                       monthKey
                     );
-
-                  }
-
-
-                  // Years
-
-                  if (
-                    !this.availableYears.includes(
-                      year
-                    )
-                  ) {
-
-                    this.availableYears.push(
-                      year
-                    );
-
                   }
 
                 }
-
               );
 
+              this.loanTotals[
+                voAlfId
+              ] = totalLoanAmount;
 
-              this.loanTotals[voAlfId] =
-                totalLoanAmount;
-
-
-              this.allLoanMonths.sort();
-
-
-              this.availableYears.sort(
-                (a, b) => a - b
-              );
-
-
-              // Latest year
+              completedRequests++;
 
               if (
-                this.selectedYear === null &&
-                this.availableYears.length > 0
+                completedRequests ===
+                totalRequests
               ) {
 
-                this.selectedYear =
-                  this.availableYears[
-                    this.availableYears.length - 1
-                  ];
-
+                this.finishLoanLoading();
               }
-
-
-              this.updateYearMonths();
 
             },
 
@@ -432,75 +419,181 @@ export class BankBalanceComponent implements OnInit {
                 error
               );
 
-              this.loanTotals[voAlfId] = 0;
+              this.loanTotals[
+                voAlfId
+              ] = 0;
 
               this.monthlyLoanTotals[
                 voAlfId
               ] = {};
 
+              completedRequests++;
+
+              if (
+                completedRequests ===
+                totalRequests
+              ) {
+
+                this.finishLoanLoading();
+              }
             }
 
           });
-
       }
-
     );
-
   }
 
+  // =========================================================
+  // FINISH LOAN LOADING
+  // =========================================================
 
-  // =========================================
-  // UPDATE YEAR MONTHS
-  // =========================================
+  finishLoanLoading(): void {
+
+    // Sort YYYY-MM
+    this.allLoanMonths.sort();
+
+    // -----------------------------------------
+    // CREATE FINANCIAL YEARS
+    // -----------------------------------------
+
+    const yearSet =
+      new Set<number>();
+
+    this.allLoanMonths.forEach(
+      (monthKey: string) => {
+
+        const [
+          yearText,
+          monthText
+        ] =
+          monthKey.split('-');
+
+        const year =
+          Number(yearText);
+
+        const month =
+          Number(monthText);
+
+        /**
+         * Apr-Dec
+         * Financial Year starts in same year
+         *
+         * Jan-Mar
+         * Financial Year starts previous year
+         */
+
+        const financialYearStart =
+          month >= 4
+            ? year
+            : year - 1;
+
+        yearSet.add(
+          financialYearStart
+        );
+      }
+    );
+
+    this.availableYears =
+      Array.from(yearSet)
+        .sort(
+          (
+            a: number,
+            b: number
+          ) => a - b
+        );
+
+    // -----------------------------------------
+    // DEFAULT = ALL
+    // -----------------------------------------
+
+    this.selectedYear = null;
+
+    this.updateYearMonths();
+  }
+
+  // =========================================================
+  // UPDATE MONTHS
+  // =========================================================
 
   updateYearMonths(): void {
+
+    // -------------------------------------------------------
+    // ALL
+    // -------------------------------------------------------
 
     if (
       this.selectedYear === null
     ) {
 
-      this.loanMonths = [];
+      this.loanMonths =
+        [...this.allLoanMonths];
 
       return;
-
     }
 
+    // -------------------------------------------------------
+    // SELECTED FINANCIAL YEAR
+    // -------------------------------------------------------
+
+    const startYear =
+      this.selectedYear;
+
+    const endYear =
+      startYear + 1;
 
     this.loanMonths =
       this.allLoanMonths
         .filter(
-          (month: string) => {
+          (monthKey: string) => {
+
+            const [
+              yearText,
+              monthText
+            ] =
+              monthKey.split('-');
 
             const year =
-              Number(
-                month.substring(0, 4)
-              );
+              Number(yearText);
 
-            return (
-              year === this.selectedYear
-            );
+            const month =
+              Number(monthText);
 
+            // Apr-Dec of start year
+            if (
+              year === startYear &&
+              month >= 4
+            ) {
+
+              return true;
+            }
+
+            // Jan-Mar of next year
+            if (
+              year === endYear &&
+              month <= 3
+            ) {
+
+              return true;
+            }
+
+            return false;
           }
         )
         .sort();
-
   }
 
-
-  // =========================================
+  // =========================================================
   // YEAR CHANGE
-  // =========================================
+  // =========================================================
 
   onYearChange(): void {
 
     this.updateYearMonths();
-
   }
 
-
-  // =========================================
+  // =========================================================
   // FINANCIAL YEAR LABEL
-  // =========================================
+  // =========================================================
 
   getFinancialYearLabel(): string {
 
@@ -508,42 +601,69 @@ export class BankBalanceComponent implements OnInit {
       this.selectedYear === null
     ) {
 
-      return '';
-
+      return 'All';
     }
 
-
-    return `${this.selectedYear}-${
-      String(
-        this.selectedYear + 1
-      ).slice(-2)
-    }`;
-
+    return `${this.selectedYear}-${String(
+      this.selectedYear + 1
+    ).slice(-2)}`;
   }
 
-
-  // =========================================
-  // CMRC NAME
-  // =========================================
+  // =========================================================
+  // SELECTED CMRC NAME
+  // =========================================================
 
   getSelectedCmrcName(): string {
 
     const cmrc =
       this.cmrcList.find(
-        c =>
-          c.id ===
-          this.selectedCmrcId
+        (c: Cmrc) =>
+          Number(c.id) ===
+          Number(this.selectedCmrcId)
       );
 
-
     return cmrc?.cmrcName || '';
-
   }
 
+  // =========================================================
+  // SEARCH
+  // =========================================================
 
-  // =========================================
+  getFilteredVoAlfList(): VoAlf[] {
+
+    const search =
+      (this.searchText || '')
+        .trim()
+        .toLowerCase();
+
+    if (!search) {
+      return this.voAlfList;
+    }
+
+    return this.voAlfList.filter(
+      (voAlf: VoAlf) => {
+
+        const voAlfName =
+          String(
+            voAlf.voAlfName || ''
+          ).toLowerCase();
+
+        const villageName =
+          String(
+            voAlf.villageName || ''
+          ).toLowerCase();
+
+        return (
+          voAlfName.includes(search) ||
+          villageName.includes(search)
+        );
+      }
+    );
+  }
+
+  // =========================================================
   // TOTAL RECEIVED FUND
-  // =========================================
+  // =========================================================
 
   getTotalReceivedFund(): number {
 
@@ -559,17 +679,14 @@ export class BankBalanceComponent implements OnInit {
             voAlf.receivedFund || 0
           )
         );
-
       },
       0
     );
-
   }
 
-
-  // =========================================
-  // FORMAT MONTH
-  // =========================================
+  // =========================================================
+  // MONTH FORMAT
+  // =========================================================
 
   formatMonth(
     monthKey: string
@@ -578,8 +695,8 @@ export class BankBalanceComponent implements OnInit {
     const [
       year,
       month
-    ] = monthKey.split('-');
-
+    ] =
+      monthKey.split('-');
 
     const date =
       new Date(
@@ -588,23 +705,20 @@ export class BankBalanceComponent implements OnInit {
         1
       );
 
-
     return date.toLocaleString(
       'en-US',
       {
         month: 'short',
-        year: 'numeric'
+        year: '2-digit'
       }
     );
-
   }
 
+  // =========================================================
+  // GET MONTHLY LOAN EXPENSE
+  // =========================================================
 
-  // =========================================
-  // MONTHLY LOAN AMOUNT
-  // =========================================
-
-  getMonthlyLoanAmount(
+  getMonthlyLoanExpense(
     voAlfId: number,
     month: string
   ): number {
@@ -614,13 +728,70 @@ export class BankBalanceComponent implements OnInit {
         voAlfId
       ]?.[month] || 0
     );
-
   }
 
+  // =========================================================
+  // GET CUMULATIVE LOAN EXPENSE
+  // =========================================================
 
-  // =========================================
-  // TOTAL LOAN
-  // =========================================
+  getCumulativeLoanExpense(
+    voAlfId: number,
+    month: string
+  ): number {
+
+    let totalExpense = 0;
+
+    for (
+      const currentMonth
+      of this.allLoanMonths
+    ) {
+
+      if (
+        currentMonth > month
+      ) {
+        break;
+      }
+
+      totalExpense +=
+        this.getMonthlyLoanExpense(
+          voAlfId,
+          currentMonth
+        );
+    }
+
+    return totalExpense;
+  }
+
+  // =========================================================
+  // GET MONTHLY REMAINING AMOUNT
+  // =========================================================
+
+  getMonthlyRemainingAmount(
+    voAlfId: number,
+    month: string,
+    receivedFund: number | undefined
+  ): number {
+
+    const receivedAmount =
+      Number(
+        receivedFund || 0
+      );
+
+    const cumulativeExpense =
+      this.getCumulativeLoanExpense(
+        voAlfId,
+        month
+      );
+
+    return (
+      receivedAmount -
+      cumulativeExpense
+    );
+  }
+
+  // =========================================================
+  // TOTAL LOAN AMOUNT FOR VO / ALF
+  // =========================================================
 
   getTotalLoanAmountForVoAlf(
     voAlfId: number
@@ -631,122 +802,456 @@ export class BankBalanceComponent implements OnInit {
         voAlfId
       ] || 0
     );
-
   }
 
+  // =========================================================
+  // CURRENT BALANCE
+  // =========================================================
 
-  // =========================================
-  // REMAINING AMOUNT
-  // =========================================
-
-  getRemainingAmount(
-    voAlfId: number,
-    receivedFund: number | undefined
+  getCurrentBalance(
+    voAlf: VoAlf
   ): number {
 
-    const receivedAmount =
-      Number(
-        receivedFund || 0
+    if (
+      !voAlf.id
+    ) {
+      return Number(
+        voAlf.receivedFund || 0
       );
+    }
 
+    if (
+      this.allLoanMonths.length === 0
+    ) {
 
-    const totalLoanAmount =
-      this.getTotalLoanAmountForVoAlf(
-        voAlfId
+      return Number(
+        voAlf.receivedFund || 0
       );
+    }
 
+    const latestMonth =
+      this.allLoanMonths[
+        this.allLoanMonths.length - 1
+      ];
+
+    return this.getMonthlyRemainingAmount(
+      voAlf.id,
+      latestMonth,
+      voAlf.receivedFund
+    );
+  }
+
+  // =========================================================
+  // CURRENT BALANCE FOR SELECTED FINANCIAL YEAR
+  // =========================================================
+
+  getSelectedPeriodCurrentBalance(
+    voAlf: VoAlf
+  ): number {
+
+    if (
+      !voAlf.id
+    ) {
+      return Number(
+        voAlf.receivedFund || 0
+      );
+    }
+
+    if (
+      this.loanMonths.length === 0
+    ) {
+
+      return Number(
+        voAlf.receivedFund || 0
+      );
+    }
+
+    const latestMonth =
+      this.loanMonths[
+        this.loanMonths.length - 1
+      ];
+
+    return this.getMonthlyRemainingAmount(
+      voAlf.id,
+      latestMonth,
+      voAlf.receivedFund
+    );
+  }
+
+  // =========================================================
+  // TOTAL LOAN AMOUNT
+  // =========================================================
+
+  getTotalLoanAmount(): number {
+
+    return this.voAlfList.reduce(
+      (
+        total: number,
+        voAlf: VoAlf
+      ) => {
+
+        return (
+          total +
+          this.getTotalLoanAmountForVoAlf(
+            voAlf.id!
+          )
+        );
+      },
+      0
+    );
+  }
+
+  // =========================================================
+  // TOTAL CURRENT BALANCE
+  // =========================================================
+
+  getTotalCurrentBalance(): number {
+
+    return this.voAlfList.reduce(
+      (
+        total: number,
+        voAlf: VoAlf
+      ) => {
+
+        return (
+          total +
+          this.getSelectedPeriodCurrentBalance(
+            voAlf
+          )
+        );
+      },
+      0
+    );
+  }
+
+  // =========================================================
+  // UTILIZATION %
+  // =========================================================
+
+  getUtilizationPercentage(): number {
+
+    const received =
+      this.getTotalReceivedFund();
+
+    const loanAmount =
+      this.getTotalLoanAmount();
+
+    if (
+      received <= 0
+    ) {
+
+      return 0;
+    }
 
     return (
-      receivedAmount -
-      totalLoanAmount
+      (loanAmount / received) *
+      100
     );
-
   }
 
+  // =========================================================
+  // TOTAL MONTHLY REMAINING
+  // =========================================================
 
-  // =========================================
-  // MONTHLY REMAINING
-  // =========================================
-
-  getMonthlyRemainingAmount(
-    voAlfId: number,
-    month: string,
-    receivedFund: number | undefined
+  getTotalMonthlyRemaining(
+    month: string
   ): number {
 
-    let remainingAmount =
-      Number(
-        receivedFund || 0
-      );
+    return this.voAlfList.reduce(
+      (
+        total: number,
+        voAlf: VoAlf
+      ) => {
 
+        return (
+          total +
+          this.getMonthlyRemainingAmount(
+            voAlf.id!,
+            month,
+            voAlf.receivedFund
+          )
+        );
+      },
+      0
+    );
+  }
 
-    for (
-      const currentMonth
-      of this.allLoanMonths
+  // =========================================================
+  // TOTAL MONTHLY LOAN EXPENSE
+  // =========================================================
+
+  getTotalMonthlyLoanExpense(
+    month: string
+  ): number {
+
+    return this.voAlfList.reduce(
+      (
+        total: number,
+        voAlf: VoAlf
+      ) => {
+
+        return (
+          total +
+          this.getMonthlyLoanExpense(
+            voAlf.id!,
+            month
+          )
+        );
+      },
+      0
+    );
+  }
+
+  // =========================================================
+  // DATE PARSER
+  // =========================================================
+
+  private parseDate(
+    value: any
+  ): Date | null {
+
+    if (!value) {
+      return null;
+    }
+
+    // Date object
+    if (
+      value instanceof Date
     ) {
 
       if (
-        currentMonth > month
+        isNaN(
+          value.getTime()
+        )
       ) {
-
-        break;
-
+        return null;
       }
 
-
-      const loanAmount =
-        this.getMonthlyLoanAmount(
-          voAlfId,
-          currentMonth
-        );
-
-
-      remainingAmount -=
-        loanAmount;
-
+      return value;
     }
 
+    const valueString =
+      String(value);
 
-    return remainingAmount;
+    // yyyy-MM-dd
+    const match =
+      valueString.match(
+        /^(\d{4})-(\d{2})-(\d{2})/
+      );
 
+    if (match) {
+
+      const year =
+        Number(match[1]);
+
+      const month =
+        Number(match[2]);
+
+      const day =
+        Number(match[3]);
+
+      const date =
+        new Date(
+          year,
+          month - 1,
+          day
+        );
+
+      if (
+        isNaN(
+          date.getTime()
+        )
+      ) {
+        return null;
+      }
+
+      return date;
+    }
+
+    const date =
+      new Date(valueString);
+
+    if (
+      isNaN(
+        date.getTime()
+      )
+    ) {
+
+      return null;
+    }
+
+    return date;
   }
-getTotalLoanAmount(): number {
 
-  return this.voAlfList.reduce(
-    (
-      total: number,
-      voAlf: VoAlf
-    ) => {
+  // =========================================================
+  // EXPORT TO EXCEL
+  // =========================================================
 
-      return total +
-        this.getTotalLoanAmountForVoAlf(
-          voAlf.id!
+  exportToExcel(): void {
+
+    if (
+      !this.selectedCmrcId ||
+      this.voAlfList.length === 0
+    ) {
+
+      alert(
+        'No bank balance data available to export.'
+      );
+
+      return;
+    }
+
+    const excelData: any[] = [];
+
+    this.voAlfList.forEach(
+      (
+        voAlf: VoAlf,
+        index: number
+      ) => {
+
+        const row: any = {
+
+          'Sr. No.':
+            index + 1,
+
+          'CMRC':
+            this.getSelectedCmrcName() || '-',
+
+          'Village':
+            voAlf.villageName || '-',
+
+          'VO / ALF':
+            voAlf.voAlfName || '-',
+
+          'Received Fund':
+            Number(
+              voAlf.receivedFund || 0
+            )
+        };
+
+        // -----------------------------------------
+        // MONTHLY REMAINING
+        // -----------------------------------------
+
+        this.loanMonths.forEach(
+          (
+            month: string
+          ) => {
+
+            row[
+              this.formatMonth(month)
+            ] =
+              this.getMonthlyRemainingAmount(
+                voAlf.id!,
+                month,
+                voAlf.receivedFund
+              );
+          }
         );
 
-    },
-    0
-  );
+        // -----------------------------------------
+        // ADDITIONAL DATA
+        // -----------------------------------------
 
-}
+        row[
+          'Total Loan Disbursed'
+        ] =
+          this.getTotalLoanAmountForVoAlf(
+            voAlf.id!
+          );
 
+        row[
+          'Current Balance'
+        ] =
+          this.getSelectedPeriodCurrentBalance(
+            voAlf
+          );
 
-getTotalRemainingAmount(): number {
+        excelData.push(row);
+      }
+    );
 
-  return this.voAlfList.reduce(
-    (
-      total: number,
-      voAlf: VoAlf
-    ) => {
+    // =======================================================
+    // WORKSHEET
+    // =======================================================
 
-      return total +
-        this.getRemainingAmount(
-          voAlf.id!,
-          voAlf.receivedFund
+    const worksheet:
+      XLSX.WorkSheet =
+      XLSX.utils.json_to_sheet(
+        excelData
+      );
+
+    // =======================================================
+    // COLUMN WIDTH
+    // =======================================================
+
+    const columnWidths: {
+      wch: number;
+    }[] = [
+
+      { wch: 10 },  // Sr No
+      { wch: 30 },  // CMRC
+      { wch: 20 },  // Village
+      { wch: 28 },  // VO/ALF
+      { wch: 18 }   // Received Fund
+    ];
+
+    this.loanMonths.forEach(
+      () => {
+
+        columnWidths.push({
+          wch: 16
+        });
+      }
+    );
+
+    columnWidths.push(
+      { wch: 22 },
+      { wch: 20 }
+    );
+
+    worksheet['!cols'] =
+      columnWidths;
+
+    // =======================================================
+    // WORKBOOK
+    // =======================================================
+
+    const workbook:
+      XLSX.WorkBook =
+      XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      'Bank Balance'
+    );
+
+    // =======================================================
+    // FILE NAME
+    // =======================================================
+
+    const cmrcName =
+      this.getSelectedCmrcName()
+        .replace(
+          /[^a-zA-Z0-9]/g,
+          '_'
         );
 
-    },
-    0
-  );
+    const financialYear =
+      this.getFinancialYearLabel()
+        .replace(
+          /[^a-zA-Z0-9-]/g,
+          ''
+        );
 
-}
+    const fileName =
+      `Bank_Balance_${cmrcName}_${financialYear}.xlsx`;
+
+    XLSX.writeFile(
+      workbook,
+      fileName
+    );
+  }
+
 }

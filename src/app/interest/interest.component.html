@@ -1,8 +1,8 @@
 <div class="interest-page">
 
-  <!-- ========================================= -->
-  <!-- PAGE HEADER -->
-  <!-- ========================================= -->
+  <!-- =====================================================
+       PAGE HEADER
+  ====================================================== -->
 
   <div class="page-header">
 
@@ -21,9 +21,9 @@
   </div>
 
 
-  <!-- ========================================= -->
-  <!-- CMRC FILTER -->
-  <!-- ========================================= -->
+  <!-- =====================================================
+       CMRC SELECTION
+  ====================================================== -->
 
   <div class="filter-card">
 
@@ -57,9 +57,9 @@
   </div>
 
 
-  <!-- ========================================= -->
-  <!-- LOADING -->
-  <!-- ========================================= -->
+  <!-- =====================================================
+       LOADING
+  ====================================================== -->
 
   <div
     *ngIf="loading"
@@ -76,562 +76,858 @@
   </div>
 
 
-  <!-- ========================================= -->
-  <!-- TABLE CARD -->
-  <!-- ========================================= -->
+  <!-- =====================================================
+       MAIN CONTENT
+  ====================================================== -->
 
   <div
-    class="table-card"
     *ngIf="selectedCmrcId && !loading">
 
 
-    <!-- ======================================= -->
-    <!-- TABLE CARD HEADER -->
-    <!-- ======================================= -->
+    <!-- ===================================================
+         FILTER PANEL
+    ==================================================== -->
 
-    <div class="table-card-header">
+    <div class="table-card filter-panel">
 
-      <div>
 
-        <h3>
-          Interest Details
-        </h3>
+      <!-- FILTER HEADER -->
 
-        <p>
-          Financial Year and Interest Rate
-          can be filtered from the table.
-        </p>
+      <div class="filter-panel-header">
+
+  <div>
+
+    <h3>
+      Interest Analysis
+    </h3>
+
+    <p>
+      Filter interest details by financial year,
+      interest rate or search criteria.
+    </p>
+
+  </div>
+
+
+  <div class="d-flex gap-2">
+
+    <!-- Export Excel -->
+
+    <button
+      type="button"
+      class="btn btn-outline-success btn-sm"
+      (click)="exportToExcel()">
+
+      <i class="bi bi-file-earmark-excel me-1"></i>
+
+      Export Excel
+
+    </button>
+
+
+    <!-- Clear Filters -->
+
+    <button
+      type="button"
+      class="btn btn-outline-secondary btn-sm"
+      (click)="clearFilters()">
+
+      <i class="bi bi-x-circle me-1"></i>
+
+      Clear Filters
+
+    </button>
+
+  </div>
+
+</div>
+
+
+      <!-- FILTER GRID -->
+
+      <div class="filter-grid">
+
+
+        <!-- =============================================
+             SEARCH
+        ============================================== -->
+
+        <div
+          class="filter-group search-group">
+
+          <label>
+            Search
+          </label>
+
+          <div class="search-box">
+
+            <i class="bi bi-search"></i>
+
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Woman, Group, VO / ALF or Village"
+              [(ngModel)]="searchText"
+              (input)="applyFilters()">
+
+          </div>
+
+        </div>
+
+
+        <!-- =============================================
+             FINANCIAL YEAR
+        ============================================== -->
+
+        <div class="filter-group">
+
+          <label>
+            Financial Year
+          </label>
+
+          <select
+            class="form-select"
+            [(ngModel)]="selectedYear"
+            (change)="onYearChange()">
+
+            <option [ngValue]="null">
+              All Years
+            </option>
+
+            <option
+              *ngFor="let year of availableYears"
+              [ngValue]="year">
+
+              {{ getFinancialYearLabel(year) }}
+
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- =============================================
+             INTEREST RATE
+        ============================================== -->
+
+        <div class="filter-group">
+
+          <label>
+            Interest Rate
+          </label>
+
+          <select
+            class="form-select"
+            [(ngModel)]="selectedInterestRate"
+            (change)="onInterestRateChange()">
+
+            <option [ngValue]="null">
+              All Rates
+            </option>
+
+            <option
+              *ngFor="let rate of availableInterestRates"
+              [ngValue]="rate">
+
+              {{ rate }}%
+
+            </option>
+
+          </select>
+
+        </div>
 
       </div>
-
-
-      <button
-        type="button"
-        class="btn btn-outline-secondary btn-sm"
-        (click)="clearFilters()">
-
-        Clear Filters
-
-      </button>
 
     </div>
 
 
-    <!-- ======================================= -->
-    <!-- TABLE RESPONSIVE -->
-    <!-- ======================================= -->
+    <!-- ===================================================
+         KPI SUMMARY
+    ==================================================== -->
 
-    <div class="table-responsive">
+    <div class="kpi-grid">
 
-      <table
-        class="table table-bordered table-hover interest-table">
 
+      <!-- =============================================
+           TOTAL WOMEN
+      ============================================== -->
 
-        <!-- ===================================== -->
-        <!-- TABLE HEADER -->
-        <!-- ===================================== -->
+      <div class="kpi-card">
 
-        <thead>
+        <div class="kpi-icon">
 
-          <tr>
+          <i class="bi bi-people"></i>
 
-            <!-- SR NO -->
-            <th class="sr-column">
-              Sr. No.
-            </th>
+        </div>
 
+        <div>
 
-            <!-- CMRC -->
-            <th>
-              CMRC Name
-            </th>
+          <span class="kpi-label">
+            Women
+          </span>
 
+          <strong class="kpi-value">
 
-            <!-- VO / ALF -->
-            <th>
-              VO / ALF Name
-            </th>
+            {{ getTotalWomen() }}
 
+          </strong>
 
-            <!-- VILLAGE -->
-            <th>
-              Village
-            </th>
+        </div>
 
+      </div>
 
-            <!-- WOMAN -->
-            <th>
-              Woman Name
-            </th>
 
+      <!-- =============================================
+           TOTAL LOAN AMOUNT
+      ============================================== -->
 
-            <!-- WOMEN COUNT -->
-            <th class="women-count-column">
-              Women Count
-            </th>
+      <div class="kpi-card">
 
+        <div class="kpi-icon">
 
-            <!-- GROUP -->
-            <th>
-              Group Name
-            </th>
+          <i class="bi bi-cash-stack"></i>
 
+        </div>
 
-            <!-- RECEIVED AMOUNT -->
-            <th>
-              VO / ALF Received Amount
-            </th>
+        <div>
 
+          <span class="kpi-label">
+            Total Loan Amount
+          </span>
 
-            <!-- FINANCIAL YEAR -->
-            <th>
+          <strong class="kpi-value">
 
-              <div class="column-filter">
+            ₹{{ getTotalLoanAmount() | number:'1.2-2' }}
 
-                <span>
-                  Financial Year
-                </span>
+          </strong>
 
-                <select
-                  class="form-select form-select-sm"
-                  [(ngModel)]="selectedYear"
-                  (change)="onYearChange()">
+        </div>
 
-                  <option [ngValue]="null">
-                    All Years
-                  </option>
+      </div>
 
-                  <option
-                    *ngFor="let year of availableYears"
-                    [ngValue]="year">
 
-                    {{ getFinancialYearLabel(year) }}
+      <!-- =============================================
+           INTEREST RECEIVED
+      ============================================== -->
 
-                  </option>
+      <div class="kpi-card">
 
-                </select>
+        <div class="kpi-icon">
 
-              </div>
+          <i class="bi bi-percent"></i>
 
-            </th>
+        </div>
 
+        <div>
 
-            <!-- INTEREST RATE -->
-            <th>
+          <span class="kpi-label">
+            Interest Received
+          </span>
 
-              <div class="column-filter">
+          <strong class="kpi-value">
 
-                <span>
-                  Interest Rate
-                </span>
+            ₹{{ getTotalInterest() | number:'1.2-2' }}
 
-                <select
-                  class="form-select form-select-sm"
-                  [(ngModel)]="selectedInterestRate"
-                  (change)="onInterestRateChange()">
+          </strong>
 
-                  <option [ngValue]="null">
-                    All Rates
-                  </option>
+        </div>
 
-                  <option
-                    *ngFor="let rate of availableInterestRates"
-                    [ngValue]="rate">
+      </div>
 
-                    {{ rate }}%
 
-                  </option>
+      <!-- =============================================
+           ACTIVE LOANS
+      ============================================== -->
 
-                </select>
+      <div class="kpi-card">
 
-              </div>
+        <div class="kpi-icon">
 
-            </th>
+          <i class="bi bi-activity"></i>
 
+        </div>
 
-            <!-- LOAN AMOUNT -->
-            <th>
-              Loan Amount
-            </th>
+        <div>
 
+          <span class="kpi-label">
+            Active Loans
+          </span>
 
-            <!-- INTEREST -->
-            <th>
-              Interest
-            </th>
+          <strong class="kpi-value">
 
+            {{ getActiveLoans() }}
 
-            <!-- LOAN STATUS -->
-            <th>
-              Loan Status
-            </th>
+          </strong>
 
+        </div>
 
-            <!-- VO / ALF TOTAL INTEREST -->
-            <th>
-              VO / ALF Total Interest
-            </th>
+      </div>
 
-          </tr>
+    </div>
 
-        </thead>
 
+    <!-- ===================================================
+         INTEREST DETAILS TABLE
+    ==================================================== -->
 
-        <!-- ===================================== -->
-        <!-- TABLE BODY -->
-        <!-- ===================================== -->
+    <div class="table-card">
 
-        <tbody>
 
-          <ng-container
-            *ngFor="
-              let record of filteredInterestRecords;
-              let i = index
-            ">
+      <!-- TABLE HEADER -->
 
+      <div class="table-card-header">
 
-            <tr
-              [ngClass]="{
+        <div>
 
-                'main-group-row':
-                  isFirstVoAlfRow(i),
+          <h3>
+            Women Interest Details
+          </h3>
 
-                'sub-group-row':
-                  !isFirstVoAlfRow(i),
+          <p>
+            VO / ALF wise loan and interest information
+          </p>
 
-                'group-color-1':
-                  getGroupColorIndex(record.voAlfId) === 0,
+        </div>
 
-                'group-color-2':
-                  getGroupColorIndex(record.voAlfId) === 1,
 
-                'group-color-3':
-                  getGroupColorIndex(record.voAlfId) === 2,
+        <!-- RECORD COUNT -->
 
-                'group-color-4':
-                  getGroupColorIndex(record.voAlfId) === 3,
+        <div class="record-count">
 
-                'group-color-5':
-                  getGroupColorIndex(record.voAlfId) === 4,
+          {{ filteredInterestRecords.length }}
 
-                'group-color-6':
-                  getGroupColorIndex(record.voAlfId) === 5,
+          Records
 
-                'group-color-7':
-                  getGroupColorIndex(record.voAlfId) === 6,
+        </div>
 
-                'group-color-8':
-                  getGroupColorIndex(record.voAlfId) === 7
+      </div>
 
-              }">
 
+      <!-- =================================================
+           TABLE
+      ================================================== -->
 
-              <!-- ================================= -->
+      <div class="table-responsive">
+
+        <table
+          class="table table-bordered table-hover interest-table">
+
+
+          <!-- =================================================
+               TABLE HEADER
+          ================================================== -->
+
+          <thead>
+
+            <tr>
+
+
               <!-- SR NO -->
-              <!-- ================================= -->
 
-              <td
-                *ngIf="isFirstVoAlfRow(i)"
-                [attr.rowspan]="getGroupRowspan(i)"
-                class="
-                  group-cell
-                  text-center
-                  serial-cell
-                ">
+              <th class="sr-column">
 
-                {{ getGroupSerialNumber(i) }}
+                #
 
-              </td>
+              </th>
 
 
-              <!-- ================================= -->
-              <!-- CMRC NAME -->
-              <!-- ================================= -->
+              <!-- CMRC -->
 
-              <td
-                *ngIf="isFirstVoAlfRow(i)"
-                [attr.rowspan]="getGroupRowspan(i)"
-                class="group-cell">
+              <th>
 
-                <strong>
-                  {{ record.cmrcName }}
-                </strong>
+                CMRC
 
-              </td>
+              </th>
 
 
-              <!-- ================================= -->
-              <!-- VO / ALF NAME -->
-              <!-- ================================= -->
+              <!-- VO / ALF -->
 
-              <td
-                *ngIf="isFirstVoAlfRow(i)"
-                [attr.rowspan]="getGroupRowspan(i)"
-                class="group-cell">
+              <th>
 
-                <strong>
-                  {{ record.voAlfName }}
-                </strong>
+                VO / ALF
 
-              </td>
+              </th>
 
 
-              <!-- ================================= -->
               <!-- VILLAGE -->
-              <!-- ================================= -->
 
-              <td
-                *ngIf="isFirstVoAlfRow(i)"
-                [attr.rowspan]="getGroupRowspan(i)"
-                class="group-cell">
+              <th>
 
-                {{ record.villageName }}
+                Village
 
-              </td>
+              </th>
 
 
-              <!-- ================================= -->
-              <!-- WOMAN NAME -->
-              <!-- ================================= -->
+              <!-- WOMAN -->
 
-              <td class="woman-cell">
+              <th>
 
-                {{ record.womanName }}
+                Woman
 
-              </td>
+              </th>
 
 
-              <!-- ================================= -->
-              <!-- WOMEN COUNT -->
-              <!-- ================================= -->
+              <!-- WOMEN -->
 
-              <td
-                *ngIf="isFirstVoAlfRow(i)"
-                [attr.rowspan]="getGroupRowspan(i)"
-                class="
-                  group-cell
-                  text-center
-                  women-count-cell
-                ">
+              <th class="women-count-column">
 
-                {{ record.womenCount }}
+                Women
 
-              </td>
+              </th>
 
 
-              <!-- ================================= -->
-              <!-- GROUP NAME -->
-              <!-- ================================= -->
+              <!-- GROUP -->
 
-              <td>
+              <th>
 
-                {{ record.groupName }}
+                Group
 
-              </td>
+              </th>
 
 
-              <!-- ================================= -->
-              <!-- VO / ALF RECEIVED AMOUNT -->
-              <!-- ================================= -->
+              <!-- RECEIVED FUND -->
 
-              <td
-                *ngIf="isFirstVoAlfRow(i)"
-                [attr.rowspan]="getGroupRowspan(i)"
-                class="
-                  group-cell
-                  text-end
-                  amount-cell
-                ">
+              <th>
 
-                ₹{{
-                  record.receivedFund
-                    | number:'1.2-2'
-                }}
+                VO / ALF Received
 
-              </td>
+              </th>
 
 
-              <!-- ================================= -->
               <!-- FINANCIAL YEAR -->
-              <!-- ================================= -->
 
-              <td>
+              <th>
 
-                {{
-                  getFinancialYearLabel(
-                    record.financialYear
-                  )
-                }}
+                Financial Year
 
-              </td>
+              </th>
 
 
-              <!-- ================================= -->
               <!-- INTEREST RATE -->
-              <!-- ================================= -->
 
-              <td class="text-center">
+              <th>
 
-                <span
-                  *ngIf="
-                    record.interestRate !== null
-                  ">
+                Rate
 
-                  {{ record.interestRate }}%
-
-                </span>
-
-                <span
-                  *ngIf="
-                    record.interestRate === null
-                  ">
-
-                  -
-
-                </span>
-
-              </td>
+              </th>
 
 
-              <!-- ================================= -->
               <!-- LOAN AMOUNT -->
-              <!-- ================================= -->
 
-              <td
-                class="
-                  text-end
-                  amount-cell
-                ">
+              <th>
 
-                ₹{{
-                  record.loanAmount
-                    | number:'1.2-2'
-                }}
+                Loan Amount
 
-              </td>
+              </th>
 
 
-              <!-- ================================= -->
               <!-- INTEREST -->
-              <!-- ================================= -->
 
-              <td
-                class="
-                  text-end
-                  amount-cell
-                  interest-cell
-                ">
+              <th>
 
-                ₹{{
-                  record.totalInterestReceived
-                    | number:'1.2-2'
-                }}
+                Interest Received
 
-              </td>
+              </th>
 
 
-              <!-- ================================= -->
-              <!-- LOAN STATUS -->
-              <!-- ================================= -->
+              <!-- STATUS -->
 
-              <td>
+              <th>
 
-                <span class="loan-status">
+                Status
 
-                  {{ record.loanStatus || '-' }}
-
-                </span>
-
-              </td>
+              </th>
 
 
-              <!-- ================================= -->
-              <!-- VO / ALF FILTERED TOTAL INTEREST -->
-              <!-- ================================= -->
+              <!-- VO / ALF TOTAL INTEREST -->
 
-              <td
-                *ngIf="isFirstVoAlfRow(i)"
-                [attr.rowspan]="getGroupRowspan(i)"
-                class="
-                  group-cell
-                  text-end
-                  amount-cell
-                  voalf-total-interest
-                ">
+              <th>
 
-                ₹{{
-                  getVoAlfFilteredInterest(
-                    record.voAlfId
-                  )
-                  | number:'1.2-2'
-                }}
+                VO / ALF Interest Received
 
-              </td>
+              </th>
 
 
             </tr>
 
-          </ng-container>
+          </thead>
 
 
-          <!-- ===================================== -->
-          <!-- NO DATA -->
-          <!-- ===================================== -->
+          <!-- =================================================
+               TABLE BODY
+          ================================================== -->
 
-          <tr
-            *ngIf="
-              filteredInterestRecords.length === 0
-            ">
-
-            <td
-              colspan="14"
-              class="text-center no-data">
-
-              No interest details available
-              for selected filters.
-
-            </td>
-
-          </tr>
-
-        </tbody>
+          <tbody>
 
 
-        <!-- ===================================== -->
-        <!-- FOOTER -->
-        <!-- ===================================== -->
+            <!-- ===============================================
+                 VO / ALF GROUP
+            ================================================ -->
 
-        <tfoot>
-
-          <tr>
-
-            <th
-              colspan="13"
-              class="text-end">
-
-              Total Interest
-
-            </th>
-
-            <th
-              class="
-                text-end
-                total-interest-cell
+            <ng-container
+              *ngFor="
+                let record of filteredInterestRecords;
+                let i = index
               ">
 
-              ₹{{
-                getTotalInterest()
-                  | number:'1.2-2'
-              }}
 
-            </th>
+              <tr
+                [ngClass]="{
 
-          </tr>
+                  'main-group-row':
+                    isFirstVoAlfRow(i),
 
-        </tfoot>
+                  'sub-group-row':
+                    !isFirstVoAlfRow(i),
+
+                  'group-color-1':
+                    getGroupColorIndex(record.voAlfId) === 0,
+
+                  'group-color-2':
+                    getGroupColorIndex(record.voAlfId) === 1,
+
+                  'group-color-3':
+                    getGroupColorIndex(record.voAlfId) === 2,
+
+                  'group-color-4':
+                    getGroupColorIndex(record.voAlfId) === 3,
+
+                  'group-color-5':
+                    getGroupColorIndex(record.voAlfId) === 4,
+
+                  'group-color-6':
+                    getGroupColorIndex(record.voAlfId) === 5,
+
+                  'group-color-7':
+                    getGroupColorIndex(record.voAlfId) === 6,
+
+                  'group-color-8':
+                    getGroupColorIndex(record.voAlfId) === 7
+
+                }">
 
 
-      </table>
+                <!-- =========================================
+                     SR NO
+                ========================================== -->
+
+                <td
+                  *ngIf="isFirstVoAlfRow(i)"
+                  [attr.rowspan]="getGroupRowspan(i)"
+                  class="group-cell serial-cell">
+
+                  {{ getGroupSerialNumber(i) }}
+
+                </td>
+
+
+                <!-- =========================================
+                     CMRC
+                ========================================== -->
+
+                <td
+                  *ngIf="isFirstVoAlfRow(i)"
+                  [attr.rowspan]="getGroupRowspan(i)"
+                  class="group-cell">
+
+                  <strong>
+
+                    {{ record.cmrcName }}
+
+                  </strong>
+
+                </td>
+
+
+                <!-- =========================================
+                     VO / ALF
+                ========================================== -->
+
+                <td
+                  *ngIf="isFirstVoAlfRow(i)"
+                  [attr.rowspan]="getGroupRowspan(i)"
+                  class="group-cell">
+
+                  <strong>
+
+                    {{ record.voAlfName }}
+
+                  </strong>
+
+                </td>
+
+
+                <!-- =========================================
+                     VILLAGE
+                ========================================== -->
+
+                <td
+                  *ngIf="isFirstVoAlfRow(i)"
+                  [attr.rowspan]="getGroupRowspan(i)"
+                  class="group-cell">
+
+                  {{ record.villageName }}
+
+                </td>
+
+
+                <!-- =========================================
+                     WOMAN
+                ========================================== -->
+
+                <td class="woman-cell">
+
+                  {{ record.womanName }}
+
+                </td>
+
+
+                <!-- =========================================
+                     WOMEN COUNT
+                ========================================== -->
+
+                <td
+                  *ngIf="isFirstVoAlfRow(i)"
+                  [attr.rowspan]="getGroupRowspan(i)"
+                  class="group-cell women-count-cell">
+
+                  {{ record.womenCount }}
+
+                </td>
+
+
+                <!-- =========================================
+                     GROUP NAME
+                ========================================== -->
+
+                <td>
+
+                  {{ record.groupName }}
+
+                </td>
+
+
+                <!-- =========================================
+                     RECEIVED FUND
+                ========================================== -->
+
+                <td
+                  *ngIf="isFirstVoAlfRow(i)"
+                  [attr.rowspan]="getGroupRowspan(i)"
+                  class="group-cell amount-cell">
+
+                  ₹{{ record.receivedFund | number:'1.2-2' }}
+
+                </td>
+
+
+                <!-- =========================================
+                     FINANCIAL YEAR
+                ========================================== -->
+
+                <td>
+
+                  {{ getFinancialYearLabel(record.financialYear) }}
+
+                </td>
+
+
+                <!-- =========================================
+                     INTEREST RATE
+                ========================================== -->
+
+                <td class="text-center">
+
+                  <span class="rate-badge">
+
+                    {{
+                      record.interestRate !== null
+                        ? record.interestRate + '%'
+                        : '-'
+                    }}
+
+                  </span>
+
+                </td>
+
+
+                <!-- =========================================
+                     LOAN AMOUNT
+                ========================================== -->
+
+                <td class="amount-cell">
+
+                  ₹{{ record.loanAmount | number:'1.2-2' }}
+
+                </td>
+
+
+                <!-- =========================================
+                     INTEREST RECEIVED
+                ========================================== -->
+
+                <td
+                  class="
+                    amount-cell
+                    interest-cell
+                  ">
+
+                  ₹{{
+                    record.totalInterestReceived
+                      | number:'1.2-2'
+                  }}
+
+                </td>
+
+
+                <!-- =========================================
+                     LOAN STATUS
+                ========================================== -->
+
+                <td>
+
+                  <span
+                    class="loan-status"
+                    [ngClass]="{
+
+                      'active':
+                        record.loanStatus === 'ACTIVE',
+
+                      'closed':
+                        record.loanStatus === 'CLOSED'
+
+                    }">
+
+                    {{ record.loanStatus || '-' }}
+
+                  </span>
+
+                </td>
+
+
+                <!-- =========================================
+                     VO / ALF TOTAL INTEREST
+                ========================================== -->
+
+                <td
+                  *ngIf="isFirstVoAlfRow(i)"
+                  [attr.rowspan]="getGroupRowspan(i)"
+                  class="
+                    group-cell
+                    amount-cell
+                    voalf-total-interest
+                  ">
+
+                  ₹{{
+                    getVoAlfFilteredInterest(
+                      record.voAlfId
+                    )
+                    | number:'1.2-2'
+                  }}
+
+                </td>
+
+
+              </tr>
+
+            </ng-container>
+
+
+            <!-- =================================================
+                 NO DATA
+            ================================================== -->
+
+            <tr
+              *ngIf="
+                filteredInterestRecords.length === 0
+              ">
+
+              <td
+                colspan="14"
+                class="no-data">
+
+                <i class="bi bi-search"></i>
+
+                <div>
+                  No interest details found
+                </div>
+
+                <small>
+                  Try changing the selected filters.
+                </small>
+
+              </td>
+
+            </tr>
+
+
+          </tbody>
+
+
+          <!-- =================================================
+               TABLE FOOTER
+          ================================================== -->
+
+          <tfoot>
+
+            <tr>
+
+              <th
+                colspan="10"
+                class="text-end">
+
+                Total
+
+              </th>
+
+
+              <!-- TOTAL LOAN -->
+
+              <th class="text-end">
+
+                ₹{{
+                  getTotalLoanAmount()
+                    | number:'1.2-2'
+                }}
+
+              </th>
+
+
+              <!-- TOTAL INTEREST -->
+
+              <th
+                class="
+                  text-end
+                  total-interest-cell
+                ">
+
+                ₹{{
+                  getTotalInterest()
+                    | number:'1.2-2'
+                }}
+
+              </th>
+
+
+              <!-- STATUS -->
+
+              <th></th>
+
+
+              <!-- VO / ALF -->
+
+              <th></th>
+
+            </tr>
+
+          </tfoot>
+
+
+        </table>
+
+      </div>
 
     </div>
 
