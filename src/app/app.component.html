@@ -1,1 +1,19 @@
-<app-main-layout></app-main-layout>
+<div class="app-wrapper">
+
+  <!-- Sidebar -->
+  <app-sidebar *ngIf="showLayout"></app-sidebar>
+
+  <!-- Main Area -->
+  <div class="app-main" [class.full-width]="!showLayout">
+
+    <!-- Topbar -->
+    <app-topbar *ngIf="showLayout"></app-topbar>
+
+    <!-- Page Content -->
+    <main class="app-content">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+
+</div>

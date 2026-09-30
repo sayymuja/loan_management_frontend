@@ -139,7 +139,8 @@ export class InterestComponent implements OnInit {
   /* =======================================================
      CONSTRUCTOR
   ======================================================= */
-
+  selectedVoAlfId: number | null = null;
+  selectedWomanId: number | null = null;
   constructor(
     private cmrcService: CmrcService,
     private voAlfService: VoAlfService,
@@ -1882,5 +1883,17 @@ export class InterestComponent implements OnInit {
     );
 
   }
+getSelectedVoAlfName(): string {
+  if (!this.selectedVoAlfId) {
+    return '-';
+  }
 
+  const selectedVoAlf = this.voAlfList.find(
+    vo => vo.id === this.selectedVoAlfId
+  );
+
+  return selectedVoAlf
+    ? (selectedVoAlf.voAlfName || '-')
+    : '-';
+}
 }

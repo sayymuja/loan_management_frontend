@@ -1,8 +1,8 @@
 <div class="dashboard-page">
 
-  <!-- ================================================= -->
+  <!-- ========================================================= -->
   <!-- HEADER -->
-  <!-- ================================================= -->
+  <!-- ========================================================= -->
 
   <div class="dashboard-header">
 
@@ -14,10 +14,7 @@
 
       <div>
         <h1>Dashboard</h1>
-
-        <p>
-          Overview of CMRC, VO / ALF, Loans & Repayments
-        </p>
+        <p>Overview of CMRC, VO / ALF, Loans & Repayments</p>
       </div>
 
     </div>
@@ -36,9 +33,9 @@
   </div>
 
 
-  <!-- ================================================= -->
+  <!-- ========================================================= -->
   <!-- FILTER CARD -->
-  <!-- ================================================= -->
+  <!-- ========================================================= -->
 
   <div class="dashboard-card filter-card">
 
@@ -102,28 +99,221 @@
   </div>
 
 
-  <!-- ================================================= -->
+  <!-- ========================================================= -->
+  <!-- TOP CHARTS -->
+  <!-- ========================================================= -->
+
+  <div class="top-charts-grid">
+
+
+    <!-- MONTHLY LOAN CHART -->
+
+    <div class="dashboard-card chart-card monthly-loan-card">
+
+      <div class="card-header">
+
+        <div>
+
+          <h3>
+            Monthly Loan Disbursement
+          </h3>
+
+          <p>
+            Month-wise loan amount distributed
+          </p>
+
+        </div>
+
+        <div class="chart-badge">
+          Loan Amount
+        </div>
+
+      </div>
+
+
+      <div class="monthly-chart-wrapper">
+
+        <canvas
+          baseChart
+          [data]="monthlyLoanChartData"
+          [options]="monthlyLoanChartOptions"
+          [type]="'line'">
+        </canvas>
+
+      </div>
+
+    </div>
+
+
+    <!-- REPAYMENT PURPOSE CHART -->
+
+    <div class="dashboard-card chart-card repayment-purpose-card">
+
+      <div class="card-header">
+
+        <div>
+
+          <h3>
+            Paid Amount by Loan Purpose
+          </h3>
+
+          <p>
+            Repayment distribution by loan purpose
+          </p>
+
+        </div>
+
+        <div class="chart-badge">
+          Paid Amount
+        </div>
+
+      </div>
+
+
+      <div class="repayment-chart-container">
+
+        <!-- CHART -->
+
+        <ng-container
+          *ngIf="
+            repaymentPurposeChartData &&
+            repaymentPurposeChartData.length > 0
+          ">
+
+          <div class="doughnut-wrapper">
+
+            <canvas
+              baseChart
+              [data]="repaymentChartData"
+              [options]="repaymentChartOptions"
+              [type]="'doughnut'">
+            </canvas>
+
+          </div>
+
+
+          <!-- PURPOSE LIST -->
+
+          <div class="purpose-list">
+
+            <div
+              class="purpose-row"
+              *ngFor="
+                let item of repaymentPurposeChartData;
+                let i = index
+              ">
+
+              <div class="purpose-left">
+
+                <span
+                  class="purpose-dot"
+                  [style.background]="getPurposeColor(i)">
+                </span>
+
+                <div>
+
+                  <strong>
+                    {{ item.purpose }}
+                  </strong>
+
+                  <small>
+
+                    {{ item.womenCount }}
+
+                    {{
+                      item.womenCount === 1
+                        ? 'Woman'
+                        : 'Women'
+                    }}
+
+                  </small>
+
+                </div>
+
+              </div>
+
+
+              <strong>
+
+                ₹{{ item.amount | number:'1.0-0' }}
+
+              </strong>
+
+            </div>
+
+
+            <!-- TOTAL PAID -->
+
+            <div class="total-paid-row">
+
+              <span>
+                Total Paid
+              </span>
+
+              <strong>
+                ₹{{ totalPaidAmount | number:'1.0-0' }}
+              </strong>
+
+            </div>
+
+          </div>
+
+        </ng-container>
+
+
+        <!-- EMPTY CHART -->
+
+        <div
+          class="chart-empty-state"
+          *ngIf="
+            !repaymentPurposeChartData ||
+            repaymentPurposeChartData.length === 0
+          ">
+
+          <i class="bi bi-pie-chart"></i>
+
+          <span>
+            No repayment data available
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ========================================================= -->
   <!-- BALANCE SUMMARY -->
-  <!-- ================================================= -->
+  <!-- ========================================================= -->
 
   <div class="section-title">
 
-    <h2>Balance Summary</h2>
+    <h2>
+      Balance Summary
+    </h2>
 
   </div>
 
 
   <div class="summary-grid balance-grid">
 
+
     <div class="summary-card balance-card">
 
       <div class="summary-icon">
+
         <i class="bi bi-bank"></i>
+
       </div>
 
       <div class="summary-content">
 
-        <span>Total CMRC Balance</span>
+        <span>
+          Total CMRC Balance
+        </span>
 
         <strong>
           ₹{{ totalCmrcBalance | number:'1.0-0' }}
@@ -137,12 +327,16 @@
     <div class="summary-card balance-card">
 
       <div class="summary-icon">
+
         <i class="bi bi-wallet2"></i>
+
       </div>
 
       <div class="summary-content">
 
-        <span>Total ALF Balance</span>
+        <span>
+          Total ALF Balance
+        </span>
 
         <strong>
           ₹{{ totalAlfBalance | number:'1.0-0' }}
@@ -156,12 +350,16 @@
     <div class="summary-card balance-card">
 
       <div class="summary-icon">
+
         <i class="bi bi-cash-stack"></i>
+
       </div>
 
       <div class="summary-content">
 
-        <span>Left ALF Balance</span>
+        <span>
+          Left ALF Balance
+        </span>
 
         <strong>
           ₹{{ leftAlfBalance | number:'1.0-0' }}
@@ -175,12 +373,16 @@
     <div class="summary-card balance-card">
 
       <div class="summary-icon">
+
         <i class="bi bi-safe2"></i>
+
       </div>
 
       <div class="summary-content">
 
-        <span>Left CMRC Balance</span>
+        <span>
+          Left CMRC Balance
+        </span>
 
         <strong>
           ₹{{ leftCmrcBalance | number:'1.0-0' }}
@@ -193,28 +395,37 @@
   </div>
 
 
-  <!-- ================================================= -->
+  <!-- ========================================================= -->
   <!-- OVERALL SUMMARY -->
-  <!-- ================================================= -->
+  <!-- ========================================================= -->
 
   <div class="section-title">
 
-    <h2>Overall Summary</h2>
+    <h2>
+      Overall Summary
+    </h2>
 
   </div>
 
 
   <div class="summary-grid main-summary-grid">
 
+
+    <!-- CMRC -->
+
     <div class="summary-card">
 
       <div class="summary-icon blue">
+
         <i class="bi bi-building"></i>
+
       </div>
 
       <div class="summary-content">
 
-        <span>Total CMRC</span>
+        <span>
+          Total CMRC
+        </span>
 
         <strong>
           {{ totalCmrc }}
@@ -225,15 +436,21 @@
     </div>
 
 
+    <!-- VO ALF -->
+
     <div class="summary-card">
 
       <div class="summary-icon purple">
+
         <i class="bi bi-diagram-3"></i>
+
       </div>
 
       <div class="summary-content">
 
-        <span>Total VO / ALF</span>
+        <span>
+          Total VO / ALF
+        </span>
 
         <strong>
           {{ totalVoAlf }}
@@ -244,15 +461,21 @@
     </div>
 
 
+    <!-- TOTAL LOANS -->
+
     <div class="summary-card">
 
       <div class="summary-icon green">
+
         <i class="bi bi-cash-coin"></i>
+
       </div>
 
       <div class="summary-content">
 
-        <span>Total Loans</span>
+        <span>
+          Total Loans
+        </span>
 
         <strong>
           {{ totalLoans }}
@@ -263,15 +486,71 @@
     </div>
 
 
+    <!-- ACTIVE LOANS -->
+
     <div class="summary-card">
 
-      <div class="summary-icon orange">
-        <i class="bi bi-people"></i>
+      <div class="summary-icon active-icon">
+
+        <i class="bi bi-check-circle"></i>
+
       </div>
 
       <div class="summary-content">
 
-        <span>Total Women</span>
+        <span>
+          Active Loans
+        </span>
+
+        <strong>
+          {{ activeLoans }}
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <!-- CLOSED LOANS -->
+
+    <div class="summary-card">
+
+      <div class="summary-icon closed-icon">
+
+        <i class="bi bi-lock"></i>
+
+      </div>
+
+      <div class="summary-content">
+
+        <span>
+          Closed Loans
+        </span>
+
+        <strong>
+          {{ closedLoans }}
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <!-- WOMEN -->
+
+    <div class="summary-card">
+
+      <div class="summary-icon orange">
+
+        <i class="bi bi-people"></i>
+
+      </div>
+
+      <div class="summary-content">
+
+        <span>
+          Total Women
+        </span>
 
         <strong>
           {{ totalWomen }}
@@ -282,15 +561,21 @@
     </div>
 
 
+    <!-- LOAN AMOUNT -->
+
     <div class="summary-card loan-amount-card">
 
       <div class="summary-icon gold">
+
         <i class="bi bi-currency-rupee"></i>
+
       </div>
 
       <div class="summary-content">
 
-        <span>Total Loan Amount</span>
+        <span>
+          Total Loan Amount
+        </span>
 
         <strong>
           ₹{{ totalLoanAmount | number:'1.0-0' }}
@@ -303,188 +588,45 @@
   </div>
 
 
-  <!-- ================================================= -->
-  <!-- CL SCHEDULE VS REPAYMENT -->
-  <!-- ================================================= -->
-
-  <div class="section-title">
-
-    <h2>CL Schedule vs Repayment Summary</h2>
-
-  </div>
-
-
-  <div class="metric-grid">
-
-    <div class="metric-card">
-
-      <div class="metric-icon scheduled">
-        <i class="bi bi-calendar-check"></i>
-      </div>
-
-      <div>
-
-        <span>Scheduled EMI</span>
-
-        <strong>
-          ₹{{ totalScheduledEmi | number:'1.0-0' }}
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <div class="metric-card">
-
-      <div class="metric-icon paid">
-        <i class="bi bi-check-circle"></i>
-      </div>
-
-      <div>
-
-        <span>Paid Amount</span>
-
-        <strong>
-          ₹{{ totalPaidAmount | number:'1.0-0' }}
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <div class="metric-card">
-
-      <div class="metric-icon outstanding">
-        <i class="bi bi-hourglass-split"></i>
-      </div>
-
-      <div>
-
-        <span>Outstanding EMI</span>
-
-        <strong>
-          ₹{{ totalOutstandingAmount | number:'1.0-0' }}
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <div class="metric-card">
-
-      <div class="metric-icon penalty">
-        <i class="bi bi-exclamation-circle"></i>
-      </div>
-
-      <div>
-
-        <span>Total Penalty</span>
-
-        <strong>
-          ₹{{ totalPenalty | number:'1.0-0' }}
-        </strong>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- ================================================= -->
-  <!-- REPAYMENT STATUS -->
-  <!-- ================================================= -->
-
-  <div class="section-title">
-
-    <h2>Repayment Status</h2>
-
-  </div>
-
-
-  <div class="status-grid">
-
-    <div class="status-card">
-
-      <span>Total Installments</span>
-
-      <strong>
-        {{ totalInstallments }}
-      </strong>
-
-    </div>
-
-
-    <div class="status-card paid-status">
-
-      <span>Paid</span>
-
-      <strong>
-        {{ paidInstallments }}
-      </strong>
-
-    </div>
-
-
-    <div class="status-card partial-status">
-
-      <span>Partial</span>
-
-      <strong>
-        {{ partialInstallments }}
-      </strong>
-
-    </div>
-
-
-    <div class="status-card pending-status">
-
-      <span>Pending EMI</span>
-
-      <strong>
-        {{ pendingInstallments }}
-      </strong>
-
-    </div>
-
-  </div>
-
-
-  <!-- ================================================= -->
+  <!-- ========================================================= -->
   <!-- MAIN CONTENT -->
-  <!-- ================================================= -->
+  <!-- ========================================================= -->
 
   <div class="main-content-grid">
 
 
-    <!-- ================================================= -->
+    <!-- ======================================================= -->
     <!-- LEFT COLUMN -->
-    <!-- ================================================= -->
+    <!-- ======================================================= -->
 
     <div class="left-column">
 
 
+      <!-- ===================================================== -->
       <!-- VO / ALF DETAILS -->
+      <!-- ===================================================== -->
 
       <div class="dashboard-card details-card">
+
 
         <div class="card-header">
 
           <div>
 
-            <h3>VO / ALF Details</h3>
+            <h3>
+              VO / ALF Details
+            </h3>
 
             <p>
-              Fund, bank balance and loan information
+              Fund, bank balance, loans and repayment information
             </p>
 
           </div>
 
         </div>
 
+
+        <!-- TABS -->
 
         <div class="tabs">
 
@@ -530,7 +672,9 @@
         </div>
 
 
+        <!-- =================================================== -->
         <!-- FUND TAB -->
+        <!-- =================================================== -->
 
         <div
           class="tab-content"
@@ -538,9 +682,12 @@
 
           <div class="detail-grid">
 
+
             <div class="detail-item">
 
-              <span>Total Received Fund</span>
+              <span>
+                Total Received Fund
+              </span>
 
               <strong>
                 ₹{{ totalReceivedFund | number:'1.0-0' }}
@@ -551,7 +698,9 @@
 
             <div class="detail-item">
 
-              <span>Ultra Poor Fund</span>
+              <span>
+                Ultra Poor Fund
+              </span>
 
               <strong>
                 ₹{{ ultraPoorReceivedFund | number:'1.0-0' }}
@@ -562,7 +711,9 @@
 
             <div class="detail-item">
 
-              <span>Debt Trapped Fund</span>
+              <span>
+                Debt Trapped Fund
+              </span>
 
               <strong>
                 ₹{{ debtTrappedReceivedFund | number:'1.0-0' }}
@@ -573,7 +724,9 @@
 
             <div class="detail-item">
 
-              <span>Total Groups</span>
+              <span>
+                Total Groups
+              </span>
 
               <strong>
                 {{ totalGroups }}
@@ -584,7 +737,9 @@
 
             <div class="detail-item">
 
-              <span>Ultra Poor Groups</span>
+              <span>
+                Ultra Poor Groups
+              </span>
 
               <strong>
                 {{ ultraPoorGroupCount }}
@@ -595,7 +750,9 @@
 
             <div class="detail-item">
 
-              <span>Debt Trapped Groups</span>
+              <span>
+                Debt Trapped Groups
+              </span>
 
               <strong>
                 {{ debtTrappedGroupCount }}
@@ -606,7 +763,9 @@
 
             <div class="detail-item">
 
-              <span>Total Women</span>
+              <span>
+                Total Women
+              </span>
 
               <strong>
                 {{ totalWomen }}
@@ -617,7 +776,9 @@
 
             <div class="detail-item">
 
-              <span>Total Group Amount</span>
+              <span>
+                Total Group Amount
+              </span>
 
               <strong>
                 ₹{{ totalGroupAmount | number:'1.0-0' }}
@@ -630,7 +791,9 @@
         </div>
 
 
+        <!-- =================================================== -->
         <!-- BANK TAB -->
+        <!-- =================================================== -->
 
         <div
           class="tab-content"
@@ -649,52 +812,282 @@
         </div>
 
 
+        <!-- =================================================== -->
         <!-- LOANS TAB -->
+        <!-- =================================================== -->
 
         <div
-          class="tab-content"
+          class="tab-content loans-tab"
           *ngIf="activeTab === 'loans'">
 
-          <div class="detail-grid">
 
-            <div class="detail-item">
+          <!-- LOAN HEADER -->
 
-              <span>Total Loans</span>
+          <div class="loans-tab-header">
+
+            <div>
+
+              <h4>
+                Loan Records
+              </h4>
+
+              <p>
+                All loans under the selected VO / ALF
+              </p>
+
+            </div>
+
+
+            <div class="loan-count-badge">
+
+              {{ loanList.length }}
+
+              {{ loanList.length === 1 ? 'Loan' : 'Loans' }}
+
+            </div>
+
+          </div>
+
+
+          <!-- LOAN SUMMARY -->
+
+          <div class="loan-summary-grid">
+
+
+            <div class="loan-summary-item">
+
+              <span>
+                Total Loans
+              </span>
 
               <strong>
-                {{ totalLoans }}
+                {{ loanList.length }}
               </strong>
 
             </div>
 
 
-            <div class="detail-item">
+            <div class="loan-summary-item">
 
-              <span>Total Women</span>
+              <span>
+                Active Loans
+              </span>
 
               <strong>
-                {{ totalWomen }}
+                {{ getActiveLoanCount() }}
               </strong>
 
             </div>
 
 
-            <div class="detail-item">
+            <div class="loan-summary-item">
 
-              <span>Total Loan Amount</span>
+              <span>
+                Closed Loans
+              </span>
 
               <strong>
-                ₹{{ totalLoanAmount | number:'1.0-0' }}
+                {{ getClosedLoanCount() }}
+              </strong>
+
+            </div>
+
+
+            <div class="loan-summary-item">
+
+              <span>
+                Total Loan Amount
+              </span>
+
+              <strong>
+                ₹{{ getLoanListTotalAmount() | number:'1.0-0' }}
               </strong>
 
             </div>
 
           </div>
 
+
+          <!-- LOAN TABLE -->
+
+          <div
+            class="loan-table-wrapper"
+            *ngIf="
+              loanList &&
+              loanList.length > 0
+            ">
+
+            <table class="loan-table">
+
+              <thead>
+
+                <tr>
+
+                  <th>
+                    Loan ID
+                  </th>
+
+                  <th>
+                    Group
+                  </th>
+
+                  <th>
+                    Woman
+                  </th>
+
+                  <th>
+                    Purpose
+                  </th>
+
+                  <th>
+                    Loan Amount
+                  </th>
+
+                  <th>
+                    Monthly EMI
+                  </th>
+
+                  <th>
+                    Interest
+                  </th>
+
+                  <th>
+                    Loan Date
+                  </th>
+
+                  <th>
+                    Status
+                  </th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody>
+
+                <tr
+                  *ngFor="let loan of loanList">
+
+
+                  <td>
+
+                    <strong>
+                      #{{ loan.id }}
+                    </strong>
+
+                  </td>
+
+
+                  <td>
+
+                    {{ loan.groupName || '-' }}
+
+                  </td>
+
+
+                  <td>
+
+                    <strong>
+                      {{ loan.womanName || '-' }}
+                    </strong>
+
+                  </td>
+
+
+                  <td>
+
+                    {{ loan.loanPurpose || '-' }}
+
+                  </td>
+
+
+                  <td>
+
+                    <strong>
+                      ₹{{ (loan.loanAmount || 0) | number:'1.0-0' }}
+                    </strong>
+
+                  </td>
+
+
+                  <td>
+
+                    ₹{{ (loan.monthlyEmi || 0) | number:'1.0-0' }}
+
+                  </td>
+
+
+                  <td>
+
+                    {{ loan.interestRate || 0 }}%
+
+                  </td>
+
+
+                  <td>
+
+                    {{ loan.loanGivenDate | date:'dd-MM-yyyy' }}
+
+                  </td>
+
+
+                  <td>
+
+                    <span
+                      class="loan-status"
+                      [class.active]="
+                        normalizeLoanStatus(loan.loanStatus) === 'ACTIVE'
+                      "
+                      [class.closed]="
+                        normalizeLoanStatus(loan.loanStatus) === 'CLOSED'
+                      "
+                      [class.pending]="
+                        normalizeLoanStatus(loan.loanStatus) === 'PENDING'
+                      ">
+
+                      {{ normalizeLoanStatus(loan.loanStatus) }}
+
+                    </span>
+
+                  </td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+
+          <!-- EMPTY LOANS -->
+
+          <div
+            class="empty-state"
+            *ngIf="
+              !loanList ||
+              loanList.length === 0
+            ">
+
+            <i class="bi bi-file-earmark-x"></i>
+
+            <h4>
+              No Loans Found
+            </h4>
+
+            <p>
+              No loans are available for the selected VO / ALF.
+            </p>
+
+          </div>
+
         </div>
 
 
+        <!-- =================================================== -->
         <!-- REPAYMENT TAB -->
+        <!-- =================================================== -->
 
         <div
           class="tab-content"
@@ -702,9 +1095,12 @@
 
           <div class="detail-grid">
 
+
             <div class="detail-item">
 
-              <span>Paid Amount</span>
+              <span>
+                Paid Amount
+              </span>
 
               <strong>
                 ₹{{ totalPaidAmount | number:'1.0-0' }}
@@ -715,7 +1111,9 @@
 
             <div class="detail-item">
 
-              <span>Outstanding</span>
+              <span>
+                Outstanding
+              </span>
 
               <strong>
                 ₹{{ totalOutstandingAmount | number:'1.0-0' }}
@@ -726,7 +1124,9 @@
 
             <div class="detail-item">
 
-              <span>Penalty</span>
+              <span>
+                Penalty
+              </span>
 
               <strong>
                 ₹{{ totalPenalty | number:'1.0-0' }}
@@ -741,17 +1141,20 @@
       </div>
 
 
-      <!-- ================================================= -->
+      <!-- ===================================================== -->
       <!-- RECENT LOANS -->
-      <!-- ================================================= -->
+      <!-- ===================================================== -->
 
       <div class="dashboard-card recent-loans-card">
+
 
         <div class="card-header">
 
           <div>
 
-            <h3>Recent Loans</h3>
+            <h3>
+              Recent Loans
+            </h3>
 
             <p>
               Latest loan records
@@ -764,12 +1167,16 @@
 
         <div
           class="loan-list"
-          *ngIf="recentLoans.length > 0">
+          *ngIf="
+            recentLoans &&
+            recentLoans.length > 0
+          ">
 
 
           <div
             class="loan-row"
             *ngFor="let loan of recentLoans">
+
 
             <div class="loan-user">
 
@@ -782,6 +1189,7 @@
                 }}
 
               </div>
+
 
               <div>
 
@@ -817,7 +1225,10 @@
 
         <div
           class="empty-state"
-          *ngIf="recentLoans.length === 0">
+          *ngIf="
+            !recentLoans ||
+            recentLoans.length === 0
+          ">
 
           No loan records found.
 
@@ -826,157 +1237,19 @@
       </div>
 
 
-      <!-- ================================================= -->
-      <!-- NEW MONTHLY LOAN CHART -->
-      <!-- ================================================= -->
-
-      <div class="dashboard-card monthly-loan-card">
-
-        <div class="card-header">
-
-          <div>
-
-            <h3>Monthly Loan Disbursement</h3>
-
-            <p>
-              Month-wise loan amount distributed
-            </p>
-
-          </div>
-
-          <div class="chart-badge">
-            Loan Amount
-          </div>
-
-        </div>
-
-
-        <div class="monthly-chart-wrapper">
-
-          <canvas
-            baseChart
-            [data]="monthlyLoanChartData"
-            [options]="monthlyLoanChartOptions"
-            [type]="'line'">
-          </canvas>
-
-        </div>
-
-      </div>
-
     </div>
 
 
-    <!-- ================================================= -->
+    <!-- ======================================================= -->
     <!-- RIGHT COLUMN -->
-    <!-- ================================================= -->
+    <!-- ======================================================= -->
 
     <div class="right-column">
 
 
-      <!-- ================================================= -->
-      <!-- REPAYMENT OVERVIEW -->
-      <!-- ================================================= -->
-
-      <div class="dashboard-card chart-card">
-
-        <div class="card-header">
-
-          <div>
-
-            <h3>Repayment Overview</h3>
-
-            <p>
-              Paid amount by loan purpose
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <div class="repayment-chart-container">
-
-          <div class="doughnut-wrapper">
-
-            <canvas
-              baseChart
-              [data]="repaymentChartData"
-              [options]="repaymentChartOptions"
-              [type]="'doughnut'">
-            </canvas>
-
-          </div>
-
-
-          <div class="purpose-list">
-
-            <div
-              class="purpose-row"
-              *ngFor="
-                let item of repaymentPurposeChartData;
-                let i = index
-              ">
-
-              <div class="purpose-left">
-
-                <span
-                  class="purpose-dot"
-                  [style.background]="
-                    getPurposeColor(i)
-                  ">
-                </span>
-
-                <div>
-
-                  <strong>
-                    {{ item.purpose }}
-                  </strong>
-
-                  <small>
-                    {{ item.womenCount }}
-                    {{
-                      item.womenCount === 1
-                        ? 'Woman'
-                        : 'Women'
-                    }}
-                  </small>
-
-                </div>
-
-              </div>
-
-
-              <strong>
-                ₹{{ item.amount | number:'1.0-0' }}
-              </strong>
-
-            </div>
-
-
-            <div
-              class="total-paid-row">
-
-              <span>
-                Total Paid
-              </span>
-
-              <strong>
-                ₹{{ totalPaidAmount | number:'1.0-0' }}
-              </strong>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <!-- ================================================= -->
+      <!-- ===================================================== -->
       <!-- SELECTED VO / ALF -->
-      <!-- ================================================= -->
+      <!-- ===================================================== -->
 
       <div
         class="dashboard-card selected-vo-card"
@@ -985,11 +1258,13 @@
 
         <div class="selected-vo-header">
 
+
           <div class="selected-vo-icon">
 
             <i class="bi bi-diagram-3"></i>
 
           </div>
+
 
           <div>
 
@@ -1008,9 +1283,12 @@
 
         <div class="selected-info-grid">
 
+
           <div>
 
-            <span>Village</span>
+            <span>
+              Village
+            </span>
 
             <strong>
               {{ selectedVoAlf.villageName || '-' }}
@@ -1021,7 +1299,9 @@
 
           <div>
 
-            <span>CMRC</span>
+            <span>
+              CMRC
+            </span>
 
             <strong>
               {{ selectedVoAlf.cmrcName || '-' }}
@@ -1032,7 +1312,9 @@
 
           <div>
 
-            <span>Account No.</span>
+            <span>
+              Account No.
+            </span>
 
             <strong>
               {{ selectedVoAlf.accountNo || '-' }}
@@ -1043,7 +1325,9 @@
 
           <div>
 
-            <span>Received Fund</span>
+            <span>
+              Received Fund
+            </span>
 
             <strong>
               ₹{{ selectedVoAlf.receivedFund | number:'1.0-0' }}
@@ -1054,7 +1338,9 @@
 
           <div>
 
-            <span>Total Loans</span>
+            <span>
+              Total Loans
+            </span>
 
             <strong>
               {{ totalLoans }}
@@ -1067,13 +1353,14 @@
       </div>
 
 
-      <!-- ================================================= -->
+      <!-- ===================================================== -->
       <!-- NO SELECTION -->
-      <!-- ================================================= -->
+      <!-- ===================================================== -->
 
       <div
         class="dashboard-card no-selection-card"
         *ngIf="!selectedVoAlf">
+
 
         <div class="no-selection-icon">
 
@@ -1081,9 +1368,11 @@
 
         </div>
 
+
         <h3>
           No VO / ALF Selected
         </h3>
+
 
         <p>
           Select a VO / ALF from the filter
@@ -1093,17 +1382,20 @@
       </div>
 
 
-      <!-- ================================================= -->
+      <!-- ===================================================== -->
       <!-- RECENT ACTIVITY -->
-      <!-- ================================================= -->
+      <!-- ===================================================== -->
 
       <div class="dashboard-card activity-card">
+
 
         <div class="card-header">
 
           <div>
 
-            <h3>Recent Activity</h3>
+            <h3>
+              Recent Activity
+            </h3>
 
             <p>
               Latest repayment activity
@@ -1117,22 +1409,27 @@
         <div
           class="activity-list"
           *ngIf="
+            recentActivities &&
             recentActivities.length > 0
           ">
 
+
           <div
             class="activity-row"
-            *ngFor="
-              let activity of recentActivities
-            ">
+            *ngFor="let activity of recentActivities">
+
 
             <div class="activity-icon">
 
-             <i
-  class="bi"
-  [class.bi-arrow-down-circle]="activity.type === 'repayment'"
-  [class.bi-cash-coin]="activity.type !== 'repayment'">
-</i>
+              <i
+                class="bi"
+                [class.bi-arrow-down-circle]="
+                  activity.type === 'repayment'
+                "
+                [class.bi-cash-coin]="
+                  activity.type !== 'repayment'
+                ">
+              </i>
 
             </div>
 
@@ -1164,6 +1461,7 @@
         <div
           class="empty-state"
           *ngIf="
+            !recentActivities ||
             recentActivities.length === 0
           ">
 
@@ -1172,6 +1470,7 @@
         </div>
 
       </div>
+
 
     </div>
 
