@@ -29,24 +29,33 @@
 
   <!-- =====================================================
        FILTER CARD
+       CMRC → VO / ALF → Village Auto → Group → Woman → Loan
   ====================================================== -->
   <div class="filter-card">
 
     <div class="filter-title">
+
       <div class="filter-icon">
         🔎
       </div>
 
       <div>
         <h3>Select Loan</h3>
-        <p>Select CMRC, VO / ALF and Loan</p>
+
+        <p>
+          Select CMRC, VO / ALF, Group, Woman and Loan
+        </p>
       </div>
+
     </div>
 
 
     <div class="filter-row">
 
-      <!-- CMRC -->
+
+      <!-- =================================================
+           CMRC
+      ================================================== -->
       <div class="form-group">
 
         <label>
@@ -66,7 +75,7 @@
             *ngFor="let cmrc of cmrcList"
             [ngValue]="cmrc.id">
 
-            {{ cmrc.cmrcName }}
+            {{ cmrc.cmrcName || '-' }}
 
           </option>
 
@@ -75,7 +84,9 @@
       </div>
 
 
-      <!-- VO / ALF -->
+      <!-- =================================================
+           VO / ALF
+      ================================================== -->
       <div class="form-group">
 
         <label>
@@ -84,7 +95,7 @@
 
         <select
           [(ngModel)]="selectedVoAlfId"
-          (change)="loadLoans()"
+          (change)="onVoAlfChange()"
           [disabled]="selectedCmrcId === null"
           class="form-control">
 
@@ -105,7 +116,92 @@
       </div>
 
 
-      <!-- LOAN -->
+      <!-- =================================================
+           VILLAGE - AUTOMATIC
+      ================================================== -->
+      <div class="form-group">
+
+        <label>
+          Village
+        </label>
+
+        <input
+          type="text"
+          class="form-control"
+          [value]="getSelectedVillageName()"
+          readonly
+          placeholder="Village will appear automatically">
+
+      </div>
+
+
+      <!-- =================================================
+           GROUP
+      ================================================== -->
+      <div class="form-group">
+
+        <label>
+          Group
+        </label>
+
+        <select
+          [(ngModel)]="selectedGroupId"
+          (change)="loadWomenByGroup()"
+          [disabled]="selectedVoAlfId === null"
+          class="form-control">
+
+          <option [ngValue]="null">
+            Select Group
+          </option>
+
+          <option
+            *ngFor="let group of groupList"
+            [ngValue]="group.id">
+
+            {{ group.groupName || '-' }}
+
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- =================================================
+           WOMAN
+      ================================================== -->
+      <div class="form-group">
+
+        <label>
+          Woman
+        </label>
+
+        <select
+          [(ngModel)]="selectedWomanId"
+          (change)="loadLoansByWoman()"
+          [disabled]="selectedGroupId === null"
+          class="form-control">
+
+          <option [ngValue]="null">
+            Select Woman
+          </option>
+
+          <option
+            *ngFor="let woman of womenList"
+            [ngValue]="woman.id">
+
+            {{ woman.womanName || '-' }}
+
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- =================================================
+           LOAN
+      ================================================== -->
       <div class="form-group">
 
         <label>
@@ -115,7 +211,7 @@
         <select
           [(ngModel)]="selectedLoanId"
           (change)="onLoanChange()"
-          [disabled]="selectedVoAlfId === null"
+          [disabled]="selectedWomanId === null"
           class="form-control">
 
           <option [ngValue]="null">
@@ -130,7 +226,7 @@
             -
             {{ loanItem.womanName || '-' }}
             -
-            ₹{{ (loanItem.loanAmount || 0) | number:'1.2-2' }}
+            ₹{{ (loanItem.sanctionedAmount || 0) | number:'1.2-2' }}
 
           </option>
 
@@ -141,7 +237,6 @@
     </div>
 
   </div>
-
 
 
   <!-- =====================================================
@@ -176,6 +271,7 @@
       </div>
 
 
+      <!-- Loan Status -->
       <span
         class="loan-status"
         [ngClass]="{
@@ -202,7 +298,7 @@
         </span>
 
         <strong>
-          {{ selectedLoan.groupName || '-' }}
+          {{ selectedLoan.groupName || getSelectedGroupName() || '-' }}
         </strong>
 
       </div>
@@ -216,7 +312,7 @@
         </span>
 
         <strong>
-          {{ selectedLoan.womanName || '-' }}
+          {{ selectedLoan.womanName || getSelectedWomanName() || '-' }}
         </strong>
 
       </div>
@@ -230,7 +326,7 @@
         </span>
 
         <strong>
-          ₹{{ (selectedLoan.loanAmount || 0) | number:'1.2-2' }}
+          ₹{{ (selectedLoan.sanctionedAmount || 0) | number:'1.2-2' }}
         </strong>
 
       </div>
@@ -280,7 +376,6 @@
     </div>
 
   </div>
-
 
 
   <!-- =====================================================
@@ -381,7 +476,6 @@
   </div>
 
 
-
   <!-- =====================================================
        FINANCIAL SUMMARY
   ====================================================== -->
@@ -392,8 +486,15 @@
     <div class="section-title">
 
       <div>
-        <h3>Financial Summary</h3>
-        <p>Current repayment position</p>
+
+        <h3>
+          Financial Summary
+        </h3>
+
+        <p>
+          Current repayment position
+        </p>
+
       </div>
 
     </div>
@@ -410,9 +511,7 @@
         </span>
 
         <strong class="green-text">
-
           ₹{{ getTotalPaidAmount() | number:'1.2-2' }}
-
         </strong>
 
       </div>
@@ -426,9 +525,7 @@
         </span>
 
         <strong class="orange-text">
-
           ₹{{ getTotalPenalty() | number:'1.2-2' }}
-
         </strong>
 
       </div>
@@ -442,9 +539,7 @@
         </span>
 
         <strong class="red-text">
-
           ₹{{ getOutstandingPrincipal() | number:'1.2-2' }}
-
         </strong>
 
       </div>
@@ -459,7 +554,11 @@
 
         <strong>
 
-          {{ getNextEmiDate() ? (getNextEmiDate() | date:'dd-MMM-yyyy') : '-' }}
+          {{
+            getNextEmiDate()
+              ? (getNextEmiDate() | date:'dd-MMM-yyyy')
+              : '-'
+          }}
 
         </strong>
 
@@ -468,7 +567,6 @@
     </div>
 
   </div>
-
 
 
   <!-- =====================================================
@@ -485,7 +583,6 @@
     </span>
 
   </div>
-
 
 
   <!-- =====================================================
@@ -512,11 +609,13 @@
       </div>
 
 
+      <!-- Schedule Summary -->
       <div class="schedule-summary">
 
         <span class="summary-count total-summary">
 
           Total
+
           <strong>
             {{ getTotalInstallments() }}
           </strong>
@@ -527,6 +626,7 @@
         <span class="summary-count paid-summary">
 
           Paid
+
           <strong>
             {{ getPaidCount() }}
           </strong>
@@ -537,6 +637,7 @@
         <span class="summary-count partial-summary">
 
           Partial
+
           <strong>
             {{ getPartialCount() }}
           </strong>
@@ -547,6 +648,7 @@
         <span class="summary-count pending-summary">
 
           Pending
+
           <strong>
             {{ getPendingCount() }}
           </strong>
@@ -558,9 +660,8 @@
     </div>
 
 
-
     <!-- ===================================================
-         TABLE
+         REPAYMENT TABLE
     ==================================================== -->
     <div
       class="table-wrapper"
@@ -572,7 +673,9 @@
 
           <tr>
 
-            <th>#</th>
+            <th>
+              #
+            </th>
 
             <th>
               Installment Date
@@ -620,15 +723,19 @@
           <tr
             *ngFor="let repayment of repaymentList"
             [ngClass]="{
-              'paid-row': repayment.paymentStatus === 'PAID',
-              'partial-row': repayment.paymentStatus === 'PARTIAL',
+              'paid-row':
+                repayment.paymentStatus === 'PAID',
+
+              'partial-row':
+                repayment.paymentStatus === 'PARTIAL',
+
               'pending-row':
                 !repayment.paymentStatus ||
                 repayment.paymentStatus === 'PENDING'
             }">
 
 
-            <!-- Number -->
+            <!-- Installment Number -->
             <td class="installment-number">
 
               {{ repayment.installmentNo }}
@@ -648,7 +755,7 @@
             </td>
 
 
-            <!-- Scheduled -->
+            <!-- Scheduled Amount -->
             <td class="amount-cell">
 
               ₹{{ (repayment.scheduledAmount || 0) | number:'1.2-2' }}
@@ -656,7 +763,7 @@
             </td>
 
 
-            <!-- Paid -->
+            <!-- Paid Amount -->
             <td class="amount-cell">
 
               ₹{{ (repayment.paidAmount || 0) | number:'1.2-2' }}
@@ -761,8 +868,9 @@
     </div>
 
 
-
-    <!-- No Schedule -->
+    <!-- ===================================================
+         EMPTY SCHEDULE
+    ==================================================== -->
     <div
       class="empty-state"
       *ngIf="repaymentList.length === 0">
@@ -784,7 +892,6 @@
   </div>
 
 
-
   <!-- =====================================================
        INITIAL EMPTY STATE
   ====================================================== -->
@@ -801,11 +908,11 @@
     </h3>
 
     <p>
-      Select CMRC, VO / ALF and Loan to view the repayment schedule.
+      Select CMRC, VO / ALF, Village, Group, Woman and Loan
+      to view the repayment schedule.
     </p>
 
   </div>
-
 
 
   <!-- =====================================================
@@ -832,10 +939,8 @@
           </span>
 
           <h3>
-
             Installment #
             {{ selectedRepayment?.installmentNo }}
-
           </h3>
 
         </div>
@@ -853,12 +958,11 @@
       </div>
 
 
-
       <!-- Modal Body -->
       <div class="payment-modal-body">
 
 
-        <!-- Scheduled -->
+        <!-- Scheduled Amount -->
         <div class="payment-info-card">
 
           <span>
@@ -877,8 +981,7 @@
         </div>
 
 
-
-        <!-- Payment Amount -->
+        <!-- Paid Amount -->
         <div class="form-group">
 
           <label>
@@ -902,7 +1005,6 @@
           </div>
 
         </div>
-
 
 
         <!-- Penalty -->
@@ -931,7 +1033,6 @@
         </div>
 
 
-
         <!-- Regular Repayment -->
         <div class="checkbox-card">
 
@@ -948,7 +1049,6 @@
           </label>
 
         </div>
-
 
 
         <!-- Current Status -->
@@ -987,9 +1087,9 @@
       </div>
 
 
-
       <!-- Modal Footer -->
       <div class="payment-modal-footer">
+
 
         <button
           type="button"
@@ -1021,4 +1121,3 @@
   </div>
 
 </div>
-

@@ -1,12 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 
 import { CmrcService, Cmrc } from '../services/cmrc.service';
 import { VoAlfService, VoAlf } from '../services/vo-alf.service';
+import { GroupService, Group } from '../services/group.service';
+import { WomenService, Women } from '../services/women.service';
+
 import { LoanService, Loan } from '../services/loan.service';
-import { RepaymentService, Repayment } from '../services/repayment.service';
+
+import {
+  RepaymentService,
+  Repayment
+} from '../services/repayment.service';
+
 import { CmrcBalanceService } from '../services/cmrc-balance.service';
 
 
@@ -38,19 +44,32 @@ interface CurrentStatus {
 }
 
 interface ReportRecord {
+
   cmrcId: number | null;
+
   cmrcName: string;
+
   villageName: string;
+
   voAlfId: number | null;
+
   voAlfName: string;
+
   accountNo: string;
 
   fundsReceived: FundsReceived;
+
   fundsDistributed: FundsDistributed;
+
   fundsRepaid: FundsRepaid;
+
   currentStatus: CurrentStatus;
 }
 
+
+/* ============================================================
+   COMPONENT
+============================================================ */
 
 @Component({
   selector: 'app-report',
@@ -58,6 +77,7 @@ interface ReportRecord {
   styleUrls: ['./report.component.css']
 })
 export class ReportComponent implements OnInit {
+
 
   /* ============================================================
      FILTERS
@@ -71,7 +91,7 @@ export class ReportComponent implements OnInit {
 
 
   /* ============================================================
-     DROPDOWN DATA
+     AVAILABLE YEARS
   ============================================================ */
 
   availableYears: number[] = [
@@ -80,9 +100,18 @@ export class ReportComponent implements OnInit {
     2026
   ];
 
+
+  /* ============================================================
+     MASTER DATA
+  ============================================================ */
+
   cmrcList: Cmrc[] = [];
 
   voAlfList: VoAlf[] = [];
+
+  groupList: Group[] = [];
+
+  womenList: Women[] = [];
 
   loanList: Loan[] = [];
 
@@ -110,11 +139,21 @@ export class ReportComponent implements OnInit {
   ============================================================ */
 
   constructor(
+
     private cmrcService: CmrcService,
+
     private voAlfService: VoAlfService,
+
+    private groupService: GroupService,
+
+    private womenService: WomenService,
+
     private loanService: LoanService,
+
     private repaymentService: RepaymentService,
+
     private cmrcBalanceService: CmrcBalanceService
+
   ) {}
 
 
@@ -124,28 +163,30 @@ export class ReportComponent implements OnInit {
 
   ngOnInit(): void {
 
-    this.loadCmrcList();
-
-    this.loadReportData();
+    this.loadAllReportData();
 
   }
 
 
   /* ============================================================
-     LOAD CMRC
+     LOAD ALL REPORT DATA
   ============================================================ */
 
-  loadCmrcList(): void {
+  loadAllReportData(): void {
+
+    this.loading = true;
 
     this.cmrcService.getAll().subscribe({
 
-      next: (data: Cmrc[]) => {
+      next: (cmrcData: Cmrc[]) => {
 
-        this.cmrcList = data || [];
+        this.cmrcList = cmrcData || [];
+
+        this.loadVoAlf();
 
       },
 
-      error: (error) => {
+      error: (error: any) => {
 
         console.error(
           'CMRC API Error:',
@@ -153,6 +194,8 @@ export class ReportComponent implements OnInit {
         );
 
         this.cmrcList = [];
+
+        this.loadVoAlf();
 
       }
 
@@ -162,30 +205,29 @@ export class ReportComponent implements OnInit {
 
 
   /* ============================================================
-     LOAD REPORT DATA
+     LOAD VO / ALF
   ============================================================ */
 
-  loadReportData(): void {
-
-    this.loading = true;
-
-    /*
-     * Load required master/report data.
-     *
-     * We load VO / ALF first, then loans and repayments.
-     */
+  loadVoAlf(): void {
 
     this.voAlfService.getAll().subscribe({
 
-      next: (voAlfData: VoAlf[]) => {
+      next: (data: VoAlf[]) => {
 
-        this.voAlfList = voAlfData || [];
+        this.voAlfList = data || [];
 
-        this.loadLoans();
+        /*
+         * Village is now stored directly
+         * inside VO / ALF.
+         *
+         * No Village API required.
+         */
+
+        this.loadGroups();
 
       },
 
-      error: (error) => {
+      error: (error: any) => {
 
         console.error(
           'VO / ALF API Error:',
@@ -193,6 +235,74 @@ export class ReportComponent implements OnInit {
         );
 
         this.voAlfList = [];
+
+        this.loadGroups();
+
+      }
+
+    });
+
+  }
+
+
+  /* ============================================================
+     LOAD GROUPS
+  ============================================================ */
+
+  loadGroups(): void {
+
+    this.groupService.getAll().subscribe({
+
+      next: (data: Group[]) => {
+
+        this.groupList = data || [];
+
+        this.loadWomen();
+
+      },
+
+      error: (error: any) => {
+
+        console.error(
+          'Group API Error:',
+          error
+        );
+
+        this.groupList = [];
+
+        this.loadWomen();
+
+      }
+
+    });
+
+  }
+
+
+  /* ============================================================
+     LOAD WOMEN
+  ============================================================ */
+
+  loadWomen(): void {
+
+    this.womenService.getAll().subscribe({
+
+      next: (data: Women[]) => {
+
+        this.womenList = data || [];
+
+        this.loadLoans();
+
+      },
+
+      error: (error: any) => {
+
+        console.error(
+          'Women API Error:',
+          error
+        );
+
+        this.womenList = [];
 
         this.loadLoans();
 
@@ -219,7 +329,7 @@ export class ReportComponent implements OnInit {
 
       },
 
-      error: (error) => {
+      error: (error: any) => {
 
         console.error(
           'Loan API Error:',
@@ -255,7 +365,7 @@ export class ReportComponent implements OnInit {
 
       },
 
-      error: (error) => {
+      error: (error: any) => {
 
         console.error(
           'Repayment API Error:',
@@ -277,330 +387,655 @@ export class ReportComponent implements OnInit {
 
   /* ============================================================
      BUILD REPORT
+     
+     ONE ROW = ONE VO / ALF
+     
+     CMRC
+       ↓
+     VO / ALF
+       ↓
+     Village
+       ↓
+     Group
+       ↓
+     Women
+       ↓
+     Loan
+       ↓
+     Repayment
   ============================================================ */
 
   buildReport(): void {
 
     const records: ReportRecord[] = [];
 
+    this.voAlfList.forEach(
+      (voAlf: VoAlf) => {
 
-    /*
-     * Create report row for every VO / ALF.
-     */
-
-    this.voAlfList.forEach((voAlf: any) => {
-
-      const voAlfId = voAlf.id;
-
-      const voLoans = this.loanList.filter(
-        loan => loan.voAlfId === voAlfId
-      );
-
-
-      /* --------------------------------------------------------
-         FILTER BY FINANCIAL YEAR
-      -------------------------------------------------------- */
-
-      const yearLoans = voLoans.filter(
-        loan => this.isInSelectedFinancialYear(
-          loan.loanGivenDate
-        )
-      );
-
-
-      /* --------------------------------------------------------
-         FUNDS DISTRIBUTED
-      -------------------------------------------------------- */
-
-      const womenSet = new Set<string>();
-
-      yearLoans.forEach(
-        loan => {
-
-          if (loan.womanName) {
-
-            womenSet.add(
-              loan.womanName.trim().toLowerCase()
-            );
-
-          }
-
-        }
-      );
-
-
-      const groupSet = new Set<string>();
-
-      yearLoans.forEach(
-        loan => {
-
-          if (loan.groupName) {
-
-            groupSet.add(
-              loan.groupName.trim().toLowerCase()
-            );
-
-          }
-
-        }
-      );
-
-
-      const totalSanctionedAmount =
-        yearLoans.reduce(
-          (sum, loan) =>
-            sum + Number(loan.loanAmount || 0),
-          0
+        records.push(
+          this.createReportRecord(voAlf)
         );
 
-
-      /*
-       * Women Amount
-       *
-       * Based on the total sanctioned amount
-       * of women-linked loans.
-       */
-
-      const womenAmount =
-        yearLoans.reduce(
-          (sum, loan) =>
-            sum + Number(loan.loanAmount || 0),
-          0
-        );
-
-
-      /* --------------------------------------------------------
-         FUNDS REPAID
-         ONLY CLOSED LOANS
-      -------------------------------------------------------- */
-
-      const closedLoans =
-        yearLoans.filter(
-          loan =>
-            String(
-              (loan as any).status || ''
-            ).toUpperCase() === 'CLOSED'
-        );
-
-
-      const closedGroups = new Set<string>();
-
-      const closedWomen = new Set<string>();
-
-
-      closedLoans.forEach(
-        loan => {
-
-          if (loan.groupName) {
-
-            closedGroups.add(
-              loan.groupName.trim().toLowerCase()
-            );
-
-          }
-
-          if (loan.womanName) {
-
-            closedWomen.add(
-              loan.womanName.trim().toLowerCase()
-            );
-
-          }
-
-        }
-      );
-
-
-      const closedAmount =
-        closedLoans.reduce(
-          (sum, loan) =>
-            sum + Number(loan.loanAmount || 0),
-          0
-        );
-
-
-      /*
-       * --------------------------------------------------------
-       * ACTUAL REPAYMENT AMOUNT
-       * --------------------------------------------------------
-       */
-
-      const loanIds = new Set(
-        closedLoans.map(
-          loan => loan.id
-        )
-      );
-
-
-      const closedRepayments =
-        this.repaymentList.filter(
-          repayment =>
-            loanIds.has(
-              (repayment as any).loanId
-            )
-        );
-
-
-      const actualRepaidAmount =
-        closedRepayments.reduce(
-          (sum, repayment: any) =>
-            sum +
-            Number(
-              repayment.amount ||
-              repayment.paidAmount ||
-              repayment.paymentAmount ||
-              0
-            ),
-          0
-        );
-
-
-      /* --------------------------------------------------------
-         INTEREST RECEIVED
-      -------------------------------------------------------- */
-
-      const totalInterest =
-        this.repaymentList
-          .filter(
-            repayment =>
-              loanIds.has(
-                (repayment as any).loanId
-              )
-          )
-          .reduce(
-            (sum, repayment: any) =>
-              sum +
-              Number(
-                repayment.interestAmount ||
-                repayment.interestPaid ||
-                repayment.interest ||
-                0
-              ),
-            0
-          );
-
-
-      /* --------------------------------------------------------
-         DEBT CYCLE WOMEN
-      -------------------------------------------------------- */
-
-      /*
-       * Current temporary rule:
-       *
-       * Women with repeated unpaid/bounced repayments.
-       *
-       * This checks repayment records for a loan.
-       */
-
-      const debtCycleWomen =
-        this.calculateDebtCycleWomen(
-          yearLoans
-        );
-
-
-      /* --------------------------------------------------------
-         ALF RECEIVED FUND
-      -------------------------------------------------------- */
-
-      /*
-       * This should come from your ALF fund/transaction
-       * table/API.
-       *
-       * Until that API is connected, value is 0.
-       */
-
-      const alfReceivedFund = 0;
-
-
-      /* --------------------------------------------------------
-         ADD REPORT ROW
-      -------------------------------------------------------- */
-
-      records.push({
-
-        cmrcId:
-          voAlf.cmrcId || null,
-
-        cmrcName:
-          this.getCmrcName(
-            voAlf.cmrcId
-          ),
-
-        villageName:
-          voAlf.villageName ||
-          voAlf.village ||
-          '-',
-
-        voAlfId:
-          voAlfId,
-
-        voAlfName:
-          voAlf.name ||
-          voAlf.voAlfName ||
-          voAlf.voAlf ||
-          '-',
-
-        accountNo:
-          voAlf.accountNo ||
-          '-',
-
-        fundsReceived: {
-
-          alfReceivedFund:
-            alfReceivedFund
-
-        },
-
-        fundsDistributed: {
-
-          groupCount:
-            groupSet.size,
-
-          womenCount:
-            womenSet.size,
-
-          groupAmount:
-            totalSanctionedAmount,
-
-          womenAmount:
-            womenAmount
-
-        },
-
-        fundsRepaid: {
-
-          groupCount:
-            closedGroups.size,
-
-          womenCount:
-            closedWomen.size,
-
-          groupAmount:
-            closedAmount,
-
-          womenAmount:
-            closedAmount
-
-        },
-
-        currentStatus: {
-
-          debtCycleWomen:
-            debtCycleWomen,
-
-          totalInterestReceived:
-            totalInterest
-
-        }
-
-      });
-
-    });
-
+      }
+    );
 
     this.reportRecords = records;
 
     this.applyFilters();
+
+  }
+
+
+  /* ============================================================
+     CREATE REPORT RECORD
+  ============================================================ */
+
+  createReportRecord(
+    voAlf: VoAlf
+  ): ReportRecord {
+
+    const voAlfId =
+      voAlf.id || null;
+
+    const cmrcId =
+      voAlf.cmrcId || null;
+
+
+    /* ==========================================================
+       FIND GROUPS UNDER VO / ALF
+    ========================================================== */
+
+    const voAlfGroups =
+      this.groupList.filter(
+        (group: Group) =>
+          group.voAlfId === voAlf.id
+      );
+
+
+    const groupIds =
+      new Set<number>();
+
+
+    voAlfGroups.forEach(
+      (group: Group) => {
+
+        if (group.id) {
+
+          groupIds.add(
+            group.id
+          );
+
+        }
+
+      }
+    );
+
+
+    /* ==========================================================
+       FIND WOMEN UNDER GROUPS
+    ========================================================== */
+
+    const voAlfWomen =
+      this.womenList.filter(
+        (woman: Women) =>
+          woman.groupId !== undefined &&
+          groupIds.has(
+            woman.groupId
+          )
+      );
+
+
+    const womanIds =
+      new Set<number>();
+
+
+    voAlfWomen.forEach(
+      (woman: Women) => {
+
+        if (woman.id) {
+
+          womanIds.add(
+            woman.id
+          );
+
+        }
+
+      }
+    );
+
+
+    /* ==========================================================
+       FIND LOANS
+    ========================================================== */
+
+    const voAlfLoans =
+      this.loanList.filter(
+        (loan: Loan) =>
+          loan.womanId !== undefined &&
+          womanIds.has(
+            loan.womanId
+          )
+      );
+
+
+    /* ==========================================================
+       FINANCIAL YEAR FILTER
+    ========================================================== */
+
+    const yearLoans =
+      voAlfLoans.filter(
+        (loan: Loan) =>
+          this.isInSelectedFinancialYear(
+            loan.loanGivenDate
+          )
+      );
+
+
+    /* ==========================================================
+       UNIQUE GROUPS
+    ========================================================== */
+
+    const activeGroupSet =
+      new Set<string>();
+
+
+    yearLoans.forEach(
+      (loan: Loan) => {
+
+        if (loan.groupName) {
+
+          activeGroupSet.add(
+            loan.groupName
+              .trim()
+              .toLowerCase()
+          );
+
+        }
+
+      }
+    );
+
+
+    /*
+     * Fallback using actual group IDs.
+     */
+
+    if (
+      activeGroupSet.size === 0
+    ) {
+
+      yearLoans.forEach(
+        (loan: Loan) => {
+
+          if (
+            loan.womanId !== undefined
+          ) {
+
+            const woman =
+              this.womenList.find(
+                (w: Women) =>
+                  w.id === loan.womanId
+              );
+
+
+            if (
+              woman?.groupId !== undefined
+            ) {
+
+              activeGroupSet.add(
+                String(
+                  woman.groupId
+                )
+              );
+
+            }
+
+          }
+
+        }
+      );
+
+    }
+
+
+    /* ==========================================================
+       UNIQUE WOMEN
+    ========================================================== */
+
+    const womenSet =
+      new Set<number>();
+
+
+    yearLoans.forEach(
+      (loan: Loan) => {
+
+        if (
+          loan.womanId !== undefined
+        ) {
+
+          womenSet.add(
+            loan.womanId
+          );
+
+        }
+
+      }
+    );
+
+
+    /* ==========================================================
+       DISTRIBUTED AMOUNT
+    ========================================================== */
+
+    const totalDistributedAmount =
+      yearLoans.reduce(
+        (
+          sum: number,
+          loan: Loan
+        ) => {
+
+          return sum +
+            Number(
+              loan.loanAmount || 0
+            );
+
+        },
+        0
+      );
+
+
+    /* ==========================================================
+       FIND REPAYMENTS
+    ========================================================== */
+
+    const loanIds =
+      new Set<number>();
+
+
+    yearLoans.forEach(
+      (loan: Loan) => {
+
+        if (loan.id) {
+
+          loanIds.add(
+            loan.id
+          );
+
+        }
+
+      }
+    );
+
+
+    const voAlfRepayments =
+      this.repaymentList.filter(
+        (repayment: Repayment) => {
+
+          const loanId =
+            this.getRepaymentLoanId(
+              repayment
+            );
+
+          return (
+            loanId !== null &&
+            loanIds.has(
+              loanId
+            )
+          );
+
+        }
+      );
+
+
+    /* ==========================================================
+       PAID LOANS
+    ========================================================== */
+
+    const paidLoanIds =
+      new Set<number>();
+
+
+    voAlfRepayments.forEach(
+      (repayment: Repayment) => {
+
+        const loanId =
+          this.getRepaymentLoanId(
+            repayment
+          );
+
+
+        const status =
+          String(
+            (repayment as any)
+              .paymentStatus || ''
+          ).toUpperCase();
+
+
+        const paidAmount =
+          Number(
+            (repayment as any)
+              .paidAmount || 0
+          );
+
+
+        if (
+          loanId !== null &&
+          (
+            status === 'PAID' ||
+            paidAmount > 0
+          )
+        ) {
+
+          paidLoanIds.add(
+            loanId
+          );
+
+        }
+
+      }
+    );
+
+
+    /* ==========================================================
+       REPAID LOANS
+    ========================================================== */
+
+    const repaidLoans =
+      yearLoans.filter(
+        (loan: Loan) =>
+          loan.id !== undefined &&
+          paidLoanIds.has(
+            loan.id
+          )
+      );
+
+
+    /* ==========================================================
+       REPAID GROUPS
+    ========================================================== */
+
+    const repaidGroupSet =
+      new Set<string>();
+
+
+    repaidLoans.forEach(
+      (loan: Loan) => {
+
+        if (loan.groupName) {
+
+          repaidGroupSet.add(
+            loan.groupName
+              .trim()
+              .toLowerCase()
+          );
+
+        }
+
+      }
+    );
+
+
+    /*
+     * Fallback using woman → group.
+     */
+
+    if (
+      repaidGroupSet.size === 0
+    ) {
+
+      repaidLoans.forEach(
+        (loan: Loan) => {
+
+          const woman =
+            this.womenList.find(
+              (w: Women) =>
+                w.id === loan.womanId
+            );
+
+
+          if (
+            woman?.groupId !== undefined
+          ) {
+
+            repaidGroupSet.add(
+              String(
+                woman.groupId
+              )
+            );
+
+          }
+
+        }
+      );
+
+    }
+
+
+    /* ==========================================================
+       REPAID WOMEN
+    ========================================================== */
+
+    const repaidWomenSet =
+      new Set<number>();
+
+
+    repaidLoans.forEach(
+      (loan: Loan) => {
+
+        if (
+          loan.womanId !== undefined
+        ) {
+
+          repaidWomenSet.add(
+            loan.womanId
+          );
+
+        }
+
+      }
+    );
+
+
+    /* ==========================================================
+       ACTUAL REPAID AMOUNT
+    ========================================================== */
+
+    const actualRepaidAmount =
+      voAlfRepayments.reduce(
+        (
+          sum: number,
+          repayment: Repayment
+        ) => {
+
+          const status =
+            String(
+              (repayment as any)
+                .paymentStatus || ''
+            ).toUpperCase();
+
+
+          const paidAmount =
+            Number(
+              (repayment as any)
+                .paidAmount || 0
+            );
+
+
+          if (
+            status === 'PAID' ||
+            status === 'PARTIAL' ||
+            paidAmount > 0
+          ) {
+
+            return sum +
+              paidAmount;
+
+          }
+
+          return sum;
+
+        },
+        0
+      );
+
+
+    /* ==========================================================
+       TOTAL INTEREST RECEIVED
+    ========================================================== */
+
+    const totalInterest =
+      voAlfRepayments.reduce(
+        (
+          sum: number,
+          repayment: Repayment
+        ) => {
+
+          return sum +
+            Number(
+              (repayment as any)
+                .interestAmount || 0
+            );
+
+        },
+        0
+      );
+
+
+    /* ==========================================================
+       DEBT CYCLE WOMEN
+    ========================================================== */
+
+    const debtCycleWomen =
+      this.calculateDebtCycleWomen(
+        yearLoans
+      );
+
+
+    /* ==========================================================
+       ALF RECEIVED FUND
+    ========================================================== */
+
+    /*
+     * Currently no separate ALF fund
+     * transaction API is connected.
+     */
+
+    const alfReceivedFund = 0;
+
+
+    /* ==========================================================
+       CREATE REPORT ROW
+    ========================================================== */
+
+    return {
+
+      cmrcId:
+        cmrcId,
+
+      cmrcName:
+        this.getCmrcName(
+          cmrcId
+        ),
+
+      /*
+       * Village now comes directly
+       * from VO / ALF.
+       */
+
+      villageName:
+        voAlf.villageName ||
+        '-',
+
+      voAlfId:
+        voAlfId,
+
+      voAlfName:
+        voAlf.voAlfName ||
+        '-',
+
+      accountNo:
+        voAlf.accountNo ||
+        '-',
+
+      fundsReceived: {
+
+        alfReceivedFund:
+          alfReceivedFund
+
+      },
+
+      fundsDistributed: {
+
+        groupCount:
+          activeGroupSet.size,
+
+        womenCount:
+          womenSet.size,
+
+        groupAmount:
+          totalDistributedAmount,
+
+        womenAmount:
+          totalDistributedAmount
+
+      },
+
+      fundsRepaid: {
+
+        groupCount:
+          repaidGroupSet.size,
+
+        womenCount:
+          repaidWomenSet.size,
+
+        groupAmount:
+          actualRepaidAmount,
+
+        womenAmount:
+          actualRepaidAmount
+
+      },
+
+      currentStatus: {
+
+        debtCycleWomen:
+          debtCycleWomen,
+
+        totalInterestReceived:
+          totalInterest
+
+      }
+
+    };
+
+  }
+
+
+  /* ============================================================
+     GET REPAYMENT LOAN ID
+  ============================================================ */
+
+  getRepaymentLoanId(
+    repayment: Repayment
+  ): number | null {
+
+    const loanId =
+      (repayment as any).loanId;
+
+
+    if (
+      loanId === undefined ||
+      loanId === null
+    ) {
+
+      return null;
+
+    }
+
+
+    return Number(
+      loanId
+    );
 
   }
 
@@ -620,7 +1055,9 @@ export class ReportComponent implements OnInit {
     }
 
 
-    if (this.selectedYear === null) {
+    if (
+      this.selectedYear === null
+    ) {
 
       return true;
 
@@ -630,27 +1067,44 @@ export class ReportComponent implements OnInit {
     const loanDate =
       new Date(date);
 
+
+    if (
+      isNaN(
+        loanDate.getTime()
+      )
+    ) {
+
+      return false;
+
+    }
+
+
     const month =
       loanDate.getMonth() + 1;
+
 
     const year =
       loanDate.getFullYear();
 
 
     /*
-     * Financial Year:
-     *
-     * April to March
+     * April → March
      */
 
     if (month >= 4) {
 
-      return year === this.selectedYear;
+      return (
+        year ===
+        this.selectedYear
+      );
 
     }
 
-    return year ===
-      this.selectedYear + 1;
+
+    return (
+      year ===
+      this.selectedYear + 1
+    );
 
   }
 
@@ -663,26 +1117,30 @@ export class ReportComponent implements OnInit {
     loans: Loan[]
   ): number {
 
-    const women = new Set<string>();
+    const women =
+      new Set<number>();
 
 
     loans.forEach(
-      loan => {
+      (loan: Loan) => {
 
-        const loanId =
-          loan.id;
+        if (
+          loan.id === undefined
+        ) {
+
+          return;
+
+        }
+
 
         const repayments =
           this.repaymentList.filter(
-            repayment =>
-              (repayment as any).loanId === loanId
+            (repayment: Repayment) =>
+              this.getRepaymentLoanId(
+                repayment
+              ) === loan.id
           );
 
-
-        /*
-         * If repayment records contain status,
-         * look for repeated unpaid/bounced status.
-         */
 
         const failedPayments =
           repayments.filter(
@@ -690,14 +1148,22 @@ export class ReportComponent implements OnInit {
 
               const status =
                 String(
-                  repayment.status || ''
+                  repayment.status ||
+                  repayment.paymentStatus ||
+                  ''
                 ).toUpperCase();
 
+
               return (
+
                 status === 'BOUNCED' ||
+
                 status === 'UNPAID' ||
+
                 status === 'FAILED' ||
+
                 status === 'OVERDUE'
+
               );
 
             }
@@ -706,18 +1172,16 @@ export class ReportComponent implements OnInit {
 
         /*
          * Current rule:
-         * 2 or more failed repayments
+         * 2 or more failed payments.
          */
 
         if (
           failedPayments.length >= 2 &&
-          loan.womanName
+          loan.womanId !== undefined
         ) {
 
           women.add(
-            loan.womanName
-              .trim()
-              .toLowerCase()
+            loan.womanId
           );
 
         }
@@ -735,18 +1199,33 @@ export class ReportComponent implements OnInit {
      GET CMRC NAME
   ============================================================ */
 
-getCmrcName(cmrcId: number | null): string {
-  if (!cmrcId) {
-    return '-';
+  getCmrcName(
+    cmrcId: number | null
+  ): string {
+
+    if (
+      cmrcId === null ||
+      cmrcId === undefined
+    ) {
+
+      return '-';
+
+    }
+
+
+    const cmrc =
+      this.cmrcList.find(
+        (c: Cmrc) =>
+          c.id === cmrcId
+      );
+
+
+    return (
+      cmrc?.cmrcName ||
+      '-'
+    );
+
   }
-
-  const cmrc = this.cmrcList.find(c => c.id === cmrcId);
-
-  return cmrc?.cmrcName || '-';
-}
-
-
-   
 
 
   /* ============================================================
@@ -785,9 +1264,12 @@ getCmrcName(cmrcId: number | null): string {
 
     this.filteredReportRecords =
       this.reportRecords.filter(
-        record => {
+        (record: ReportRecord) => {
 
-          /* CMRC filter */
+
+          /* ----------------------------------------------
+             CMRC FILTER
+          ---------------------------------------------- */
 
           if (
             this.selectedCmrcId !== null &&
@@ -800,7 +1282,9 @@ getCmrcName(cmrcId: number | null): string {
           }
 
 
-          /* Search filter */
+          /* ----------------------------------------------
+             SEARCH FILTER
+          ---------------------------------------------- */
 
           if (!search) {
 
@@ -865,13 +1349,20 @@ getCmrcName(cmrcId: number | null): string {
   getTotalAlfReceivedFund(): number {
 
     return this.filteredReportRecords.reduce(
-      (sum, record) =>
+
+      (
+        sum: number,
+        record: ReportRecord
+      ) =>
+
         sum +
         Number(
           record.fundsReceived
             ?.alfReceivedFund || 0
         ),
+
       0
+
     );
 
   }
@@ -880,13 +1371,20 @@ getCmrcName(cmrcId: number | null): string {
   getTotalDistributedGroupCount(): number {
 
     return this.filteredReportRecords.reduce(
-      (sum, record) =>
+
+      (
+        sum: number,
+        record: ReportRecord
+      ) =>
+
         sum +
         Number(
           record.fundsDistributed
             ?.groupCount || 0
         ),
+
       0
+
     );
 
   }
@@ -895,13 +1393,20 @@ getCmrcName(cmrcId: number | null): string {
   getTotalDistributedWomen(): number {
 
     return this.filteredReportRecords.reduce(
-      (sum, record) =>
+
+      (
+        sum: number,
+        record: ReportRecord
+      ) =>
+
         sum +
         Number(
           record.fundsDistributed
             ?.womenCount || 0
         ),
+
       0
+
     );
 
   }
@@ -910,13 +1415,20 @@ getCmrcName(cmrcId: number | null): string {
   getTotalDistributedGroupAmount(): number {
 
     return this.filteredReportRecords.reduce(
-      (sum, record) =>
+
+      (
+        sum: number,
+        record: ReportRecord
+      ) =>
+
         sum +
         Number(
           record.fundsDistributed
             ?.groupAmount || 0
         ),
+
       0
+
     );
 
   }
@@ -925,13 +1437,20 @@ getCmrcName(cmrcId: number | null): string {
   getTotalDistributedWomenAmount(): number {
 
     return this.filteredReportRecords.reduce(
-      (sum, record) =>
+
+      (
+        sum: number,
+        record: ReportRecord
+      ) =>
+
         sum +
         Number(
           record.fundsDistributed
             ?.womenAmount || 0
         ),
+
       0
+
     );
 
   }
@@ -940,13 +1459,20 @@ getCmrcName(cmrcId: number | null): string {
   getTotalRepaidGroupCount(): number {
 
     return this.filteredReportRecords.reduce(
-      (sum, record) =>
+
+      (
+        sum: number,
+        record: ReportRecord
+      ) =>
+
         sum +
         Number(
           record.fundsRepaid
             ?.groupCount || 0
         ),
+
       0
+
     );
 
   }
@@ -955,13 +1481,20 @@ getCmrcName(cmrcId: number | null): string {
   getTotalRepaidWomen(): number {
 
     return this.filteredReportRecords.reduce(
-      (sum, record) =>
+
+      (
+        sum: number,
+        record: ReportRecord
+      ) =>
+
         sum +
         Number(
           record.fundsRepaid
             ?.womenCount || 0
         ),
+
       0
+
     );
 
   }
@@ -970,13 +1503,20 @@ getCmrcName(cmrcId: number | null): string {
   getTotalRepaidGroupAmount(): number {
 
     return this.filteredReportRecords.reduce(
-      (sum, record) =>
+
+      (
+        sum: number,
+        record: ReportRecord
+      ) =>
+
         sum +
         Number(
           record.fundsRepaid
             ?.groupAmount || 0
         ),
+
       0
+
     );
 
   }
@@ -985,13 +1525,20 @@ getCmrcName(cmrcId: number | null): string {
   getTotalRepaidWomenAmount(): number {
 
     return this.filteredReportRecords.reduce(
-      (sum, record) =>
+
+      (
+        sum: number,
+        record: ReportRecord
+      ) =>
+
         sum +
         Number(
           record.fundsRepaid
             ?.womenAmount || 0
         ),
+
       0
+
     );
 
   }
@@ -1000,13 +1547,20 @@ getCmrcName(cmrcId: number | null): string {
   getTotalDebtCycleWomen(): number {
 
     return this.filteredReportRecords.reduce(
-      (sum, record) =>
+
+      (
+        sum: number,
+        record: ReportRecord
+      ) =>
+
         sum +
         Number(
           record.currentStatus
             ?.debtCycleWomen || 0
         ),
+
       0
+
     );
 
   }
@@ -1015,13 +1569,20 @@ getCmrcName(cmrcId: number | null): string {
   getTotalInterestReceived(): number {
 
     return this.filteredReportRecords.reduce(
-      (sum, record) =>
+
+      (
+        sum: number,
+        record: ReportRecord
+      ) =>
+
         sum +
         Number(
           record.currentStatus
             ?.totalInterestReceived || 0
         ),
+
       0
+
     );
 
   }
@@ -1029,7 +1590,7 @@ getCmrcName(cmrcId: number | null): string {
 
   /* ============================================================
      OLD SUMMARY METHODS
-     ============================================================ */
+  ============================================================ */
 
   getTotalGroups(): number {
 
@@ -1092,7 +1653,10 @@ getCmrcName(cmrcId: number | null): string {
 
     const excelData =
       this.filteredReportRecords.map(
-        (record, index) => ({
+        (
+          record: ReportRecord,
+          index: number
+        ) => ({
 
           'Sr. No.':
             index + 1,
@@ -1109,15 +1673,9 @@ getCmrcName(cmrcId: number | null): string {
           'VO / ALF Account No.':
             record.accountNo,
 
-
-          /* Funds Received */
-
           'ALF Received Fund':
             record.fundsReceived
               .alfReceivedFund,
-
-
-          /* Funds Distributed */
 
           'Distributed - Group Count':
             record.fundsDistributed
@@ -1135,9 +1693,6 @@ getCmrcName(cmrcId: number | null): string {
             record.fundsDistributed
               .womenAmount,
 
-
-          /* Funds Repaid */
-
           'Repaid - Group Count':
             record.fundsRepaid
               .groupCount,
@@ -1154,9 +1709,6 @@ getCmrcName(cmrcId: number | null): string {
             record.fundsRepaid
               .womenAmount,
 
-
-          /* Current Status */
-
           'Women Trapped in Debt Cycle':
             record.currentStatus
               .debtCycleWomen,
@@ -1169,11 +1721,19 @@ getCmrcName(cmrcId: number | null): string {
       );
 
 
+    /* ======================================================
+       CREATE WORKSHEET
+    ====================================================== */
+
     const worksheet =
       XLSX.utils.json_to_sheet(
         excelData
       );
 
+
+    /* ======================================================
+       CREATE WORKBOOK
+    ====================================================== */
 
     const workbook =
       XLSX.utils.book_new();
@@ -1186,9 +1746,15 @@ getCmrcName(cmrcId: number | null): string {
     );
 
 
+    /* ======================================================
+       FILE NAME
+    ====================================================== */
+
     const yearText =
       this.selectedYear === null
+
         ? 'All-Years'
+
         : `${this.selectedYear}-${String(
             this.selectedYear + 1
           ).slice(-2)}`;

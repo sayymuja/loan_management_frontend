@@ -20,6 +20,22 @@ import {
   Loan
 } from '../services/loan.service';
 
+import {
+  GroupService,
+  Group
+} from '../services/group.service';
+
+import {
+  WomenService,
+  Women
+} from '../services/women.service';
+
+import {
+  Observable,
+  forkJoin,
+  firstValueFrom
+} from 'rxjs';
+
 import * as XLSX from 'xlsx';
 
 
@@ -38,12 +54,17 @@ export class BankBalanceComponent implements OnInit {
     [voAlfId: number]: number;
   } = {};
 
-  // Month-wise loan expense
+
+  // =========================================================
+  // MONTH-WISE LOAN TOTALS
+  // =========================================================
+
   monthlyLoanTotals: {
     [voAlfId: number]: {
       [month: string]: number;
     };
   } = {};
+
 
   // =========================================================
   // MONTHS
@@ -53,25 +74,22 @@ export class BankBalanceComponent implements OnInit {
 
   loanMonths: string[] = [];
 
+
   // =========================================================
   // FINANCIAL YEAR
   // =========================================================
 
   availableYears: number[] = [];
 
-  /**
-   * null = All
-   *
-   * Example:
-   * 2025 = Financial Year 2025-26
-   */
   selectedYear: number | null = null;
+
 
   // =========================================================
   // SEARCH
   // =========================================================
 
   searchText = '';
+
 
   // =========================================================
   // CMRC / VO ALF
@@ -81,6 +99,7 @@ export class BankBalanceComponent implements OnInit {
 
   voAlfList: VoAlf[] = [];
 
+
   // =========================================================
   // CMRC BALANCE
   // =========================================================
@@ -88,6 +107,7 @@ export class BankBalanceComponent implements OnInit {
   cmrcBalance = 0;
 
   selectedCmrcId: number | null = null;
+
 
   // =========================================================
   // LOADING
@@ -97,6 +117,9 @@ export class BankBalanceComponent implements OnInit {
 
   loadingBalance = false;
 
+  loadingLoans = false;
+
+
   // =========================================================
   // CONSTRUCTOR
   // =========================================================
@@ -105,16 +128,22 @@ export class BankBalanceComponent implements OnInit {
     private cmrcService: CmrcService,
     private voAlfService: VoAlfService,
     private cmrcBalanceService: CmrcBalanceService,
-    private loanService: LoanService
+    private loanService: LoanService,
+    private groupService: GroupService,
+    private womenService: WomenService
   ) {}
+
 
   // =========================================================
   // INIT
   // =========================================================
 
   ngOnInit(): void {
+
     this.loadCmrc();
+
   }
+
 
   // =========================================================
   // LOAD CMRC
@@ -130,7 +159,7 @@ export class BankBalanceComponent implements OnInit {
 
       },
 
-      error: (error) => {
+      error: (error: any) => {
 
         console.error(
           'CMRC API Error:',
@@ -138,16 +167,23 @@ export class BankBalanceComponent implements OnInit {
         );
 
         this.cmrcList = [];
+
       }
 
     });
+
   }
+
 
   // =========================================================
   // LOAD BANK BALANCE
   // =========================================================
 
   loadBankBalance(): void {
+
+    // -------------------------------------------------------
+    // RESET
+    // -------------------------------------------------------
 
     this.voAlfList = [];
 
@@ -167,16 +203,24 @@ export class BankBalanceComponent implements OnInit {
 
     this.searchText = '';
 
+
+    // -------------------------------------------------------
+    // VALIDATE CMRC
+    // -------------------------------------------------------
+
     if (
       this.selectedCmrcId === null ||
       this.selectedCmrcId === undefined
     ) {
+
       return;
+
     }
 
-    // -------------------------------------------------------
+
+    // =======================================================
     // LOAD VO / ALF
-    // -------------------------------------------------------
+    // =======================================================
 
     this.loadingVoAlf = true;
 
@@ -191,9 +235,10 @@ export class BankBalanceComponent implements OnInit {
           this.loadingVoAlf = false;
 
           this.loadLoanTotals();
+
         },
 
-        error: (error) => {
+        error: (error: any) => {
 
           console.error(
             'VO / ALF API Error:',
@@ -203,13 +248,15 @@ export class BankBalanceComponent implements OnInit {
           this.voAlfList = [];
 
           this.loadingVoAlf = false;
+
         }
 
       });
 
-    // -------------------------------------------------------
+
+    // =======================================================
     // LOAD CMRC BALANCE
-    // -------------------------------------------------------
+    // =======================================================
 
     this.loadingBalance = true;
 
@@ -235,12 +282,14 @@ export class BankBalanceComponent implements OnInit {
           } else {
 
             this.cmrcBalance = 0;
+
           }
 
           this.loadingBalance = false;
+
         },
 
-        error: (error) => {
+        error: (error: any) => {
 
           console.error(
             'CMRC Balance API Error:',
@@ -250,16 +299,19 @@ export class BankBalanceComponent implements OnInit {
           this.cmrcBalance = 0;
 
           this.loadingBalance = false;
+
         }
 
       });
+
   }
+
 
   // =========================================================
   // LOAD LOAN TOTALS
   // =========================================================
 
-  loadLoanTotals(): void {
+  async loadLoanTotals(): Promise<void> {
 
     this.loanTotals = {};
 
@@ -271,11 +323,27 @@ export class BankBalanceComponent implements OnInit {
 
     this.availableYears = [];
 
+    this.loadingLoans = true;
+
+
+    // -------------------------------------------------------
+    // NO VO / ALF
+    // -------------------------------------------------------
+
     if (
       this.voAlfList.length === 0
     ) {
+
+      this.finishLoanLoading();
+
       return;
+
     }
+
+
+    // -------------------------------------------------------
+    // VALID VO / ALF
+    // -------------------------------------------------------
 
     const validVoAlfList =
       this.voAlfList.filter(
@@ -284,164 +352,377 @@ export class BankBalanceComponent implements OnInit {
           voAlf.id !== null
       );
 
+
     if (
       validVoAlfList.length === 0
     ) {
+
       this.finishLoanLoading();
+
       return;
+
     }
 
-    let completedRequests = 0;
 
-    const totalRequests =
-      validVoAlfList.length;
+    // =======================================================
+    // LOAD LOANS FOR ALL VO / ALF
+    // =======================================================
 
-    validVoAlfList.forEach(
-      (voAlf: VoAlf) => {
+    try {
 
-        const voAlfId =
-          voAlf.id!;
+      const loanLists: Loan[][] =
+        await Promise.all(
 
-        this.loanService
-          .getByVoAlfId(voAlfId)
-          .subscribe({
+          validVoAlfList.map(
+            (voAlf: VoAlf) =>
+              this.getLoansByVoAlfId(
+                voAlf.id!
+              )
+          )
 
-            next: (loans: Loan[]) => {
+        );
+
+
+      // =====================================================
+      // PROCESS EACH VO / ALF
+      // =====================================================
+
+      validVoAlfList.forEach(
+        (
+          voAlf: VoAlf,
+          index: number
+        ) => {
+
+          const voAlfId =
+            voAlf.id!;
+
+
+          const loans: Loan[] =
+            loanLists[index] || [];
+
+
+          // -------------------------------------------------
+          // INITIALIZE
+          // -------------------------------------------------
+
+          this.monthlyLoanTotals[
+            voAlfId
+          ] = {};
+
+
+          let totalLoanAmount = 0;
+
+
+          // -------------------------------------------------
+          // PROCESS LOANS
+          // -------------------------------------------------
+
+          loans.forEach(
+            (loan: Loan) => {
+
+              const disbursedAmount =
+                Number(
+                  loan.sanctionedAmount || 0
+                );
+
+
+              totalLoanAmount +=
+                disbursedAmount;
+
+
+              // -------------------------------------------
+              // LOAN DATE
+              // -------------------------------------------
+
+              if (
+                !loan.loanGivenDate
+              ) {
+
+                return;
+
+              }
+
+
+              const date =
+                this.parseDate(
+                  loan.loanGivenDate
+                );
+
+
+              if (!date) {
+
+                return;
+
+              }
+
+
+              const year =
+                date.getFullYear();
+
+
+              const month =
+                String(
+                  date.getMonth() + 1
+                ).padStart(2, '0');
+
+
+              const monthKey =
+                `${year}-${month}`;
+
+
+              // -------------------------------------------
+              // MONTHLY LOAN EXPENSE
+              // -------------------------------------------
+
+              if (
+                this.monthlyLoanTotals[
+                  voAlfId
+                ][monthKey] === undefined
+              ) {
+
+                this.monthlyLoanTotals[
+                  voAlfId
+                ][monthKey] = 0;
+
+              }
+
 
               this.monthlyLoanTotals[
                 voAlfId
-              ] = {};
+              ][monthKey] +=
+                disbursedAmount;
 
-              let totalLoanAmount = 0;
 
-              (loans || []).forEach(
-                (loan: Loan) => {
-
-                 const sanctionedAmount =
-  Number(
-    loan.sanctionedAmount || 0
-  );
-
-totalLoanAmount +=
-  sanctionedAmount;
-
-                  // -----------------------------------------
-                  // LOAN DATE
-                  // -----------------------------------------
-
-                  if (
-                    !loan.loanGivenDate
-                  ) {
-                    return;
-                  }
-
-                  const date =
-                    this.parseDate(
-                      loan.loanGivenDate
-                    );
-
-                  if (
-                    !date
-                  ) {
-                    return;
-                  }
-
-                  const year =
-                    date.getFullYear();
-
-                  const month =
-                    String(
-                      date.getMonth() + 1
-                    ).padStart(2, '0');
-
-                  const monthKey =
-                    `${year}-${month}`;
-
-                  // -----------------------------------------
-                  // MONTHLY LOAN EXPENSE
-                  // -----------------------------------------
-
-                  if (
-                    this.monthlyLoanTotals[
-                      voAlfId
-                    ][monthKey] === undefined
-                  ) {
-
-                    this.monthlyLoanTotals[
-                      voAlfId
-                    ][monthKey] = 0;
-                  }
-
-                  this.monthlyLoanTotals[
-                    voAlfId
-                  ][monthKey] +=
-                    sanctionedAmount;
-
-                  // -----------------------------------------
-                  // ALL MONTHS
-                  // -----------------------------------------
-
-                  if (
-                    !this.allLoanMonths.includes(
-                      monthKey
-                    )
-                  ) {
-
-                    this.allLoanMonths.push(
-                      monthKey
-                    );
-                  }
-
-                }
-              );
-
-              this.loanTotals[
-                voAlfId
-              ] = totalLoanAmount;
-
-              completedRequests++;
+              // -------------------------------------------
+              // ADD MONTH
+              // -------------------------------------------
 
               if (
-                completedRequests ===
-                totalRequests
+                !this.allLoanMonths.includes(
+                  monthKey
+                )
               ) {
 
-                this.finishLoanLoading();
+                this.allLoanMonths.push(
+                  monthKey
+                );
+
               }
 
-            },
-
-            error: (error) => {
-
-              console.error(
-                'Loan API Error:',
-                voAlfId,
-                error
-              );
-
-              this.loanTotals[
-                voAlfId
-              ] = 0;
-
-              this.monthlyLoanTotals[
-                voAlfId
-              ] = {};
-
-              completedRequests++;
-
-              if (
-                completedRequests ===
-                totalRequests
-              ) {
-
-                this.finishLoanLoading();
-              }
             }
+          );
 
-          });
-      }
-    );
+
+          // -------------------------------------------------
+          // TOTAL LOAN FOR VO / ALF
+          // -------------------------------------------------
+
+          this.loanTotals[
+            voAlfId
+          ] = totalLoanAmount;
+
+        }
+      );
+
+
+      // =====================================================
+      // FINISH
+      // =====================================================
+
+      this.finishLoanLoading();
+
+    }
+    catch (error: any) {
+
+      console.error(
+        'Loan Totals Error:',
+        error
+      );
+
+      this.finishLoanLoading();
+
+    }
+
   }
+
+
+  // =========================================================
+  // GET LOANS BY VO / ALF
+  // =========================================================
+  //
+  // NEW HIERARCHY:
+  //
+  // CMRC
+  //   ↓
+  // VO / ALF
+  //   ↓
+  // Village (inside VO / ALF)
+  //   ↓
+  // Group
+  //   ↓
+  // Women
+  //   ↓
+  // Loan
+  //
+  // No Village API is required here.
+  // =========================================================
+
+  private async getLoansByVoAlfId(
+    voAlfId: number
+  ): Promise<Loan[]> {
+
+    try {
+
+      // =====================================================
+      // 1. LOAD GROUPS DIRECTLY BY VO / ALF
+      // =====================================================
+
+      const groups: Group[] =
+        await firstValueFrom(
+          this.groupService.getByVoAlfId(
+            voAlfId
+          )
+        );
+
+
+      if (
+        !groups ||
+        groups.length === 0
+      ) {
+
+        return [];
+
+      }
+
+
+      // =====================================================
+      // 2. VALID GROUPS
+      // =====================================================
+
+      const validGroups =
+        groups.filter(
+          (group: Group) =>
+            group.id !== undefined &&
+            group.id !== null
+        );
+
+
+      if (
+        validGroups.length === 0
+      ) {
+
+        return [];
+
+      }
+
+
+      // =====================================================
+      // 3. LOAD WOMEN
+      // =====================================================
+
+      const womenRequests:
+        Observable<Women[]>[] =
+        validGroups.map(
+          (group: Group) =>
+            this.womenService
+              .getByGroupId(
+                group.id!
+              )
+        );
+
+
+      const womenLists:
+        Women[][] =
+        await firstValueFrom(
+          forkJoin(womenRequests)
+        );
+
+
+      const women: Women[] =
+        ([] as Women[]).concat(
+          ...womenLists
+        );
+
+
+      if (
+        women.length === 0
+      ) {
+
+        return [];
+
+      }
+
+
+      // =====================================================
+      // 4. VALID WOMEN
+      // =====================================================
+
+      const validWomen =
+        women.filter(
+          (woman: Women) =>
+            woman.id !== undefined &&
+            woman.id !== null
+        );
+
+
+      if (
+        validWomen.length === 0
+      ) {
+
+        return [];
+
+      }
+
+
+      // =====================================================
+      // 5. LOAD LOANS
+      // =====================================================
+
+      const loanRequests:
+        Observable<Loan[]>[] =
+        validWomen.map(
+          (woman: Women) =>
+            this.loanService
+              .getByWomanId(
+                woman.id!
+              )
+        );
+
+
+      const loanLists:
+        Loan[][] =
+        await firstValueFrom(
+          forkJoin(loanRequests)
+        );
+
+
+      // =====================================================
+      // 6. FLATTEN LOANS
+      // =====================================================
+
+      const loans: Loan[] =
+        ([] as Loan[]).concat(
+          ...loanLists
+        );
+
+
+      return loans;
+
+    }
+    catch (error: any) {
+
+      console.error(
+        'Get Loans By VO / ALF Error:',
+        voAlfId,
+        error
+      );
+
+      return [];
+
+    }
+
+  }
+
 
   // =========================================================
   // FINISH LOAN LOADING
@@ -449,15 +730,16 @@ totalLoanAmount +=
 
   finishLoanLoading(): void {
 
-    // Sort YYYY-MM
     this.allLoanMonths.sort();
 
-    // -----------------------------------------
+
+    // -------------------------------------------------------
     // CREATE FINANCIAL YEARS
-    // -----------------------------------------
+    // -------------------------------------------------------
 
     const yearSet =
       new Set<number>();
+
 
     this.allLoanMonths.forEach(
       (monthKey: string) => {
@@ -468,30 +750,28 @@ totalLoanAmount +=
         ] =
           monthKey.split('-');
 
+
         const year =
           Number(yearText);
+
 
         const month =
           Number(monthText);
 
-        /**
-         * Apr-Dec
-         * Financial Year starts in same year
-         *
-         * Jan-Mar
-         * Financial Year starts previous year
-         */
 
         const financialYearStart =
           month >= 4
             ? year
             : year - 1;
 
+
         yearSet.add(
           financialYearStart
         );
+
       }
     );
+
 
     this.availableYears =
       Array.from(yearSet)
@@ -502,14 +782,21 @@ totalLoanAmount +=
           ) => a - b
         );
 
-    // -----------------------------------------
+
+    // -------------------------------------------------------
     // DEFAULT = ALL
-    // -----------------------------------------
+    // -------------------------------------------------------
 
     this.selectedYear = null;
 
+
     this.updateYearMonths();
+
+
+    this.loadingLoans = false;
+
   }
+
 
   // =========================================================
   // UPDATE MONTHS
@@ -529,7 +816,9 @@ totalLoanAmount +=
         [...this.allLoanMonths];
 
       return;
+
     }
+
 
     // -------------------------------------------------------
     // SELECTED FINANCIAL YEAR
@@ -538,8 +827,10 @@ totalLoanAmount +=
     const startYear =
       this.selectedYear;
 
+
     const endYear =
       startYear + 1;
+
 
     this.loanMonths =
       this.allLoanMonths
@@ -552,35 +843,47 @@ totalLoanAmount +=
             ] =
               monthKey.split('-');
 
+
             const year =
               Number(yearText);
+
 
             const month =
               Number(monthText);
 
-            // Apr-Dec of start year
+
+            // APR - DEC
+
             if (
               year === startYear &&
               month >= 4
             ) {
 
               return true;
+
             }
 
-            // Jan-Mar of next year
+
+            // JAN - MAR
+
             if (
               year === endYear &&
               month <= 3
             ) {
 
               return true;
+
             }
 
+
             return false;
+
           }
         )
         .sort();
+
   }
+
 
   // =========================================================
   // YEAR CHANGE
@@ -589,7 +892,9 @@ totalLoanAmount +=
   onYearChange(): void {
 
     this.updateYearMonths();
+
   }
+
 
   // =========================================================
   // FINANCIAL YEAR LABEL
@@ -602,12 +907,16 @@ totalLoanAmount +=
     ) {
 
       return 'All';
+
     }
+
 
     return `${this.selectedYear}-${String(
       this.selectedYear + 1
     ).slice(-2)}`;
+
   }
+
 
   // =========================================================
   // SELECTED CMRC NAME
@@ -622,8 +931,11 @@ totalLoanAmount +=
           Number(this.selectedCmrcId)
       );
 
+
     return cmrc?.cmrcName || '';
+
   }
+
 
   // =========================================================
   // SEARCH
@@ -636,9 +948,13 @@ totalLoanAmount +=
         .trim()
         .toLowerCase();
 
+
     if (!search) {
+
       return this.voAlfList;
+
     }
+
 
     return this.voAlfList.filter(
       (voAlf: VoAlf) => {
@@ -648,18 +964,23 @@ totalLoanAmount +=
             voAlf.voAlfName || ''
           ).toLowerCase();
 
+
         const villageName =
           String(
             voAlf.villageName || ''
           ).toLowerCase();
 
+
         return (
           voAlfName.includes(search) ||
           villageName.includes(search)
         );
+
       }
     );
+
   }
+
 
   // =========================================================
   // TOTAL RECEIVED FUND
@@ -679,10 +1000,13 @@ totalLoanAmount +=
             voAlf.receivedFund || 0
           )
         );
+
       },
       0
     );
+
   }
+
 
   // =========================================================
   // MONTH FORMAT
@@ -698,12 +1022,14 @@ totalLoanAmount +=
     ] =
       monthKey.split('-');
 
+
     const date =
       new Date(
         Number(year),
         Number(month) - 1,
         1
       );
+
 
     return date.toLocaleString(
       'en-US',
@@ -712,7 +1038,9 @@ totalLoanAmount +=
         year: '2-digit'
       }
     );
+
   }
+
 
   // =========================================================
   // GET MONTHLY LOAN EXPENSE
@@ -728,7 +1056,9 @@ totalLoanAmount +=
         voAlfId
       ]?.[month] || 0
     );
+
   }
+
 
   // =========================================================
   // GET CUMULATIVE LOAN EXPENSE
@@ -741,6 +1071,7 @@ totalLoanAmount +=
 
     let totalExpense = 0;
 
+
     for (
       const currentMonth
       of this.allLoanMonths
@@ -749,18 +1080,25 @@ totalLoanAmount +=
       if (
         currentMonth > month
       ) {
+
         break;
+
       }
+
 
       totalExpense +=
         this.getMonthlyLoanExpense(
           voAlfId,
           currentMonth
         );
+
     }
 
+
     return totalExpense;
+
   }
+
 
   // =========================================================
   // GET MONTHLY REMAINING AMOUNT
@@ -777,17 +1115,21 @@ totalLoanAmount +=
         receivedFund || 0
       );
 
+
     const cumulativeExpense =
       this.getCumulativeLoanExpense(
         voAlfId,
         month
       );
 
+
     return (
       receivedAmount -
       cumulativeExpense
     );
+
   }
+
 
   // =========================================================
   // TOTAL LOAN AMOUNT FOR VO / ALF
@@ -802,7 +1144,9 @@ totalLoanAmount +=
         voAlfId
       ] || 0
     );
+
   }
+
 
   // =========================================================
   // CURRENT BALANCE
@@ -815,10 +1159,13 @@ totalLoanAmount +=
     if (
       !voAlf.id
     ) {
+
       return Number(
         voAlf.receivedFund || 0
       );
+
     }
+
 
     if (
       this.allLoanMonths.length === 0
@@ -827,19 +1174,24 @@ totalLoanAmount +=
       return Number(
         voAlf.receivedFund || 0
       );
+
     }
+
 
     const latestMonth =
       this.allLoanMonths[
         this.allLoanMonths.length - 1
       ];
 
+
     return this.getMonthlyRemainingAmount(
       voAlf.id,
       latestMonth,
       voAlf.receivedFund
     );
+
   }
+
 
   // =========================================================
   // CURRENT BALANCE FOR SELECTED FINANCIAL YEAR
@@ -852,10 +1204,13 @@ totalLoanAmount +=
     if (
       !voAlf.id
     ) {
+
       return Number(
         voAlf.receivedFund || 0
       );
+
     }
+
 
     if (
       this.loanMonths.length === 0
@@ -864,19 +1219,24 @@ totalLoanAmount +=
       return Number(
         voAlf.receivedFund || 0
       );
+
     }
+
 
     const latestMonth =
       this.loanMonths[
         this.loanMonths.length - 1
       ];
 
+
     return this.getMonthlyRemainingAmount(
       voAlf.id,
       latestMonth,
       voAlf.receivedFund
     );
+
   }
+
 
   // =========================================================
   // TOTAL LOAN AMOUNT
@@ -896,10 +1256,13 @@ totalLoanAmount +=
             voAlf.id!
           )
         );
+
       },
       0
     );
+
   }
+
 
   // =========================================================
   // TOTAL CURRENT BALANCE
@@ -919,10 +1282,13 @@ totalLoanAmount +=
             voAlf
           )
         );
+
       },
       0
     );
+
   }
+
 
   // =========================================================
   // UTILIZATION %
@@ -933,21 +1299,27 @@ totalLoanAmount +=
     const received =
       this.getTotalReceivedFund();
 
+
     const loanAmount =
       this.getTotalLoanAmount();
+
 
     if (
       received <= 0
     ) {
 
       return 0;
+
     }
+
 
     return (
       (loanAmount / received) *
       100
     );
+
   }
+
 
   // =========================================================
   // TOTAL MONTHLY REMAINING
@@ -971,10 +1343,13 @@ totalLoanAmount +=
             voAlf.receivedFund
           )
         );
+
       },
       0
     );
+
   }
+
 
   // =========================================================
   // TOTAL MONTHLY LOAN EXPENSE
@@ -997,10 +1372,13 @@ totalLoanAmount +=
             month
           )
         );
+
       },
       0
     );
+
   }
+
 
   // =========================================================
   // DATE PARSER
@@ -1011,10 +1389,16 @@ totalLoanAmount +=
   ): Date | null {
 
     if (!value) {
+
       return null;
+
     }
 
-    // Date object
+
+    // -------------------------------------------------------
+    // DATE OBJECT
+    // -------------------------------------------------------
+
     if (
       value instanceof Date
     ) {
@@ -1024,31 +1408,44 @@ totalLoanAmount +=
           value.getTime()
         )
       ) {
+
         return null;
+
       }
 
+
       return value;
+
     }
+
 
     const valueString =
       String(value);
 
-    // yyyy-MM-dd
+
+    // -------------------------------------------------------
+    // YYYY-MM-DD
+    // -------------------------------------------------------
+
     const match =
       valueString.match(
         /^(\d{4})-(\d{2})-(\d{2})/
       );
+
 
     if (match) {
 
       const year =
         Number(match[1]);
 
+
       const month =
         Number(match[2]);
 
+
       const day =
         Number(match[3]);
+
 
       const date =
         new Date(
@@ -1057,19 +1454,30 @@ totalLoanAmount +=
           day
         );
 
+
       if (
         isNaN(
           date.getTime()
         )
       ) {
+
         return null;
+
       }
 
+
       return date;
+
     }
+
+
+    // -------------------------------------------------------
+    // FALLBACK
+    // -------------------------------------------------------
 
     const date =
       new Date(valueString);
+
 
     if (
       isNaN(
@@ -1078,10 +1486,14 @@ totalLoanAmount +=
     ) {
 
       return null;
+
     }
 
+
     return date;
+
   }
+
 
   // =========================================================
   // EXPORT TO EXCEL
@@ -1099,9 +1511,16 @@ totalLoanAmount +=
       );
 
       return;
+
     }
 
+
     const excelData: any[] = [];
+
+
+    // =======================================================
+    // VO / ALF ROWS
+    // =======================================================
 
     this.voAlfList.forEach(
       (
@@ -1127,11 +1546,13 @@ totalLoanAmount +=
             Number(
               voAlf.receivedFund || 0
             )
+
         };
 
-        // -----------------------------------------
+
+        // ---------------------------------------------------
         // MONTHLY REMAINING
-        // -----------------------------------------
+        // ---------------------------------------------------
 
         this.loanMonths.forEach(
           (
@@ -1146,12 +1567,14 @@ totalLoanAmount +=
                 month,
                 voAlf.receivedFund
               );
+
           }
         );
 
-        // -----------------------------------------
-        // ADDITIONAL DATA
-        // -----------------------------------------
+
+        // ---------------------------------------------------
+        // TOTAL LOAN DISBURSED
+        // ---------------------------------------------------
 
         row[
           'Total Loan Disbursed'
@@ -1160,6 +1583,11 @@ totalLoanAmount +=
             voAlf.id!
           );
 
+
+        // ---------------------------------------------------
+        // CURRENT BALANCE
+        // ---------------------------------------------------
+
         row[
           'Current Balance'
         ] =
@@ -1167,9 +1595,12 @@ totalLoanAmount +=
             voAlf
           );
 
+
         excelData.push(row);
+
       }
     );
+
 
     // =======================================================
     // WORKSHEET
@@ -1181,6 +1612,7 @@ totalLoanAmount +=
         excelData
       );
 
+
     // =======================================================
     // COLUMN WIDTH
     // =======================================================
@@ -1189,12 +1621,18 @@ totalLoanAmount +=
       wch: number;
     }[] = [
 
-      { wch: 10 },  // Sr No
-      { wch: 30 },  // CMRC
-      { wch: 20 },  // Village
-      { wch: 28 },  // VO/ALF
-      { wch: 18 }   // Received Fund
+      { wch: 10 },
+
+      { wch: 30 },
+
+      { wch: 20 },
+
+      { wch: 28 },
+
+      { wch: 18 }
+
     ];
+
 
     this.loanMonths.forEach(
       () => {
@@ -1202,16 +1640,20 @@ totalLoanAmount +=
         columnWidths.push({
           wch: 16
         });
+
       }
     );
+
 
     columnWidths.push(
       { wch: 22 },
       { wch: 20 }
     );
 
+
     worksheet['!cols'] =
       columnWidths;
+
 
     // =======================================================
     // WORKBOOK
@@ -1221,11 +1663,13 @@ totalLoanAmount +=
       XLSX.WorkBook =
       XLSX.utils.book_new();
 
+
     XLSX.utils.book_append_sheet(
       workbook,
       worksheet,
       'Bank Balance'
     );
+
 
     // =======================================================
     // FILE NAME
@@ -1238,6 +1682,7 @@ totalLoanAmount +=
           '_'
         );
 
+
     const financialYear =
       this.getFinancialYearLabel()
         .replace(
@@ -1245,13 +1690,16 @@ totalLoanAmount +=
           ''
         );
 
+
     const fileName =
       `Bank_Balance_${cmrcName}_${financialYear}.xlsx`;
+
 
     XLSX.writeFile(
       workbook,
       fileName
     );
+
   }
 
 }

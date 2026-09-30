@@ -1,0 +1,629 @@
+/* =====================================================
+   GROUP PAGE
+===================================================== */
+
+.group-page {
+  padding: 20px;
+  background: #f8f9fa;
+  min-height: 100%;
+}
+
+
+/* =====================================================
+   PAGE HEADER
+===================================================== */
+
+.page-header {
+  padding: 4px 2px;
+}
+
+.page-header h4 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #212529;
+}
+
+.page-header p {
+  margin-top: 5px;
+  font-size: 14px;
+  color: #6c757d;
+}
+
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+.btn {
+  border-radius: 7px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  box-shadow: 0 2px 5px rgba(13, 110, 253, 0.15);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-danger:hover {
+  transform: translateY(-1px);
+}
+
+
+/* =====================================================
+   SUMMARY CARD
+===================================================== */
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  background: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+
+  padding: 18px 20px;
+
+  min-height: 100px;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  transition: all 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+
+.summary-card span {
+  display: block;
+
+  font-size: 13px;
+  color: #6c757d;
+
+  margin-bottom: 4px;
+}
+
+
+.summary-card h3 {
+  margin: 0;
+
+  font-size: 26px;
+  font-weight: 700;
+
+  color: #212529;
+}
+
+
+/* =====================================================
+   SUMMARY ICON
+===================================================== */
+
+.summary-icon {
+  width: 52px;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  font-size: 23px;
+}
+
+
+.summary-icon.blue {
+  background: #e8f1ff;
+  color: #0d6efd;
+}
+
+
+/* =====================================================
+   FILTER CARD
+===================================================== */
+
+.filter-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+
+.filter-card .card-body {
+  padding: 22px;
+}
+
+
+.form-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #343a40;
+  margin-bottom: 7px;
+}
+
+
+.form-select,
+.form-control {
+  min-height: 42px;
+
+  border-radius: 7px;
+
+  border: 1px solid #ced4da;
+
+  font-size: 14px;
+}
+
+
+.form-select:focus,
+.form-control:focus {
+  border-color: #86b7fe;
+
+  box-shadow:
+    0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+}
+
+
+.form-control[readonly] {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+
+/* =====================================================
+   SELECTED HIERARCHY
+===================================================== */
+
+.selected-hierarchy {
+  display: flex;
+
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+  padding: 12px 15px;
+
+  background: #f8f9fa;
+
+  border: 1px solid #e9ecef;
+
+  border-radius: 9px;
+}
+
+
+.hierarchy-item {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 7px 12px;
+
+  background: #ffffff;
+
+  border: 1px solid #dee2e6;
+
+  border-radius: 7px;
+
+  font-size: 13px;
+
+  color: #495057;
+}
+
+
+.hierarchy-item i {
+  color: #0d6efd;
+
+  font-size: 15px;
+}
+
+
+.hierarchy-item strong {
+  color: #212529;
+}
+
+
+.hierarchy-arrow {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  color: #6c757d;
+
+  font-size: 16px;
+}
+
+
+/* =====================================================
+   FORM CARD
+===================================================== */
+
+.form-card {
+  border: 1px solid #e1e5ea;
+
+  border-radius: 12px;
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 3px 12px rgba(0, 0, 0, 0.06);
+}
+
+
+.form-card .card-header {
+  background: #ffffff;
+
+  border-bottom: 1px solid #e9ecef;
+
+  padding: 16px 20px;
+}
+
+
+.form-card .card-header h5 {
+  margin: 0;
+
+  font-size: 18px;
+
+  font-weight: 600;
+
+  color: #212529;
+}
+
+
+.form-card .card-header small {
+  color: #6c757d;
+}
+
+
+.form-card .card-body {
+  padding: 22px;
+}
+
+
+/* =====================================================
+   GROUP NAME INPUT
+===================================================== */
+
+.form-card input {
+  height: 42px;
+}
+
+
+/* =====================================================
+   FORM ACTIONS
+===================================================== */
+
+.form-actions {
+  display: flex;
+
+  justify-content: flex-end;
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding-top: 5px;
+}
+
+
+/* =====================================================
+   TABLE CARD
+===================================================== */
+
+.table-card {
+  border: 1px solid #e5e7eb;
+
+  border-radius: 12px;
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+
+.table-card .card-header {
+  background: #ffffff;
+
+  border-bottom: 1px solid #e9ecef;
+
+  padding: 17px 20px;
+}
+
+
+.table-card .card-header h5 {
+  margin: 0;
+
+  font-size: 18px;
+
+  font-weight: 600;
+
+  color: #212529;
+}
+
+
+.table-card .card-header small {
+  color: #6c757d;
+
+  font-size: 13px;
+}
+
+
+/* =====================================================
+   RECORD COUNT
+===================================================== */
+
+.record-count {
+  display: inline-flex;
+
+  align-items: center;
+
+  padding: 6px 12px;
+
+  border-radius: 20px;
+
+  background: #e8f1ff;
+
+  color: #0d6efd;
+
+  font-size: 13px;
+
+  font-weight: 600;
+}
+
+
+/* =====================================================
+   TABLE
+===================================================== */
+
+.table {
+  margin-bottom: 0;
+
+  font-size: 14px;
+}
+
+
+.table thead th {
+  background: #f8f9fa;
+
+  color: #495057;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  padding: 13px 14px;
+
+  border-bottom: 1px solid #dee2e6;
+}
+
+
+.table tbody td {
+  padding: 13px 14px;
+
+  vertical-align: middle;
+
+  color: #495057;
+}
+
+
+.table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+
+.table tbody tr:hover {
+  background-color: #f8fbff;
+}
+
+
+.table tbody td strong {
+  color: #212529;
+
+  font-weight: 600;
+}
+
+
+/* =====================================================
+   ACTION BUTTONS
+===================================================== */
+
+.table .btn-sm {
+  min-width: 72px;
+
+  padding: 5px 9px;
+
+  border-radius: 6px;
+
+  font-size: 12px;
+
+  font-weight: 500;
+}
+
+
+.table .btn-sm i {
+  margin-right: 3px;
+}
+
+
+/* =====================================================
+   EMPTY STATE
+===================================================== */
+
+.table tbody tr td.text-muted {
+  color: #6c757d !important;
+}
+
+
+.table tbody tr td .bi {
+  color: #adb5bd;
+}
+
+
+/* =====================================================
+   CLOSE BUTTON
+===================================================== */
+
+.btn-close {
+  opacity: 0.65;
+
+  transition: all 0.2s ease;
+}
+
+
+.btn-close:hover {
+  opacity: 1;
+
+  transform: rotate(90deg);
+}
+
+
+/* =====================================================
+   DISABLED CONTROLS
+===================================================== */
+
+.form-select:disabled,
+.form-control:disabled,
+.btn:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.65;
+}
+
+
+/* =====================================================
+   SPINNER
+===================================================== */
+
+.spinner-border-sm {
+  width: 0.85rem;
+  height: 0.85rem;
+
+  border-width: 0.12em;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 992px) {
+
+  .group-page {
+    padding: 15px;
+  }
+
+  .page-header h4 {
+    font-size: 21px;
+  }
+
+  .summary-card {
+    min-height: 90px;
+  }
+
+}
+
+
+@media (max-width: 768px) {
+
+  .page-header {
+    flex-direction: column;
+
+    align-items: flex-start !important;
+
+    gap: 15px;
+  }
+
+
+  .page-header .btn {
+    width: 100%;
+  }
+
+
+  .selected-hierarchy {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+
+  .hierarchy-arrow {
+    transform: rotate(90deg);
+  }
+
+
+  .form-actions {
+    flex-direction: column-reverse;
+
+    align-items: stretch;
+  }
+
+
+  .form-actions .btn {
+    width: 100%;
+  }
+
+
+  .table {
+    min-width: 850px;
+  }
+
+}
+
+
+@media (max-width: 576px) {
+
+  .group-page {
+    padding: 10px;
+  }
+
+
+  .summary-card {
+    padding: 15px;
+  }
+
+
+  .summary-icon {
+    width: 45px;
+    height: 45px;
+
+    font-size: 20px;
+  }
+
+
+  .summary-card h3 {
+    font-size: 23px;
+  }
+
+
+  .filter-card .card-body,
+  .form-card .card-body {
+    padding: 15px;
+  }
+
+}

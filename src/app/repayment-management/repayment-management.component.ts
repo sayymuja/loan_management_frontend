@@ -1,11 +1,17 @@
+import {
+  Component,
+  Input,
+  OnInit,
+  OnChanges,
+  SimpleChanges
+} from '@angular/core';
 
-import { Component, Input, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 
 import { CmrcService, Cmrc } from '../services/cmrc.service';
 import { VoAlfService, VoAlf } from '../services/vo-alf.service';
+import { GroupService, Group } from '../services/group.service';
+import { WomenService, Women } from '../services/women.service';
 import { LoanService, Loan } from '../services/loan.service';
 
 import {
@@ -19,7 +25,9 @@ import {
   templateUrl: './repayment-management.component.html',
   styleUrls: ['./repayment-management.component.css']
 })
-export class RepaymentManagementComponent implements OnInit {
+export class RepaymentManagementComponent
+  implements OnInit, OnChanges {
+
 
   // =====================================================
   // LISTS
@@ -28,6 +36,10 @@ export class RepaymentManagementComponent implements OnInit {
   cmrcList: Cmrc[] = [];
 
   voAlfList: VoAlf[] = [];
+
+  groupList: Group[] = [];
+
+  womenList: Women[] = [];
 
   loanList: Loan[] = [];
 
@@ -42,11 +54,15 @@ export class RepaymentManagementComponent implements OnInit {
 
   selectedVoAlfId: number | null = null;
 
+  selectedGroupId: number | null = null;
+
+  selectedWomanId: number | null = null;
+
   selectedLoanId: number | null = null;
 
 
   // =====================================================
-  // LOAN
+  // LOAN INPUT
   // =====================================================
 
   @Input() loanId: number | null = null;
@@ -79,12 +95,21 @@ export class RepaymentManagementComponent implements OnInit {
 
 
   // =====================================================
+  // COMPONENT INITIALIZED
+  // =====================================================
+
+  private componentInitialized = false;
+
+
+  // =====================================================
   // CONSTRUCTOR
   // =====================================================
 
   constructor(
     private cmrcService: CmrcService,
     private voAlfService: VoAlfService,
+    private groupService: GroupService,
+    private womenService: WomenService,
     private loanService: LoanService,
     private repaymentService: RepaymentService
   ) {}
@@ -96,21 +121,60 @@ export class RepaymentManagementComponent implements OnInit {
 
   ngOnInit(): void {
 
+    this.componentInitialized = true;
+
     this.loadCmrc();
 
-    /*
-     * If component receives loanId from parent
-     */
-    if (this.loanId !== null) {
+    this.initializeInputLoan();
+  }
 
-      this.selectedLoanId = this.loanId;
+
+  // =====================================================
+  // INPUT CHANGE
+  // =====================================================
+
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (!this.componentInitialized) {
+      return;
+    }
+
+    if (
+      changes['loanId'] ||
+      changes['loan']
+    ) {
+      this.initializeInputLoan();
+    }
+  }
+
+
+  // =====================================================
+  // INITIALIZE INPUT LOAN
+  // =====================================================
+
+  private initializeInputLoan(): void {
+
+    if (this.loanId === null) {
+      return;
+    }
+
+    this.selectedLoanId = this.loanId;
+
+    if (
+      this.loan &&
+      this.loan.id === this.loanId
+    ) {
 
       this.selectedLoan = this.loan;
 
       this.loadOrGenerateSchedule();
 
     }
+    else {
 
+      this.loadLoanById(this.loanId);
+
+    }
   }
 
 
@@ -126,11 +190,11 @@ export class RepaymentManagementComponent implements OnInit {
 
         next: (data: Cmrc[]) => {
 
-          this.cmrcList = data;
+          this.cmrcList = data || [];
 
         },
 
-        error: (error) => {
+        error: (error: any) => {
 
           console.error(
             'CMRC API Error:',
@@ -142,7 +206,6 @@ export class RepaymentManagementComponent implements OnInit {
         }
 
       });
-
   }
 
 
@@ -154,11 +217,20 @@ export class RepaymentManagementComponent implements OnInit {
 
     this.voAlfList = [];
 
+    this.groupList = [];
+
+    this.womenList = [];
+
     this.loanList = [];
 
     this.repaymentList = [];
 
+
     this.selectedVoAlfId = null;
+
+    this.selectedGroupId = null;
+
+    this.selectedWomanId = null;
 
     this.selectedLoanId = null;
 
@@ -166,9 +238,7 @@ export class RepaymentManagementComponent implements OnInit {
 
 
     if (this.selectedCmrcId === null) {
-
       return;
-
     }
 
 
@@ -181,13 +251,13 @@ export class RepaymentManagementComponent implements OnInit {
 
         next: (data: VoAlf[]) => {
 
-          this.voAlfList = data;
+          this.voAlfList = data || [];
 
           this.loading = false;
 
         },
 
-        error: (error) => {
+        error: (error: any) => {
 
           console.error(
             'VO/ALF API Error:',
@@ -201,19 +271,27 @@ export class RepaymentManagementComponent implements OnInit {
         }
 
       });
-
   }
 
 
   // =====================================================
-  // LOAD LOANS BY VO / ALF
+  // VO / ALF CHANGE
   // =====================================================
 
-  loadLoans(): void {
+  onVoAlfChange(): void {
+
+    this.groupList = [];
+
+    this.womenList = [];
 
     this.loanList = [];
 
     this.repaymentList = [];
+
+
+    this.selectedGroupId = null;
+
+    this.selectedWomanId = null;
 
     this.selectedLoanId = null;
 
@@ -221,9 +299,150 @@ export class RepaymentManagementComponent implements OnInit {
 
 
     if (this.selectedVoAlfId === null) {
-
       return;
+    }
 
+
+    this.loadGroupsByVoAlf();
+  }
+
+
+  // =====================================================
+  // LOAD GROUPS BY VO / ALF
+  // =====================================================
+
+  loadGroupsByVoAlf(): void {
+
+    this.groupList = [];
+
+    this.womenList = [];
+
+    this.loanList = [];
+
+    this.repaymentList = [];
+
+
+    this.selectedGroupId = null;
+
+    this.selectedWomanId = null;
+
+    this.selectedLoanId = null;
+
+    this.selectedLoan = null;
+
+
+    if (this.selectedVoAlfId === null) {
+      return;
+    }
+
+
+    this.loading = true;
+
+
+    this.groupService
+      .getByVoAlfId(this.selectedVoAlfId)
+      .subscribe({
+
+        next: (data: Group[]) => {
+
+          this.groupList = data || [];
+
+          this.loading = false;
+
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Group API Error:',
+            error
+          );
+
+          this.groupList = [];
+
+          this.loading = false;
+
+        }
+
+      });
+  }
+
+
+  // =====================================================
+  // LOAD WOMEN BY GROUP
+  // =====================================================
+
+  loadWomenByGroup(): void {
+
+    this.womenList = [];
+
+    this.loanList = [];
+
+    this.repaymentList = [];
+
+
+    this.selectedWomanId = null;
+
+    this.selectedLoanId = null;
+
+    this.selectedLoan = null;
+
+
+    if (this.selectedGroupId === null) {
+      return;
+    }
+
+
+    this.loading = true;
+
+
+    this.womenService
+      .getByGroupId(this.selectedGroupId)
+      .subscribe({
+
+        next: (data: Women[]) => {
+
+          this.womenList = data || [];
+
+          this.loading = false;
+
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Women API Error:',
+            error
+          );
+
+          this.womenList = [];
+
+          this.loading = false;
+
+        }
+
+      });
+  }
+
+
+  // =====================================================
+  // LOAD LOANS BY WOMAN
+  // =====================================================
+
+  loadLoansByWoman(): void {
+
+    this.loanList = [];
+
+    this.repaymentList = [];
+
+
+    this.selectedLoanId = null;
+
+    this.selectedLoan = null;
+
+
+    if (this.selectedWomanId === null) {
+      return;
     }
 
 
@@ -231,18 +450,18 @@ export class RepaymentManagementComponent implements OnInit {
 
 
     this.loanService
-      .getByVoAlfId(this.selectedVoAlfId)
+      .getByWomanId(this.selectedWomanId)
       .subscribe({
 
         next: (data: Loan[]) => {
 
-          this.loanList = data;
+          this.loanList = data || [];
 
           this.loading = false;
 
         },
 
-        error: (error) => {
+        error: (error: any) => {
 
           console.error(
             'Loan API Error:',
@@ -256,7 +475,49 @@ export class RepaymentManagementComponent implements OnInit {
         }
 
       });
+  }
 
+
+  // =====================================================
+  // LOAD LOAN BY ID
+  // =====================================================
+
+  loadLoanById(id: number): void {
+
+    this.loading = true;
+
+
+    this.loanService
+      .getById(id)
+      .subscribe({
+
+        next: (data: Loan) => {
+
+          this.selectedLoan = data;
+
+          this.loan = data;
+
+          this.selectedLoanId =
+            data.id || id;
+
+          this.loading = false;
+
+          this.loadOrGenerateSchedule();
+
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Loan API Error:',
+            error
+          );
+
+          this.loading = false;
+
+        }
+
+      });
   }
 
 
@@ -272,9 +533,7 @@ export class RepaymentManagementComponent implements OnInit {
 
 
     if (this.selectedLoanId === null) {
-
       return;
-
     }
 
 
@@ -302,12 +561,7 @@ export class RepaymentManagementComponent implements OnInit {
     this.loan = loan;
 
 
-    /*
-     * Load existing repayment schedule.
-     * If no schedule exists, generate it.
-     */
     this.loadOrGenerateSchedule();
-
   }
 
 
@@ -318,9 +572,7 @@ export class RepaymentManagementComponent implements OnInit {
   loadOrGenerateSchedule(): void {
 
     if (this.selectedLoanId === null) {
-
       return;
-
     }
 
 
@@ -328,7 +580,7 @@ export class RepaymentManagementComponent implements OnInit {
 
 
     this.repaymentService
-      .getByLoanId(this.selectedLoanId)
+      .generateSchedule(this.selectedLoanId)
       .subscribe({
 
         next: (data: Repayment[]) => {
@@ -351,7 +603,7 @@ export class RepaymentManagementComponent implements OnInit {
 
         },
 
-        error: (error) => {
+        error: (error: any) => {
 
           console.error(
             'Repayment API Error:',
@@ -363,7 +615,6 @@ export class RepaymentManagementComponent implements OnInit {
         }
 
       });
-
   }
 
 
@@ -374,9 +625,7 @@ export class RepaymentManagementComponent implements OnInit {
   generateSchedule(): void {
 
     if (this.selectedLoanId === null) {
-
       return;
-
     }
 
 
@@ -391,13 +640,14 @@ export class RepaymentManagementComponent implements OnInit {
 
         next: (data: Repayment[]) => {
 
-          this.repaymentList = data || [];
+          this.repaymentList =
+            data || [];
 
           this.loading = false;
 
         },
 
-        error: (error) => {
+        error: (error: any) => {
 
           console.error(
             'Generate Schedule Error:',
@@ -413,7 +663,6 @@ export class RepaymentManagementComponent implements OnInit {
         }
 
       });
-
   }
 
 
@@ -426,9 +675,7 @@ export class RepaymentManagementComponent implements OnInit {
   ): void {
 
     if (!repayment.id) {
-
       return;
-
     }
 
 
@@ -454,19 +701,10 @@ export class RepaymentManagementComponent implements OnInit {
 
 
     if (remainingAmount < 0) {
-
       remainingAmount = 0;
-
     }
 
 
-    /*
-     * PARTIAL payment:
-     * show remaining amount.
-     *
-     * PENDING:
-     * show complete scheduled amount.
-     */
     if (
       repayment.paymentStatus === 'PARTIAL'
     ) {
@@ -492,7 +730,6 @@ export class RepaymentManagementComponent implements OnInit {
     this.regularRepayment = true;
 
     this.showPaymentModal = true;
-
   }
 
 
@@ -505,9 +742,7 @@ export class RepaymentManagementComponent implements OnInit {
   ): void {
 
     if (!repayment.id) {
-
       return;
-
     }
 
 
@@ -528,7 +763,6 @@ export class RepaymentManagementComponent implements OnInit {
 
 
     this.showPaymentModal = true;
-
   }
 
 
@@ -621,7 +855,7 @@ export class RepaymentManagementComponent implements OnInit {
 
           },
 
-          error: (error) => {
+          error: (error: any) => {
 
             console.error(
               'Edit Paid EMI Error:',
@@ -637,7 +871,6 @@ export class RepaymentManagementComponent implements OnInit {
         });
 
       return;
-
     }
 
 
@@ -666,7 +899,7 @@ export class RepaymentManagementComponent implements OnInit {
 
         },
 
-        error: (error) => {
+        error: (error: any) => {
 
           console.error(
             'Pay EMI Error:',
@@ -680,7 +913,6 @@ export class RepaymentManagementComponent implements OnInit {
         }
 
       });
-
   }
 
 
@@ -705,7 +937,6 @@ export class RepaymentManagementComponent implements OnInit {
         updated;
 
     }
-
   }
 
 
@@ -722,7 +953,6 @@ export class RepaymentManagementComponent implements OnInit {
     this.paymentAmount = 0;
 
     this.penaltyAmount = 0;
-
   }
 
 
@@ -740,7 +970,6 @@ export class RepaymentManagementComponent implements OnInit {
 
 
     return cmrc?.cmrcName || '';
-
   }
 
 
@@ -758,7 +987,72 @@ export class RepaymentManagementComponent implements OnInit {
 
 
     return voAlf?.voAlfName || '';
+  }
 
+
+  // =====================================================
+  // SELECTED VILLAGE NAME
+  // =====================================================
+  // Village is now stored directly in VO / ALF.
+  // =====================================================
+
+  getSelectedVillageName(): string {
+
+    const voAlf =
+      this.voAlfList.find(
+        v =>
+          v.id === this.selectedVoAlfId
+      );
+
+
+    return voAlf?.villageName || '';
+  }
+
+
+  // =====================================================
+  // SELECTED VO / ALF
+  // =====================================================
+
+  getSelectedVoAlf(): VoAlf | undefined {
+
+    return this.voAlfList.find(
+      voAlf =>
+        voAlf.id === this.selectedVoAlfId
+    );
+  }
+
+
+  // =====================================================
+  // SELECTED GROUP NAME
+  // =====================================================
+
+  getSelectedGroupName(): string {
+
+    const group =
+      this.groupList.find(
+        g =>
+          g.id === this.selectedGroupId
+      );
+
+
+    return group?.groupName || '';
+  }
+
+
+  // =====================================================
+  // SELECTED WOMAN NAME
+  // =====================================================
+
+  getSelectedWomanName(): string {
+
+    const woman =
+      this.womenList.find(
+        w =>
+          w.id === this.selectedWomanId
+      );
+
+
+    return woman?.womanName || '';
   }
 
 
@@ -772,7 +1066,6 @@ export class RepaymentManagementComponent implements OnInit {
       loan =>
         loan.id === this.selectedLoanId
     );
-
   }
 
 
@@ -782,10 +1075,6 @@ export class RepaymentManagementComponent implements OnInit {
 
   getTotalInstallments(): number {
 
-    /*
-     * Prefer loan repayment period.
-     * Fallback to repayment list length.
-     */
     if (
       this.selectedLoan &&
       this.selectedLoan.repaymentPeriodMonths !== undefined &&
@@ -795,12 +1084,10 @@ export class RepaymentManagementComponent implements OnInit {
       return Number(
         this.selectedLoan.repaymentPeriodMonths
       );
-
     }
 
 
     return this.repaymentList.length;
-
   }
 
 
@@ -814,7 +1101,6 @@ export class RepaymentManagementComponent implements OnInit {
       repayment =>
         repayment.paymentStatus === 'PAID'
     ).length;
-
   }
 
 
@@ -828,7 +1114,6 @@ export class RepaymentManagementComponent implements OnInit {
       repayment =>
         repayment.paymentStatus === 'PARTIAL'
     ).length;
-
   }
 
 
@@ -843,7 +1128,6 @@ export class RepaymentManagementComponent implements OnInit {
         !repayment.paymentStatus ||
         repayment.paymentStatus === 'PENDING'
     ).length;
-
   }
 
 
@@ -869,7 +1153,6 @@ export class RepaymentManagementComponent implements OnInit {
       },
       0
     );
-
   }
 
 
@@ -895,7 +1178,6 @@ export class RepaymentManagementComponent implements OnInit {
       },
       0
     );
-
   }
 
 
@@ -927,7 +1209,6 @@ export class RepaymentManagementComponent implements OnInit {
         },
         0
       );
-
   }
 
 
@@ -959,7 +1240,6 @@ export class RepaymentManagementComponent implements OnInit {
         },
         0
       );
-
   }
 
 
@@ -985,7 +1265,6 @@ export class RepaymentManagementComponent implements OnInit {
       },
       0
     );
-
   }
 
 
@@ -1011,7 +1290,6 @@ export class RepaymentManagementComponent implements OnInit {
       },
       0
     );
-
   }
 
 
@@ -1022,9 +1300,7 @@ export class RepaymentManagementComponent implements OnInit {
   getOutstandingPrincipal(): number {
 
     if (!this.selectedLoan) {
-
       return 0;
-
     }
 
 
@@ -1043,7 +1319,6 @@ export class RepaymentManagementComponent implements OnInit {
       principalPaid,
       0
     );
-
   }
 
 
@@ -1056,9 +1331,7 @@ export class RepaymentManagementComponent implements OnInit {
   ): number {
 
     if (!this.selectedLoan) {
-
       return 0;
-
     }
 
 
@@ -1106,7 +1379,6 @@ export class RepaymentManagementComponent implements OnInit {
       principalPaid,
       0
     );
-
   }
 
 
@@ -1154,7 +1426,6 @@ export class RepaymentManagementComponent implements OnInit {
     return pendingList.length > 0
       ? pendingList[0]
       : null;
-
   }
 
 
@@ -1169,7 +1440,6 @@ export class RepaymentManagementComponent implements OnInit {
 
 
     return nextEmi?.installmentDate || '';
-
   }
 
 
@@ -1180,9 +1450,7 @@ export class RepaymentManagementComponent implements OnInit {
   getLoanStatus(): string {
 
     if (!this.selectedLoan) {
-
       return '-';
-
     }
 
 
@@ -1200,12 +1468,10 @@ export class RepaymentManagementComponent implements OnInit {
     ) {
 
       return 'CLOSED';
-
     }
 
 
     return 'ACTIVE';
-
   }
 
 
@@ -1225,13 +1491,8 @@ export class RepaymentManagementComponent implements OnInit {
       );
 
       return;
-
     }
 
-
-    // ===================================================
-    // REPAYMENT DATA
-    // ===================================================
 
     const excelData =
       this.repaymentList.map(
@@ -1290,10 +1551,6 @@ export class RepaymentManagementComponent implements OnInit {
       );
 
 
-    // ===================================================
-    // SUMMARY
-    // ===================================================
-
     const totalScheduledEmi =
       this.getTotalScheduledEmi();
 
@@ -1322,19 +1579,11 @@ export class RepaymentManagementComponent implements OnInit {
       this.getPendingCount();
 
 
-    // ===================================================
-    // WORKSHEET
-    // ===================================================
-
     const worksheet: XLSX.WorkSheet =
       XLSX.utils.json_to_sheet(
         excelData
       );
 
-
-    // ===================================================
-    // SUMMARY
-    // ===================================================
 
     XLSX.utils.sheet_add_aoa(
       worksheet,
@@ -1350,13 +1599,30 @@ export class RepaymentManagementComponent implements OnInit {
         ],
 
         [
+          'CMRC',
+          this.getSelectedCmrcName()
+        ],
+
+        [
+          'VO / ALF',
+          this.getSelectedVoAlfName()
+        ],
+
+        [
+          'Village',
+          this.getSelectedVillageName()
+        ],
+
+        [
           'Group Name',
-          this.selectedLoan?.groupName || ''
+          this.selectedLoan?.groupName ||
+          this.getSelectedGroupName()
         ],
 
         [
           'Woman Name',
-          this.selectedLoan?.womanName || ''
+          this.selectedLoan?.womanName ||
+          this.getSelectedWomanName()
         ],
 
         [
@@ -1443,10 +1709,6 @@ export class RepaymentManagementComponent implements OnInit {
     );
 
 
-    // ===================================================
-    // WORKBOOK
-    // ===================================================
-
     const workbook: XLSX.WorkBook =
       XLSX.utils.book_new();
 
@@ -1457,10 +1719,6 @@ export class RepaymentManagementComponent implements OnInit {
       'Repayment Schedule'
     );
 
-
-    // ===================================================
-    // COLUMN WIDTH
-    // ===================================================
 
     worksheet['!cols'] = [
 
@@ -1478,24 +1736,14 @@ export class RepaymentManagementComponent implements OnInit {
     ];
 
 
-    // ===================================================
-    // FILE NAME
-    // ===================================================
-
     const fileName =
       `Loan_${this.selectedLoanId}_Repayment_Schedule.xlsx`;
 
-
-    // ===================================================
-    // DOWNLOAD
-    // =====================================================
 
     XLSX.writeFile(
       workbook,
       fileName
     );
-
   }
 
 }
-

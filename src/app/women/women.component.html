@@ -1,0 +1,872 @@
+<div class="container-fluid">
+
+  <!-- =====================================================
+       PAGE HEADER
+  ====================================================== -->
+
+  <div class="page-header d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+      <h2 class="mb-1">
+        Women Management
+      </h2>
+
+      <p class="text-muted mb-0">
+        Manage women under CMRC → VO / ALF → Group
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="selectedGroupId == null"
+      (click)="openAddForm()"
+    >
+      <i class="bi bi-plus-circle me-1"></i>
+      Add Woman
+    </button>
+
+  </div>
+
+
+  <!-- =====================================================
+       SUMMARY
+  ====================================================== -->
+
+  <div class="row mb-4">
+
+    <div class="col-md-3">
+
+      <div class="card shadow-sm border-0">
+
+        <div class="card-body">
+
+          <div class="text-muted small">
+            Total Women
+          </div>
+
+          <h3 class="mb-0">
+            {{ totalWomen }}
+          </h3>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       HIERARCHY FILTER
+  ====================================================== -->
+
+  <div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-body">
+
+      <div class="row g-3">
+
+        <!-- =================================================
+             CMRC
+        ================================================== -->
+
+        <div class="col-md-3">
+
+          <label class="form-label fw-semibold">
+            CMRC
+          </label>
+
+          <select
+            class="form-select"
+            [(ngModel)]="selectedCmrcId"
+            (ngModelChange)="onCmrcChange()"
+          >
+
+            <option [ngValue]="null">
+              All CMRC
+            </option>
+
+            <option
+              *ngFor="let cmrc of cmrcList"
+              [ngValue]="cmrc.id"
+            >
+              {{ cmrc.cmrcName }}
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- =================================================
+             VO / ALF
+        ================================================== -->
+
+        <div class="col-md-3">
+
+          <label class="form-label fw-semibold">
+            VO / ALF
+          </label>
+
+          <select
+            class="form-select"
+            [(ngModel)]="selectedVoAlfId"
+            (ngModelChange)="onVoAlfChange()"
+            [disabled]="selectedCmrcId == null"
+          >
+
+            <option [ngValue]="null">
+              All VO / ALF
+            </option>
+
+            <option
+              *ngFor="let voAlf of voAlfList"
+              [ngValue]="voAlf.id"
+            >
+              {{ voAlf.voAlfName }}
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- =================================================
+             VILLAGE
+        ================================================== -->
+
+        <div class="col-md-3">
+
+          <label class="form-label fw-semibold">
+            Village
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            [value]="selectedVillageName"
+            readonly
+            placeholder="Village"
+          />
+
+        </div>
+
+
+        <!-- =================================================
+             GROUP
+        ================================================== -->
+
+        <div class="col-md-3">
+
+          <label class="form-label fw-semibold">
+            Group
+          </label>
+
+          <select
+            class="form-select"
+            [(ngModel)]="selectedGroupId"
+            (ngModelChange)="onGroupChange()"
+            [disabled]="selectedVoAlfId == null"
+          >
+
+            <option [ngValue]="null">
+              All Groups
+            </option>
+
+            <option
+              *ngFor="let group of groupList"
+              [ngValue]="group.id"
+            >
+              {{ group.groupName }}
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- =================================================
+             SEARCH
+        ================================================== -->
+
+        <div class="col-md-6">
+
+          <label class="form-label fw-semibold">
+            Search Woman
+          </label>
+
+          <div class="input-group">
+
+            <span class="input-group-text">
+              <i class="bi bi-search"></i>
+            </span>
+
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="searchText"
+              placeholder="Search woman, husband, mobile, group or village..."
+            />
+
+            <button
+              *ngIf="searchText"
+              type="button"
+              class="btn btn-outline-secondary"
+              (click)="searchText = ''"
+            >
+              <i class="bi bi-x-lg"></i>
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       CURRENT FILTER
+  ====================================================== -->
+
+  <div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-body">
+
+      <div class="d-flex flex-wrap align-items-center gap-2">
+
+        <strong>
+          Current Filter:
+        </strong>
+
+
+        <!-- CMRC -->
+
+        <span
+          *ngIf="selectedCmrcId == null"
+          class="badge bg-secondary"
+        >
+          All CMRC
+        </span>
+
+        <span
+          *ngIf="selectedCmrcId != null"
+          class="badge bg-primary"
+        >
+          CMRC: {{ selectedCmrcName }}
+        </span>
+
+
+        <!-- VO / ALF -->
+
+        <span
+          *ngIf="selectedCmrcId != null && selectedVoAlfId == null"
+          class="badge bg-info text-dark"
+        >
+          All VO / ALF
+        </span>
+
+        <span
+          *ngIf="selectedVoAlfId != null"
+          class="badge bg-info text-dark"
+        >
+          VO / ALF: {{ selectedVoAlfName }}
+        </span>
+
+
+        <!-- GROUP -->
+
+        <span
+          *ngIf="selectedVoAlfId != null && selectedGroupId == null"
+          class="badge bg-secondary"
+        >
+          All Groups
+        </span>
+
+        <span
+          *ngIf="selectedGroupId != null"
+          class="badge bg-success"
+        >
+          Group: {{ selectedGroupName }}
+        </span>
+
+
+        <!-- SEARCH -->
+
+        <span
+          *ngIf="searchText"
+          class="badge bg-warning text-dark"
+        >
+          Search: {{ searchText }}
+        </span>
+
+
+        <!-- COUNT -->
+
+        <span class="badge bg-dark">
+          {{ totalWomen }} Women
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       ADD / EDIT FORM
+  ====================================================== -->
+
+  <div
+    *ngIf="showForm"
+    class="card shadow-sm border-0 mb-4 form-card"
+  >
+
+    <div class="card-header bg-primary text-white">
+
+      <h5 class="mb-0">
+
+        <i
+          class="bi"
+          [ngClass]="
+            isEditMode
+              ? 'bi-pencil-square'
+              : 'bi-person-plus'
+          "
+        ></i>
+
+        {{ isEditMode ? 'Edit Woman' : 'Add Woman' }}
+
+      </h5>
+
+    </div>
+
+
+    <div class="card-body">
+
+      <div class="row g-3">
+
+        <!-- CMRC -->
+
+        <div class="col-md-3">
+
+          <label class="form-label">
+            CMRC
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            [value]="selectedCmrcName"
+            readonly
+          />
+
+        </div>
+
+
+        <!-- VO / ALF -->
+
+        <div class="col-md-3">
+
+          <label class="form-label">
+            VO / ALF
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            [value]="selectedVoAlfName"
+            readonly
+          />
+
+        </div>
+
+
+        <!-- VILLAGE -->
+
+        <div class="col-md-3">
+
+          <label class="form-label">
+            Village
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            [value]="selectedVillageName"
+            readonly
+          />
+
+        </div>
+
+
+        <!-- GROUP -->
+
+        <div class="col-md-3">
+
+          <label class="form-label">
+            Group
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            [value]="selectedGroupName"
+            readonly
+          />
+
+        </div>
+
+
+        <!-- WOMAN NAME -->
+
+        <div class="col-md-4">
+
+          <label class="form-label">
+            Woman Name
+            <span class="text-danger">*</span>
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newWomen.womanName"
+            placeholder="Enter woman name"
+          />
+
+        </div>
+
+
+        <!-- HUSBAND NAME -->
+
+        <div class="col-md-4">
+
+          <label class="form-label">
+            Husband Name
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newWomen.husbandName"
+            placeholder="Enter husband name"
+          />
+
+        </div>
+
+
+        <!-- MOBILE -->
+
+        <div class="col-md-4">
+
+          <label class="form-label">
+            Mobile Number
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newWomen.mobileNo"
+            placeholder="Enter mobile number"
+            maxlength="10"
+          />
+
+        </div>
+
+
+        <!-- STATUS -->
+
+        <div class="col-md-4">
+
+          <label class="form-label">
+            Status
+          </label>
+
+          <select
+            class="form-select"
+            [(ngModel)]="newWomen.status"
+          >
+
+            <option value="ACTIVE">
+              ACTIVE
+            </option>
+
+            <option value="INACTIVE">
+              INACTIVE
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- ADDRESS -->
+
+        <div class="col-md-8">
+
+          <label class="form-label">
+            Address
+          </label>
+
+          <textarea
+            class="form-control"
+            rows="2"
+            [(ngModel)]="newWomen.address"
+            placeholder="Enter address"
+          ></textarea>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- FORM FOOTER -->
+
+    <div class="card-footer bg-white">
+
+      <div class="d-flex justify-content-end gap-2">
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          [disabled]="isSaving"
+          (click)="closeForm()"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="
+            isSaving ||
+            !newWomen.womanName?.trim()
+          "
+          (click)="saveWomen()"
+        >
+
+          <span
+            *ngIf="isSaving"
+            class="spinner-border spinner-border-sm me-1"
+          ></span>
+
+          <i
+            *ngIf="!isSaving"
+            class="bi"
+            [ngClass]="
+              isEditMode
+                ? 'bi-check-circle'
+                : 'bi-save'
+            "
+          ></i>
+
+          {{ isEditMode ? 'Update Woman' : 'Save Woman' }}
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       WOMEN TABLE
+  ====================================================== -->
+
+  <div class="card shadow-sm border-0">
+
+    <div class="card-header bg-white">
+
+      <div class="d-flex justify-content-between align-items-center">
+
+        <div>
+
+          <h5 class="mb-1">
+            Women List
+          </h5>
+
+          <small class="text-muted">
+
+
+            <!-- GROUP -->
+
+            <span *ngIf="selectedGroupId != null">
+
+              Women registered under
+
+              <strong>
+                {{ selectedGroupName }}
+              </strong>
+
+            </span>
+
+
+            <!-- VO / ALF -->
+
+            <span
+              *ngIf="
+                selectedGroupId == null &&
+                selectedVoAlfId != null
+              "
+            >
+
+              Women under
+
+              <strong>
+                {{ selectedVoAlfName }}
+              </strong>
+
+            </span>
+
+
+            <!-- CMRC -->
+
+            <span
+              *ngIf="
+                selectedGroupId == null &&
+                selectedVoAlfId == null &&
+                selectedCmrcId != null
+              "
+            >
+
+              Women under
+
+              <strong>
+                {{ selectedCmrcName }}
+              </strong>
+
+            </span>
+
+
+            <!-- ALL -->
+
+            <span
+              *ngIf="
+                selectedGroupId == null &&
+                selectedVoAlfId == null &&
+                selectedCmrcId == null
+              "
+            >
+              All registered women
+            </span>
+
+          </small>
+
+        </div>
+
+
+        <span class="badge bg-primary">
+          {{ totalWomen }} Women
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <!-- =================================================
+         TABLE
+    ================================================== -->
+
+    <div class="card-body p-0">
+
+      <!-- EMPTY -->
+
+      <div
+        *ngIf="filteredWomenList.length === 0"
+        class="text-center py-5"
+      >
+
+        <i class="bi bi-people fs-1 text-muted"></i>
+
+        <h5 class="mt-3">
+          No Women Found
+        </h5>
+
+        <p class="text-muted mb-0">
+
+          <span *ngIf="searchText">
+            No women match your search.
+          </span>
+
+          <span *ngIf="!searchText">
+            No women records are available
+            for the selected hierarchy.
+          </span>
+
+        </p>
+
+      </div>
+
+
+      <!-- TABLE -->
+
+      <div
+        *ngIf="filteredWomenList.length > 0"
+        class="table-responsive"
+      >
+
+        <table
+          class="table table-hover table-bordered mb-0 align-middle"
+        >
+
+          <thead class="table-light">
+
+            <tr>
+
+              <th
+                class="text-center"
+                style="width: 70px;"
+              >
+                Sr No
+              </th>
+
+              <th>
+                Woman Name
+              </th>
+
+              <th>
+                Husband Name
+              </th>
+
+              <th>
+                Mobile
+              </th>
+
+              <th>
+                Group
+              </th>
+
+              <th>
+                Village
+              </th>
+
+              <th class="text-center">
+                Status
+              </th>
+
+              <th
+                class="text-center"
+                style="width: 150px;"
+              >
+                Actions
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            <tr
+              *ngFor="
+                let women of filteredWomenList;
+                let i = index
+              "
+            >
+
+              <td class="text-center">
+                {{ i + 1 }}
+              </td>
+
+              <td>
+                <strong>
+                  {{ women.womanName || '-' }}
+                </strong>
+              </td>
+
+              <td>
+                {{ women.husbandName || '-' }}
+              </td>
+
+              <td>
+                {{ women.mobileNo || '-' }}
+              </td>
+
+              <td>
+                {{ women.groupName || '-' }}
+              </td>
+
+              <td>
+                {{ women.villageName || '-' }}
+              </td>
+
+              <td class="text-center">
+
+                <span
+                  class="badge"
+                  [ngClass]="
+                    women.status === 'ACTIVE'
+                      ? 'bg-success'
+                      : 'bg-secondary'
+                  "
+                >
+                  {{ women.status || 'N/A' }}
+                </span>
+
+              </td>
+
+              <td class="text-center">
+
+                <div
+                  class="btn-group"
+                  role="group"
+                >
+
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    title="Edit"
+                    (click)="openEditForm(women)"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    title="Delete"
+                    [disabled]="deletingId === women.id"
+                    (click)="deleteWomen(women.id!)"
+                  >
+
+                    <span
+                      *ngIf="deletingId === women.id"
+                      class="spinner-border spinner-border-sm"
+                    ></span>
+
+                    <i
+                      *ngIf="deletingId !== women.id"
+                      class="bi bi-trash"
+                    ></i>
+
+                  </button>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

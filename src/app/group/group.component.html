@@ -1,0 +1,637 @@
+<div class="group-page">
+
+  <!-- =====================================================
+       PAGE HEADER
+  ====================================================== -->
+  <div
+    class="page-header d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+      <h4>Group Management</h4>
+
+      <p class="text-muted mb-0">
+        Manage groups under CMRC → VO / ALF → Village
+      </p>
+    </div>
+
+    <!-- ADD GROUP -->
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="selectedVoAlfId == null"
+      (click)="openAddForm()">
+
+      <i class="bi bi-plus-lg me-1"></i>
+      Add Group
+
+    </button>
+
+  </div>
+
+
+  <!-- =====================================================
+       TOTAL GROUP
+  ====================================================== -->
+  <div class="row g-3 mb-4">
+
+    <div class="col-xl-3 col-md-6">
+
+      <div class="summary-card">
+
+        <div class="summary-icon blue">
+          <i class="bi bi-diagram-2-fill"></i>
+        </div>
+
+        <div>
+          <span>Total Groups</span>
+
+          <h3>
+            {{ totalGroups }}
+          </h3>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       FILTER
+       CMRC → VO / ALF
+  ====================================================== -->
+  <div class="card filter-card mb-4">
+
+    <div class="card-body">
+
+      <div class="row g-3 align-items-end">
+
+        <!-- =================================================
+             CMRC
+        ================================================== -->
+        <div class="col-md-4">
+
+          <label class="form-label fw-semibold">
+            CMRC
+          </label>
+
+          <select
+            class="form-select"
+            [(ngModel)]="selectedCmrcId"
+            (change)="onCmrcChange()">
+
+            <option [ngValue]="null">
+              -- Select CMRC --
+            </option>
+
+            <option
+              *ngFor="let cmrc of cmrcList"
+              [ngValue]="cmrc.id">
+
+              {{ cmrc.cmrcName }}
+
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- =================================================
+             VO / ALF
+        ================================================== -->
+        <div class="col-md-4">
+
+          <label class="form-label fw-semibold">
+            VO / ALF
+          </label>
+
+          <select
+            class="form-select"
+            [(ngModel)]="selectedVoAlfId"
+            [disabled]="selectedCmrcId == null"
+            (change)="onVoAlfChange()">
+
+            <option [ngValue]="null">
+              -- Select VO / ALF --
+            </option>
+
+            <option
+              *ngFor="let voAlf of voAlfList"
+              [ngValue]="voAlf.id">
+
+              {{ voAlf.voAlfName }}
+
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- =================================================
+             VILLAGE AUTOMATIC
+        ================================================== -->
+        <div class="col-md-4">
+
+          <label class="form-label fw-semibold">
+            Village
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            [value]="selectedVoAlfVillageName"
+            readonly>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           SELECTED HIERARCHY
+      ================================================== -->
+      <div
+        class="selected-hierarchy mt-4"
+        *ngIf="selectedCmrcId != null">
+
+        <!-- CMRC -->
+        <div class="hierarchy-item">
+
+          <i class="bi bi-building"></i>
+
+          <span>
+            <strong>CMRC:</strong>
+            {{ selectedCmrcName }}
+          </span>
+
+        </div>
+
+
+        <!-- ARROW -->
+        <div
+          class="hierarchy-arrow"
+          *ngIf="selectedVoAlfId != null">
+
+          <i class="bi bi-chevron-right"></i>
+
+        </div>
+
+
+        <!-- VO / ALF -->
+        <div
+          class="hierarchy-item"
+          *ngIf="selectedVoAlfId != null">
+
+          <i class="bi bi-people-fill"></i>
+
+          <span>
+            <strong>VO / ALF:</strong>
+            {{ selectedVoAlfName }}
+          </span>
+
+        </div>
+
+
+        <!-- ARROW -->
+        <div
+          class="hierarchy-arrow"
+          *ngIf="selectedVoAlfId != null">
+
+          <i class="bi bi-chevron-right"></i>
+
+        </div>
+
+
+        <!-- VILLAGE -->
+        <div
+          class="hierarchy-item"
+          *ngIf="selectedVoAlfId != null">
+
+          <i class="bi bi-geo-alt-fill"></i>
+
+          <span>
+            <strong>Village:</strong>
+            {{ selectedVoAlfVillageName }}
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       ADD / EDIT GROUP
+  ====================================================== -->
+  <div
+    class="card form-card mb-4"
+    *ngIf="showForm">
+
+    <!-- HEADER -->
+    <div
+      class="card-header d-flex justify-content-between align-items-center">
+
+      <div>
+
+        <h5 class="mb-1">
+
+          {{
+            isEditMode
+              ? 'Edit Group'
+              : 'Add Group'
+          }}
+
+        </h5>
+
+        <small class="text-muted">
+
+          {{
+            isEditMode
+              ? 'Update group information'
+              : 'Create new group'
+          }}
+
+        </small>
+
+      </div>
+
+      <button
+        type="button"
+        class="btn-close"
+        aria-label="Close"
+        (click)="closeForm()">
+      </button>
+
+    </div>
+
+
+    <!-- BODY -->
+    <div class="card-body">
+
+      <div class="row g-3">
+
+        <!-- =================================================
+             CMRC
+        ================================================== -->
+        <div class="col-md-4">
+
+          <label class="form-label fw-semibold">
+            CMRC
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            [value]="selectedCmrcName"
+            readonly>
+
+        </div>
+
+
+        <!-- =================================================
+             VO / ALF
+        ================================================== -->
+        <div class="col-md-4">
+
+          <label class="form-label fw-semibold">
+            VO / ALF
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            [value]="selectedVoAlfName"
+            readonly>
+
+        </div>
+
+
+        <!-- =================================================
+             VILLAGE
+        ================================================== -->
+        <div class="col-md-4">
+
+          <label class="form-label fw-semibold">
+            Village
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            [value]="selectedVoAlfVillageName"
+            readonly>
+
+        </div>
+
+
+        <!-- =================================================
+             GROUP NAME
+        ================================================== -->
+        <div class="col-md-6">
+
+          <label class="form-label fw-semibold">
+
+            Group Name
+
+            <span class="text-danger">
+              *
+            </span>
+
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Enter group name"
+            [(ngModel)]="newGroup.groupName"
+            name="groupName">
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           ACTION BUTTONS
+      ================================================== -->
+      <div class="d-flex justify-content-end gap-2 mt-4">
+
+        <!-- CANCEL -->
+        <button
+          type="button"
+          class="btn btn-light"
+          [disabled]="isSaving"
+          (click)="closeForm()">
+
+          <i class="bi bi-x-circle me-1"></i>
+          Cancel
+
+        </button>
+
+
+        <!-- SAVE / UPDATE -->
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="isSaving"
+          (click)="saveGroup()">
+
+          <span
+            *ngIf="isSaving"
+            class="spinner-border spinner-border-sm me-1">
+          </span>
+
+          <i
+            *ngIf="!isSaving"
+            class="bi me-1"
+            [ngClass]="
+              isEditMode
+                ? 'bi-check-circle'
+                : 'bi-save'
+            ">
+          </i>
+
+          {{
+            isSaving
+              ? 'Saving...'
+              : (
+                  isEditMode
+                    ? 'Update Group'
+                    : 'Save Group'
+                )
+          }}
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       GROUP TABLE
+  ====================================================== -->
+  <div class="card table-card">
+
+    <!-- TABLE HEADER -->
+    <div
+      class="card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+      <div>
+
+        <h5 class="mb-1">
+          Group List
+        </h5>
+
+        <small class="text-muted">
+
+          {{
+            selectedVoAlfId != null
+              ? 'Groups under selected VO / ALF'
+              : selectedCmrcId != null
+                ? 'Groups under selected CMRC'
+                : 'All groups'
+          }}
+
+        </small>
+
+      </div>
+
+
+      <!-- RECORD COUNT -->
+      <span class="record-count">
+
+        {{ filteredGroupList.length }}
+
+        Records
+
+      </span>
+
+    </div>
+
+
+    <!-- =====================================================
+         TABLE
+    ====================================================== -->
+    <div class="card-body p-0">
+
+      <div class="table-responsive">
+
+        <table
+          class="table table-hover table-bordered align-middle mb-0">
+
+          <!-- HEADER -->
+          <thead class="table-light">
+
+            <tr>
+
+              <th style="width: 80px;">
+                Sr No
+              </th>
+
+              <th>
+                Group Name
+              </th>
+
+              <th>
+                Village
+              </th>
+
+              <th>
+                VO / ALF
+              </th>
+
+              <th>
+                CMRC
+              </th>
+
+              <th
+                class="text-center"
+                style="width: 190px;">
+
+                Actions
+
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <!-- BODY -->
+          <tbody>
+
+            <!-- =================================================
+                 GROUP RECORDS
+            ================================================== -->
+            <tr
+              *ngFor="
+                let group of filteredGroupList;
+                let i = index
+              ">
+
+              <!-- SR NO -->
+              <td>
+                {{ i + 1 }}
+              </td>
+
+
+              <!-- GROUP -->
+              <td>
+
+                <strong>
+                  {{ group.groupName || '-' }}
+                </strong>
+
+              </td>
+
+
+              <!-- VILLAGE -->
+              <td>
+                {{ group.villageName || '-' }}
+              </td>
+
+
+              <!-- VO / ALF -->
+              <td>
+                {{ group.voAlfName || '-' }}
+              </td>
+
+
+              <!-- CMRC -->
+              <td>
+                {{ group.cmrcName || '-' }}
+              </td>
+
+
+              <!-- ACTIONS -->
+              <td class="text-center">
+
+                <div
+                  class="d-flex justify-content-center gap-2">
+
+                  <!-- EDIT -->
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    title="Edit Group"
+                    (click)="openEditForm(group)">
+
+                    <i class="bi bi-pencil-square"></i>
+                    Edit
+
+                  </button>
+
+
+                  <!-- DELETE -->
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    title="Delete Group"
+                    [disabled]="deletingId === group.id"
+                    (click)="deleteGroup(group.id!)">
+
+                    <span
+                      *ngIf="deletingId === group.id"
+                      class="spinner-border spinner-border-sm me-1">
+                    </span>
+
+                    <i
+                      *ngIf="deletingId !== group.id"
+                      class="bi bi-trash">
+                    </i>
+
+                    {{
+                      deletingId === group.id
+                        ? 'Deleting...'
+                        : 'Delete'
+                    }}
+
+                  </button>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+
+            <!-- =================================================
+                 NO GROUPS
+            ================================================== -->
+            <tr
+              *ngIf="filteredGroupList.length === 0">
+
+              <td
+                colspan="6"
+                class="text-center py-5 text-muted">
+
+                <i
+                  class="bi bi-inbox fs-1 d-block mb-2">
+                </i>
+
+                No groups found.
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

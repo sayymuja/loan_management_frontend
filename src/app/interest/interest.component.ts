@@ -22,47 +22,43 @@ import * as XLSX from 'xlsx';
    INTEREST RECORD
 ========================================================= */
 
-interface InterestRecord {
+export interface InterestRecord {
 
-  voAlfId: number;
+  loanId?: number;
 
-  cmrcId: number;
-
+  cmrcId?: number;
   cmrcName: string;
 
+  voAlfId?: number;
   voAlfName: string;
 
   villageName: string;
 
-  receivedFund: number;
-
-  loanId?: number;
-
+  womanId?: number;
   womanName: string;
 
+  womenCount: number;
+
+  groupId?: number;
   groupName: string;
 
-  // Actual disbursed loan amount
-  loanAmount: number;
-
-  // Original sanctioned loan amount
-  sanctionedAmount: number;
-
-  loanGivenDate?: string;
+  receivedFund: number;
 
   financialYear: number | null;
 
   interestRate: number | null;
 
+  sanctionedAmount: number;
+
   totalInterestReceived: number;
 
-  loanStatus?: string;
-
-  voAlfTotalInterest: number;
-
-  womenCount: number;
+  loanStatus: string;
 }
 
+
+/* =========================================================
+   COMPONENT
+========================================================= */
 
 @Component({
   selector: 'app-interest',
@@ -72,60 +68,77 @@ interface InterestRecord {
 export class InterestComponent implements OnInit {
 
 
-  // =========================================================
-  // DATA
-  // =========================================================
+  /* =======================================================
+     MASTER DATA
+  ======================================================= */
 
   cmrcList: Cmrc[] = [];
 
   voAlfList: VoAlf[] = [];
 
-  loansByVoAlf: {
-    [voAlfId: number]: Loan[];
-  } = {};
+  /*
+   * CLOSED loans used for Interest Details table
+   */
+  loanList: Loan[] = [];
+
+  /*
+   * ALL loans of selected CMRC.
+   *
+   * Used for Active / Closed KPI counts.
+   */
+  allLoanList: Loan[] = [];
+
+
+  /* =======================================================
+     SELECTION
+  ======================================================= */
+
+  selectedCmrcId: number | null = null;
+
+
+  /* =======================================================
+     INTEREST RECORDS
+  ======================================================= */
 
   interestRecords: InterestRecord[] = [];
 
   filteredInterestRecords: InterestRecord[] = [];
 
 
-  // =========================================================
-  // SELECTED CMRC
-  // =========================================================
-
-  selectedCmrcId: number | null = null;
-
-
-  // =========================================================
-  // SEARCH
-  // =========================================================
+  /* =======================================================
+     FILTERS
+  ======================================================= */
 
   searchText: string = '';
-
-
-  // =========================================================
-  // FILTERS
-  // =========================================================
-
-  availableYears: number[] = [];
-
-  availableInterestRates: number[] = [];
 
   selectedYear: number | null = null;
 
   selectedInterestRate: number | null = null;
 
+  availableYears: number[] = [];
 
-  // =========================================================
-  // LOADING
-  // =========================================================
-
-  loading = false;
+  availableInterestRates: number[] = [];
 
 
-  // =========================================================
-  // CONSTRUCTOR
-  // =========================================================
+  /* =======================================================
+     VO / ALF INTEREST
+  ======================================================= */
+
+  voAlfTotalInterest: {
+    [key: number]: number;
+  } = {};
+
+
+  /* =======================================================
+     LOADING
+  ======================================================= */
+
+  loading: boolean = false;
+
+
+  /* =======================================================
+     CONSTRUCTOR
+  ======================================================= */
 
   constructor(
     private cmrcService: CmrcService,
@@ -134,9 +147,9 @@ export class InterestComponent implements OnInit {
   ) {}
 
 
-  // =========================================================
-  // INIT
-  // =========================================================
+  /* =======================================================
+     INIT
+  ======================================================= */
 
   ngOnInit(): void {
 
@@ -145,11 +158,13 @@ export class InterestComponent implements OnInit {
   }
 
 
-  // =========================================================
-  // LOAD CMRC
-  // =========================================================
+  /* =======================================================
+     LOAD CMRC
+  ======================================================= */
 
   loadCmrc(): void {
+
+    this.loading = true;
 
     this.cmrcService.getAll().subscribe({
 
@@ -157,16 +172,20 @@ export class InterestComponent implements OnInit {
 
         this.cmrcList = data || [];
 
+        this.loading = false;
+
       },
 
       error: (error) => {
 
         console.error(
-          'CMRC API Error:',
+          'Error loading CMRC:',
           error
         );
 
         this.cmrcList = [];
+
+        this.loading = false;
 
       }
 
@@ -175,62 +194,119 @@ export class InterestComponent implements OnInit {
   }
 
 
-  // =========================================================
-  // CMRC CHANGE
-  // =========================================================
+  /* =======================================================
+     CMRC CHANGE
+  ======================================================= */
 
   onCmrcChange(): void {
 
-    // Reset VO / ALF
-    this.voAlfList = [];
-
-    // Reset loans
-    this.loansByVoAlf = {};
-
-    // Reset records
-    this.interestRecords = [];
-
-    this.filteredInterestRecords = [];
-
-    // Reset filters
-    this.availableYears = [];
-
-    this.availableInterestRates = [];
+    /*
+     * Reset filters
+     */
+    this.searchText = '';
 
     this.selectedYear = null;
 
     this.selectedInterestRate = null;
 
-    this.searchText = '';
+
+    /*
+     * Reset data
+     */
+    this.voAlfList = [];
+
+    this.loanList = [];
+
+    this.allLoanList = [];
+
+    this.interestRecords = [];
+
+    this.filteredInterestRecords = [];
+
+    this.availableYears = [];
+
+    this.availableInterestRates = [];
+
+    this.voAlfTotalInterest = {};
 
 
-    // No CMRC selected
-    if (
-      this.selectedCmrcId === null ||
-      this.selectedCmrcId === undefined
-    ) {
-
+    if (!this.selectedCmrcId) {
       return;
-
     }
 
 
-    // Load VO / ALF
-    this.loadVoAlf();
+    /*
+     * IMPORTANT:
+     *
+     * First load VO / ALF.
+     * After VO / ALF is loaded,
+     * load loans.
+     *
+     * This allows us to identify loans
+     * through VO / ALF hierarchy also.
+     */
+    this.voAlfService
+      .getByCmrcId(this.selectedCmrcId)
+      .subscribe({
+
+        next: (data: VoAlf[]) => {
+
+          this.voAlfList = data || [];
+
+          console.log(
+            'VO / ALF FOR SELECTED CMRC:',
+            this.voAlfList
+          );
+
+
+          this.loadClosedLoansByCmrc();
+
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Error loading VO / ALF:',
+            error
+          );
+
+          this.voAlfList = [];
+
+
+          /*
+           * Still try loading loans.
+           *
+           * Some LoanDto responses contain cmrcId
+           * directly.
+           */
+          this.loadClosedLoansByCmrc();
+
+        }
+
+      });
 
   }
 
 
-  // =========================================================
-  // LOAD VO / ALF
-  // =========================================================
+  /* =======================================================
+     LOAD LOANS FOR SELECTED CMRC
+     
+     ALL loans are stored in allLoanList.
+     
+     CLOSED loans are stored in loanList.
+  ======================================================= */
 
-  loadVoAlf(): void {
+  loadClosedLoansByCmrc(): void {
 
-    if (
-      this.selectedCmrcId === null ||
-      this.selectedCmrcId === undefined
-    ) {
+    if (!this.selectedCmrcId) {
+
+      this.loanList = [];
+
+      this.allLoanList = [];
+
+      this.interestRecords = [];
+
+      this.filteredInterestRecords = [];
 
       return;
 
@@ -240,54 +316,191 @@ export class InterestComponent implements OnInit {
     this.loading = true;
 
 
-    this.voAlfService
-      .getByCmrcId(this.selectedCmrcId)
-      .subscribe({
+    this.loanService.getAll().subscribe({
 
-        next: (data: VoAlf[]) => {
+      next: (allLoans: Loan[]) => {
 
-          this.voAlfList = data || [];
+        console.log(
+          '========== ALL LOANS FROM API =========='
+        );
 
-          this.loadLoans();
+        console.log(allLoans);
 
-        },
 
-        error: (error) => {
+        /* =================================================
+           GET VO / ALF IDs OF SELECTED CMRC
+        ================================================= */
 
-          console.error(
-            'VO / ALF API Error:',
-            error
+        const cmrcVoAlfIds =
+          this.voAlfList
+            .map(
+              (vo: VoAlf) =>
+                Number(vo.id)
+            )
+            .filter(
+              (id: number) =>
+                !isNaN(id)
+            );
+
+
+        console.log(
+          'VO / ALF IDs FOR SELECTED CMRC:',
+          cmrcVoAlfIds
+        );
+
+
+        /* =================================================
+           GET ALL LOANS OF SELECTED CMRC
+           
+           Match:
+           1. Direct cmrcId
+           OR
+           2. voAlfId belongs to selected CMRC
+        ================================================= */
+
+        this.allLoanList =
+          allLoans.filter(
+            (loan: Loan) => {
+
+              const directCmrcMatch =
+                loan.cmrcId !== undefined &&
+                loan.cmrcId !== null &&
+                Number(loan.cmrcId) ===
+                Number(this.selectedCmrcId);
+
+
+              const voAlfMatch =
+                loan.voAlfId !== undefined &&
+                loan.voAlfId !== null &&
+                cmrcVoAlfIds.includes(
+                  Number(loan.voAlfId)
+                );
+
+
+              return (
+                directCmrcMatch ||
+                voAlfMatch
+              );
+
+            }
           );
 
-          this.voAlfList = [];
 
-          this.loading = false;
+        console.log(
+          '========== ALL LOANS FOR SELECTED CMRC =========='
+        );
 
-        }
+        console.log(
+          this.allLoanList
+        );
 
-      });
+
+        /* =================================================
+           CLOSED LOANS ONLY
+           
+           These are used by Interest Details table.
+        ================================================= */
+
+        this.loanList =
+          this.allLoanList.filter(
+            (loan: Loan) =>
+              this.normalizeStatus(
+                loan.loanStatus
+              ) === 'CLOSED'
+          );
+
+
+        console.log(
+          '========== CLOSED LOANS =========='
+        );
+
+        console.log(
+          this.loanList
+        );
+
+
+        /* =================================================
+           DEBUG COUNTS
+        ================================================= */
+
+        const activeCount =
+          this.allLoanList.filter(
+            (loan: Loan) =>
+              this.normalizeStatus(
+                loan.loanStatus
+              ) === 'ACTIVE'
+          ).length;
+
+
+        const closedCount =
+          this.allLoanList.filter(
+            (loan: Loan) =>
+              this.normalizeStatus(
+                loan.loanStatus
+              ) === 'CLOSED'
+          ).length;
+
+
+        console.log(
+          'ACTIVE LOAN COUNT:',
+          activeCount
+        );
+
+
+        console.log(
+          'CLOSED LOAN COUNT:',
+          closedCount
+        );
+
+
+        /* =================================================
+           BUILD INTEREST RECORDS
+        ================================================= */
+
+        this.buildInterestRecords();
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error loading loans:',
+          error
+        );
+
+        this.allLoanList = [];
+
+        this.loanList = [];
+
+        this.interestRecords = [];
+
+        this.filteredInterestRecords = [];
+
+        this.loading = false;
+
+      }
+
+    });
 
   }
 
 
-  // =========================================================
-  // LOAD LOANS FOR ALL VO / ALF
-  // =========================================================
+  /* =======================================================
+     BUILD INTEREST RECORDS
+     
+     ONLY CLOSED LOANS
+  ======================================================= */
 
-  loadLoans(): void {
-
-    this.loansByVoAlf = {};
+  buildInterestRecords(): void {
 
     this.interestRecords = [];
 
-    this.filteredInterestRecords = [];
-
-    this.availableYears = [];
-
-    this.availableInterestRates = [];
+    this.voAlfTotalInterest = {};
 
 
-    if (this.voAlfList.length === 0) {
+    if (!this.selectedCmrcId) {
+
+      this.filteredInterestRecords = [];
 
       this.loading = false;
 
@@ -296,482 +509,617 @@ export class InterestComponent implements OnInit {
     }
 
 
-    let completedRequests = 0;
+    /*
+     * Safety filter.
+     *
+     * Even if loanList somehow contains ACTIVE records,
+     * they will never be added to Interest Records.
+     */
+    const closedLoans =
+      this.loanList.filter(
+        (loan: Loan) =>
+          this.normalizeStatus(
+            loan.loanStatus
+          ) === 'CLOSED'
+      );
 
 
-    this.voAlfList.forEach(
-      (voAlf: VoAlf) => {
+    /* =====================================================
+       SELECTED CMRC
+    ===================================================== */
+
+    const selectedCmrc =
+      this.cmrcList.find(
+        (cmrc: Cmrc) =>
+          Number(cmrc.id) ===
+          Number(this.selectedCmrcId)
+      );
 
 
-        // ---------------------------------------------------
-        // VO / ALF ID CHECK
-        // ---------------------------------------------------
+    const selectedCmrcName =
+      selectedCmrc?.cmrcName || '-';
+
+
+    /* =====================================================
+       WOMEN COUNT BY VO / ALF
+    ===================================================== */
+
+    const womenByVoAlf: {
+      [key: number]: Set<string>
+    } = {};
+
+
+    closedLoans.forEach(
+      (loan: Loan) => {
 
         if (
-          voAlf.id === undefined ||
-          voAlf.id === null
+          loan.voAlfId === undefined ||
+          loan.voAlfId === null
         ) {
-
-          completedRequests++;
-
-
-          if (
-            completedRequests ===
-            this.voAlfList.length
-          ) {
-
-            this.buildInterestRecords();
-
-          }
 
           return;
 
         }
 
 
-        const voAlfId: number =
-          voAlf.id;
+        const voAlfId =
+          Number(loan.voAlfId);
 
 
-        // ---------------------------------------------------
-        // LOAD LOANS
-        // ---------------------------------------------------
+        if (!womenByVoAlf[voAlfId]) {
 
-        this.loanService
-          .getByVoAlfId(voAlfId)
-          .subscribe({
+          womenByVoAlf[voAlfId] =
+            new Set<string>();
 
-            next: (loans: Loan[]) => {
-
-              this.loansByVoAlf[voAlfId] =
-                loans || [];
+        }
 
 
-              completedRequests++;
+        if (
+          loan.womanName &&
+          loan.womanName.trim() !== ''
+        ) {
 
+          womenByVoAlf[voAlfId].add(
+            loan.womanName.trim()
+          );
 
-              if (
-                completedRequests ===
-                this.voAlfList.length
-              ) {
-
-                this.buildInterestRecords();
-
-              }
-
-            },
-
-
-            error: (error) => {
-
-              console.error(
-                'Loan API Error:',
-                voAlfId,
-                error
-              );
-
-
-              this.loansByVoAlf[voAlfId] =
-                [];
-
-
-              completedRequests++;
-
-
-              if (
-                completedRequests ===
-                this.voAlfList.length
-              ) {
-
-                this.buildInterestRecords();
-
-              }
-
-            }
-
-          });
+        }
 
       }
-
     );
 
-  }
+
+    /* =====================================================
+       CREATE INTEREST RECORDS
+    ===================================================== */
+
+    closedLoans.forEach(
+      (loan: Loan) => {
+
+        const voAlfId =
+          loan.voAlfId !== undefined &&
+          loan.voAlfId !== null
+            ? Number(loan.voAlfId)
+            : undefined;
 
 
-  // =========================================================
-  // BUILD INTEREST RECORDS
-  // =========================================================
-
-  buildInterestRecords(): void {
-
-    this.interestRecords = [];
-
-    this.availableYears = [];
-
-    this.availableInterestRates = [];
+        const voAlf =
+          voAlfId !== undefined
+            ? this.voAlfList.find(
+                (item: VoAlf) =>
+                  Number(item.id) ===
+                  voAlfId
+              )
+            : undefined;
 
 
-    // =======================================================
-    // LOOP VO / ALF
-    // =======================================================
+        /* ================================================
+           VO / ALF NAME
+        ================================================= */
 
-    this.voAlfList.forEach(
-      (voAlf: VoAlf) => {
-
-
-        if (
-          voAlf.id === undefined ||
-          voAlf.id === null
-        ) {
-
-          return;
-
-        }
+        const voAlfName =
+          loan.voAlfName ||
+          (voAlf as any)?.voAlfName ||
+          '-';
 
 
-        const voAlfId: number =
-          voAlf.id;
+        /* ================================================
+           VILLAGE
+        ================================================= */
+
+        const villageName =
+          loan.villageName ||
+          (voAlf as any)?.villageName ||
+          '-';
 
 
-        const loans: Loan[] =
-          this.loansByVoAlf[voAlfId] || [];
+        /* ================================================
+           GROUP
+        ================================================= */
+
+        const groupName =
+          loan.groupName ||
+          '-';
 
 
-        // ===================================================
-        // VO / ALF TOTAL INTEREST
-        // ===================================================
+        /* ================================================
+           RECEIVED FUND
+        ================================================= */
 
-        const voAlfTotalInterest =
-          loans.reduce(
-            (
-              total: number,
-              loan: Loan
-            ) => {
-
-              return (
-                total +
-                this.getLoanInterest(loan)
-              );
-
-            },
-            0
+        const receivedFund =
+          this.getVoAlfReceivedFund(
+            voAlf
           );
 
 
-        // ===================================================
-        // WOMEN COUNT
-        // ===================================================
+        /* ================================================
+           SANCTIONED AMOUNT
+        ================================================= */
+
+        const sanctionedAmount =
+          Number(
+            loan.sanctionedAmount
+          ) || 0;
+
+
+        /* ================================================
+           INTEREST RECEIVED
+        ================================================= */
+
+        const totalInterestReceived =
+          Number(
+            loan.totalInterestReceived
+          ) || 0;
+
+
+        /* ================================================
+           FINANCIAL YEAR
+        ================================================= */
+
+        const financialYear =
+          this.getLoanYear(
+            loan.loanGivenDate
+          );
+
+
+        /* ================================================
+           INTEREST RATE
+        ================================================= */
+
+        const interestRate =
+          loan.interestRate !== undefined &&
+          loan.interestRate !== null
+            ? Number(
+                loan.interestRate
+              )
+            : null;
+
+
+        /* ================================================
+           STATUS
+        ================================================= */
+
+        const loanStatus =
+          this.normalizeStatus(
+            loan.loanStatus
+          );
+
+
+        /* ================================================
+           WOMEN COUNT
+        ================================================= */
 
         const womenCount =
-          loans.length;
+          voAlfId !== undefined &&
+          womenByVoAlf[voAlfId]
+            ? womenByVoAlf[voAlfId].size
+            : 0;
 
 
-        // ===================================================
-        // LOOP EACH LOAN / WOMAN
-        // ===================================================
+        /* ================================================
+           CREATE RECORD
+        ================================================= */
 
-        loans.forEach(
-          (loan: Loan) => {
+        const record: InterestRecord = {
 
+          loanId:
+            loan.id,
 
-            // ------------------------------------------------
-            // FINANCIAL YEAR
-            // ------------------------------------------------
+          cmrcId:
+            loan.cmrcId ||
+            this.selectedCmrcId ||
+            undefined,
 
-            const financialYear =
-              this.getLoanYear(loan);
+          cmrcName:
+            loan.cmrcName ||
+            selectedCmrcName,
 
+          voAlfId:
+            loan.voAlfId,
 
-            // ------------------------------------------------
-            // INTEREST RATE
-            // ------------------------------------------------
+          voAlfName:
+            voAlfName,
 
-            let interestRate:
-              number | null = null;
+          villageName:
+            villageName,
 
+          womanId:
+            loan.womanId,
 
-            if (
-              loan.interestRate !== undefined &&
-              loan.interestRate !== null
-            ) {
+          womanName:
+            loan.womanName ||
+            '-',
 
-              interestRate =
-                Number(
-                  loan.interestRate
-                );
+          womenCount:
+            womenCount,
 
-            }
+          groupId:
+            loan.groupId,
 
+          groupName:
+            groupName,
 
-            // ------------------------------------------------
-            // AVAILABLE YEARS
-            // ------------------------------------------------
+          receivedFund:
+            receivedFund,
 
-            if (
-              financialYear !== null &&
-              !this.availableYears.includes(
-                financialYear
-              )
-            ) {
+          financialYear:
+            financialYear,
 
-              this.availableYears.push(
-                financialYear
-              );
+          interestRate:
+            interestRate,
 
-            }
+          sanctionedAmount:
+            sanctionedAmount,
 
+          totalInterestReceived:
+            totalInterestReceived,
 
-            // ------------------------------------------------
-            // AVAILABLE INTEREST RATES
-            // ------------------------------------------------
+          loanStatus:
+            loanStatus
 
-            if (
-              interestRate !== null &&
-              !this.availableInterestRates.includes(
-                interestRate
-              )
-            ) {
-
-              this.availableInterestRates.push(
-                interestRate
-              );
-
-            }
+        };
 
 
-            // ------------------------------------------------
-            // CREATE RECORD
-            // ------------------------------------------------
-
-            const record:
-              InterestRecord = {
-
-              voAlfId:
-                voAlfId,
-
-              cmrcId:
-                voAlf.cmrcId ?? 0,
-
-              cmrcName:
-                this.getCmrcName(
-                  voAlf.cmrcId
-                ),
-
-              voAlfName:
-                voAlf.voAlfName || '-',
-
-              villageName:
-                voAlf.villageName || '-',
-
-              receivedFund:
-                Number(
-                  voAlf.receivedFund || 0
-                ),
-
-              loanId:
-                loan.id,
-
-              womanName:
-                loan.womanName || '-',
-
-              groupName:
-                loan.groupName || '-',
+        this.interestRecords.push(
+          record
+        );
 
 
-              // =============================================
-              // ACTUAL DISBURSED LOAN AMOUNT
-              // =============================================
+        /* ================================================
+           VO / ALF TOTAL INTEREST
+        ================================================= */
 
-              loanAmount:
-                Number(
-                  loan.loanAmount || 0
-                ),
+        if (
+          voAlfId !== undefined
+        ) {
 
+          if (
+            this.voAlfTotalInterest[
+              voAlfId
+            ] === undefined
+          ) {
 
-              // =============================================
-              // SANCTIONED AMOUNT
-              // =============================================
-
-              sanctionedAmount:
-                Number(
-                  loan.sanctionedAmount || 0
-                ),
-
-
-              loanGivenDate:
-                loan.loanGivenDate,
-
-              financialYear:
-                financialYear,
-
-              interestRate:
-                interestRate,
-
-              totalInterestReceived:
-                this.getLoanInterest(
-                  loan
-                ),
-
-              loanStatus:
-                loan.loanStatus || '-',
-
-              voAlfTotalInterest:
-                voAlfTotalInterest,
-
-              womenCount:
-                womenCount
-
-            };
-
-
-            this.interestRecords.push(
-              record
-            );
+            this.voAlfTotalInterest[
+              voAlfId
+            ] = 0;
 
           }
 
+
+          this.voAlfTotalInterest[
+            voAlfId
+          ] +=
+            totalInterestReceived;
+
+        }
+
+      }
+    );
+
+
+    /* =====================================================
+       SORT RECORDS
+    ===================================================== */
+
+    this.interestRecords.sort(
+      (
+        a: InterestRecord,
+        b: InterestRecord
+      ) => {
+
+        const voCompare =
+          String(
+            a.voAlfName || ''
+          ).localeCompare(
+            String(
+              b.voAlfName || ''
+            )
+          );
+
+
+        if (voCompare !== 0) {
+
+          return voCompare;
+
+        }
+
+
+        const groupCompare =
+          String(
+            a.groupName || ''
+          ).localeCompare(
+            String(
+              b.groupName || ''
+            )
+          );
+
+
+        if (groupCompare !== 0) {
+
+          return groupCompare;
+
+        }
+
+
+        return String(
+          a.womanName || ''
+        ).localeCompare(
+          String(
+            b.womanName || ''
+          )
         );
 
       }
-
     );
 
 
-    // =======================================================
-    // SORT FINANCIAL YEARS
-    // =======================================================
+    /* =====================================================
+       AVAILABLE FINANCIAL YEARS
+       
+       CLOSED loans only.
+    ===================================================== */
 
-    this.availableYears.sort(
-      (
-        a: number,
-        b: number
-      ) => a - b
-    );
+    this.availableYears =
+      Array.from(
+        new Set(
+          this.interestRecords
+            .map(
+              (
+                record: InterestRecord
+              ) =>
+                record.financialYear
+            )
+            .filter(
+              (
+                year:
+                  | number
+                  | null
+              ): year is number =>
+                year !== null
+            )
+        )
+      ).sort(
+        (a: number, b: number) =>
+          b - a
+      );
 
 
-    // =======================================================
-    // SORT INTEREST RATES
-    // =======================================================
+    /* =====================================================
+       AVAILABLE INTEREST RATES
+       
+       CLOSED loans only.
+    ===================================================== */
 
-    this.availableInterestRates.sort(
-      (
-        a: number,
-        b: number
-      ) => a - b
-    );
+    this.availableInterestRates =
+      Array.from(
+        new Set(
+          this.interestRecords
+            .map(
+              (
+                record: InterestRecord
+              ) =>
+                record.interestRate
+            )
+            .filter(
+              (
+                rate:
+                  | number
+                  | null
+              ): rate is number =>
+                rate !== null
+            )
+        )
+      ).sort(
+        (a: number, b: number) =>
+          a - b
+      );
 
 
-    // =======================================================
-    // INITIAL FILTER
-    // =======================================================
+    /* =====================================================
+       APPLY TABLE FILTERS
+    ===================================================== */
 
     this.applyFilters();
 
 
-    // =======================================================
-    // LOADING COMPLETE
-    // =======================================================
-
     this.loading = false;
-
-
-    console.log(
-      'Interest Records:',
-      this.interestRecords
-    );
 
   }
 
 
-  // =========================================================
-  // SEARCH / FILTER
-  // =========================================================
+  /* =======================================================
+     NORMALIZE STATUS
+  ======================================================= */
+
+  normalizeStatus(
+    status: any
+  ): string {
+
+    if (
+      status === null ||
+      status === undefined
+    ) {
+
+      return '';
+
+    }
+
+
+    return String(status)
+      .trim()
+      .toUpperCase();
+
+  }
+
+
+  /* =======================================================
+     GET VO / ALF RECEIVED FUND
+  ======================================================= */
+
+  getVoAlfReceivedFund(
+    voAlf: VoAlf | undefined
+  ): number {
+
+    if (!voAlf) {
+
+      return 0;
+
+    }
+
+
+    const value =
+      (voAlf as any).receivedFund ??
+      (voAlf as any).totalReceivedFund ??
+      (voAlf as any).receivedAmount ??
+      (voAlf as any).totalAmount ??
+      0;
+
+
+    return Number(value) || 0;
+
+  }
+
+
+  /* =======================================================
+     APPLY TABLE FILTERS
+     
+     TABLE = CLOSED ONLY
+  ======================================================= */
 
   applyFilters(): void {
 
+    /*
+     * Always start with CLOSED records.
+     */
     let records =
-      [...this.interestRecords];
-
-
-    // =======================================================
-    // ONLY CLOSED LOANS
-    // =======================================================
-
-    records =
-      records.filter(
-        (record: InterestRecord) =>
-          (
-            record.loanStatus || ''
-          )
-            .toUpperCase() ===
-          'CLOSED'
+      this.interestRecords.filter(
+        (
+          record: InterestRecord
+        ) =>
+          this.normalizeStatus(
+            record.loanStatus
+          ) === 'CLOSED'
       );
 
 
-    // =======================================================
-    // SEARCH FILTER
-    // =======================================================
+    /* =====================================================
+       SEARCH
+    ===================================================== */
 
     if (
       this.searchText &&
-      this.searchText.trim()
+      this.searchText.trim() !== ''
     ) {
 
       const search =
         this.searchText
-          .trim()
-          .toLowerCase();
+          .toLowerCase()
+          .trim();
 
 
       records =
         records.filter(
-          (record: InterestRecord) =>
+          (
+            record: InterestRecord
+          ) => {
 
-            (record.womanName || '')
-              .toLowerCase()
-              .includes(search)
+            return (
 
-            ||
+              (
+                record.cmrcName || ''
+              )
+                .toLowerCase()
+                .includes(search)
 
-            (record.groupName || '')
-              .toLowerCase()
-              .includes(search)
+              ||
 
-            ||
+              (
+                record.voAlfName || ''
+              )
+                .toLowerCase()
+                .includes(search)
 
-            (record.voAlfName || '')
-              .toLowerCase()
-              .includes(search)
+              ||
 
-            ||
+              (
+                record.villageName || ''
+              )
+                .toLowerCase()
+                .includes(search)
 
-            (record.villageName || '')
-              .toLowerCase()
-              .includes(search)
+              ||
 
-            ||
+              (
+                record.womanName || ''
+              )
+                .toLowerCase()
+                .includes(search)
 
-            (record.cmrcName || '')
-              .toLowerCase()
-              .includes(search)
+              ||
 
+              (
+                record.groupName || ''
+              )
+                .toLowerCase()
+                .includes(search)
+
+              ||
+
+              String(
+                record.financialYear || ''
+              )
+                .toLowerCase()
+                .includes(search)
+
+              ||
+
+              String(
+                record.interestRate || ''
+              )
+                .toLowerCase()
+                .includes(search)
+
+            );
+
+          }
         );
 
     }
 
 
-    // =======================================================
-    // FINANCIAL YEAR FILTER
-    // =======================================================
+    /* =====================================================
+       FINANCIAL YEAR
+    ===================================================== */
 
     if (
-      this.selectedYear !== null &&
-      this.selectedYear !== undefined
+      this.selectedYear !== null
     ) {
 
       records =
         records.filter(
-          (record: InterestRecord) =>
+          (
+            record: InterestRecord
+          ) =>
             record.financialYear ===
             this.selectedYear
         );
@@ -779,28 +1127,29 @@ export class InterestComponent implements OnInit {
     }
 
 
-    // =======================================================
-    // INTEREST RATE FILTER
-    // =======================================================
+    /* =====================================================
+       INTEREST RATE
+    ===================================================== */
 
     if (
-      this.selectedInterestRate !== null &&
-      this.selectedInterestRate !== undefined
+      this.selectedInterestRate !== null
     ) {
 
       records =
         records.filter(
-          (record: InterestRecord) =>
-            record.interestRate ===
-            this.selectedInterestRate
+          (
+            record: InterestRecord
+          ) =>
+            Number(
+              record.interestRate
+            ) ===
+            Number(
+              this.selectedInterestRate
+            )
         );
 
     }
 
-
-    // =======================================================
-    // FINAL RESULT
-    // =======================================================
 
     this.filteredInterestRecords =
       records;
@@ -808,9 +1157,11 @@ export class InterestComponent implements OnInit {
   }
 
 
-  // =========================================================
-  // YEAR FILTER
-  // =========================================================
+  /* =======================================================
+     YEAR CHANGE
+     
+     Table + KPI automatically update.
+  ======================================================= */
 
   onYearChange(): void {
 
@@ -819,9 +1170,9 @@ export class InterestComponent implements OnInit {
   }
 
 
-  // =========================================================
-  // INTEREST RATE FILTER
-  // =========================================================
+  /* =======================================================
+     RATE CHANGE
+  ======================================================= */
 
   onInterestRateChange(): void {
 
@@ -830,9 +1181,9 @@ export class InterestComponent implements OnInit {
   }
 
 
-  // =========================================================
-  // CLEAR FILTERS
-  // =========================================================
+  /* =======================================================
+     CLEAR FILTERS
+  ======================================================= */
 
   clearFilters(): void {
 
@@ -842,56 +1193,28 @@ export class InterestComponent implements OnInit {
 
     this.selectedInterestRate = null;
 
-
-    // IMPORTANT:
-    // Use applyFilters so CLOSED-only filter remains active.
-
     this.applyFilters();
 
   }
 
 
-  // =========================================================
-  // GET CMRC NAME
-  // =========================================================
-
-  getCmrcName(
-    cmrcId: number | undefined
-  ): string {
-
-    if (
-      cmrcId === undefined ||
-      cmrcId === null
-    ) {
-
-      return '';
-
-    }
-
-
-    const cmrc =
-      this.cmrcList.find(
-        c =>
-          Number(c.id) ===
-          Number(cmrcId)
-      );
-
-
-    return cmrc?.cmrcName || '';
-
-  }
-
-
-  // =========================================================
-  // FINANCIAL YEAR
-  // APRIL - MARCH
-  // =========================================================
+  /* =======================================================
+     GET LOAN YEAR / FINANCIAL YEAR
+     
+     April to March.
+     
+     Example:
+     Sep 2026 => FY 2026-27
+     Feb 2027 => FY 2026-27
+     Mar 2027 => FY 2026-27
+     Apr 2027 => FY 2027-28
+  ======================================================= */
 
   getLoanYear(
-    loan: Loan
+    loanGivenDate: string | undefined
   ): number | null {
 
-    if (!loan.loanGivenDate) {
+    if (!loanGivenDate) {
 
       return null;
 
@@ -900,7 +1223,7 @@ export class InterestComponent implements OnInit {
 
     const date =
       new Date(
-        loan.loanGivenDate
+        loanGivenDate
       );
 
 
@@ -918,7 +1241,6 @@ export class InterestComponent implements OnInit {
     const year =
       date.getFullYear();
 
-
     const month =
       date.getMonth() + 1;
 
@@ -930,15 +1252,18 @@ export class InterestComponent implements OnInit {
   }
 
 
-  // =========================================================
-  // FINANCIAL YEAR LABEL
-  // =========================================================
+  /* =======================================================
+     FINANCIAL YEAR LABEL
+  ======================================================= */
 
   getFinancialYearLabel(
     year: number | null
   ): string {
 
-    if (year === null) {
+    if (
+      year === null ||
+      year === undefined
+    ) {
 
       return '-';
 
@@ -948,87 +1273,63 @@ export class InterestComponent implements OnInit {
     return (
       year +
       '-' +
-      (year + 1)
-        .toString()
-        .slice(-2)
+      String(
+        year + 1
+      ).slice(-2)
     );
 
   }
 
 
-  // =========================================================
-  // LOAN INTEREST
-  // =========================================================
-
-  getLoanInterest(
-    loan: Loan
-  ): number {
-
-    return Number(
-      loan.totalInterestReceived || 0
-    );
-
-  }
-
-
-  // =========================================================
-  // VO / ALF FILTERED TOTAL INTEREST
-  // =========================================================
-
-  getVoAlfFilteredInterest(
-    voAlfId: number
-  ): number {
-
-    return this.filteredInterestRecords
-
-      .filter(
-        (
-          record: InterestRecord
-        ) =>
-          Number(record.voAlfId) ===
-          Number(voAlfId)
-      )
-
-      .reduce(
-        (
-          total: number,
-          record: InterestRecord
-        ) => {
-
-          return (
-            total +
-            Number(
-              record.totalInterestReceived || 0
-            )
-          );
-
-        },
-        0
-      );
-
-  }
-
-
-  // =========================================================
-  // TOTAL WOMEN
-  // =========================================================
+  /* =======================================================
+     TOTAL WOMEN
+     
+     Based on filtered CLOSED records.
+  ======================================================= */
 
   getTotalWomen(): number {
 
-    return this.filteredInterestRecords.length;
+    const women =
+      new Set<string>();
+
+
+    this.filteredInterestRecords
+      .forEach(
+        (
+          record: InterestRecord
+        ) => {
+
+          if (
+            record.womanName &&
+            record.womanName !== '-'
+          ) {
+
+            women.add(
+              record.womanName
+                .trim()
+                .toLowerCase()
+            );
+
+          }
+
+        }
+      );
+
+
+    return women.size;
 
   }
 
 
-  // =========================================================
-  // TOTAL LOAN AMOUNT
-  // SANCTIONED AMOUNT
-  // =========================================================
+  /* =======================================================
+     TOTAL LOAN AMOUNT
+     
+     CLOSED filtered records only.
+  ======================================================= */
 
   getTotalLoanAmount(): number {
 
     return this.filteredInterestRecords
-
       .reduce(
         (
           total: number,
@@ -1037,8 +1338,10 @@ export class InterestComponent implements OnInit {
 
           return (
             total +
-            Number(
-              record.sanctionedAmount || 0
+            (
+              Number(
+                record.sanctionedAmount
+              ) || 0
             )
           );
 
@@ -1049,14 +1352,15 @@ export class InterestComponent implements OnInit {
   }
 
 
-  // =========================================================
-  // TOTAL INTEREST
-  // =========================================================
+  /* =======================================================
+     TOTAL INTEREST
+     
+     CLOSED filtered records only.
+  ======================================================= */
 
   getTotalInterest(): number {
 
     return this.filteredInterestRecords
-
       .reduce(
         (
           total: number,
@@ -1065,8 +1369,10 @@ export class InterestComponent implements OnInit {
 
           return (
             total +
-            Number(
-              record.totalInterestReceived || 0
+            (
+              Number(
+                record.totalInterestReceived
+              ) || 0
             )
           );
 
@@ -1077,67 +1383,236 @@ export class InterestComponent implements OnInit {
   }
 
 
-  // =========================================================
-  // ACTIVE LOANS
-  // =========================================================
+  /* =======================================================
+     ACTIVE LOAN COUNT
+     
+     Selected CMRC
+     +
+     Selected Financial Year
+     +
+     ACTIVE status
+  ======================================================= */
+
+  getTotalActiveLoans(): number {
+
+    return this.getLoanCountByStatus(
+      'ACTIVE'
+    );
+
+  }
+
+
+  /* =======================================================
+     CLOSED LOAN COUNT
+     
+     Selected CMRC
+     +
+     Selected Financial Year
+     +
+     CLOSED status
+  ======================================================= */
+
+  getTotalClosedLoans(): number {
+
+    return this.getLoanCountByStatus(
+      'CLOSED'
+    );
+
+  }
+
+
+  /* =======================================================
+     LOAN COUNT BY STATUS
+  ======================================================= */
+
+  private getLoanCountByStatus(
+    status: string
+  ): number {
+
+    if (!this.selectedCmrcId) {
+
+      return 0;
+
+    }
+
+
+    /*
+     * Start from ALL loans.
+     *
+     * Do NOT use loanList here because loanList
+     * contains CLOSED loans only.
+     */
+    let loans =
+      this.allLoanList.filter(
+        (loan: Loan) =>
+          this.normalizeStatus(
+            loan.loanStatus
+          ) ===
+          this.normalizeStatus(
+            status
+          )
+      );
+
+
+    /* =====================================================
+       FINANCIAL YEAR FILTER
+    ===================================================== */
+
+    if (
+      this.selectedYear !== null
+    ) {
+
+      loans =
+        loans.filter(
+          (loan: Loan) =>
+            this.getLoanYear(
+              loan.loanGivenDate
+            ) ===
+            this.selectedYear
+        );
+
+    }
+
+
+    return loans.length;
+
+  }
+
+
+  /* =======================================================
+     OLD METHOD SUPPORT
+     
+     If old HTML has:
+     {{ getActiveLoans() }}
+     
+     it will still work.
+     
+     Returns ACTIVE count.
+  ======================================================= */
 
   getActiveLoans(): number {
 
-    return this.filteredInterestRecords
-
-      .filter(
-        (
-          record: InterestRecord
-        ) =>
-          (
-            record.loanStatus || ''
-          )
-            .toUpperCase() ===
-          'ACTIVE'
-      )
-
-      .length;
+    return this.getTotalActiveLoans();
 
   }
 
 
-  // =========================================================
-  // CLOSED LOANS
-  // =========================================================
+  /* =======================================================
+     GET LOAN INTEREST
+  ======================================================= */
 
-  getClosedLoans(): number {
+  getLoanInterest(
+    loanId: number | undefined
+  ): number {
 
-    return this.filteredInterestRecords
+    if (!loanId) {
 
-      .filter(
+      return 0;
+
+    }
+
+
+    const record =
+      this.interestRecords.find(
         (
-          record: InterestRecord
+          item: InterestRecord
         ) =>
-          (
-            record.loanStatus || ''
+          Number(
+            item.loanId
+          ) ===
+          Number(
+            loanId
           )
-            .toUpperCase() ===
-          'CLOSED'
-      )
+      );
 
-      .length;
+
+    return record
+      ? Number(
+          record.totalInterestReceived
+        ) || 0
+      : 0;
 
   }
 
 
-  // =========================================================
-  // GROUP ROWSPAN
-  // =========================================================
+  /* =======================================================
+     VO / ALF FILTERED INTEREST
+  ======================================================= */
+
+  getVoAlfFilteredInterest(
+    voAlfId: number | undefined
+  ): number {
+
+    if (!voAlfId) {
+
+      return 0;
+
+    }
+
+
+    return this.filteredInterestRecords
+      .filter(
+        (
+          record: InterestRecord
+        ) =>
+          Number(
+            record.voAlfId
+          ) ===
+          Number(
+            voAlfId
+          )
+      )
+      .reduce(
+        (
+          total: number,
+          record: InterestRecord
+        ) => {
+
+          return (
+            total +
+            (
+              Number(
+                record.totalInterestReceived
+              ) || 0
+            )
+          );
+
+        },
+        0
+      );
+
+  }
+
+
+  /* =======================================================
+     GROUP ROWSPAN
+  ======================================================= */
 
   getGroupRowspan(
     index: number
   ): number {
 
+    if (
+      index < 0 ||
+      index >=
+      this.filteredInterestRecords.length
+    ) {
+
+      return 1;
+
+    }
+
+
     const current =
-      this.filteredInterestRecords[index];
+      this.filteredInterestRecords[
+        index
+      ];
 
 
-    if (!current) {
+    if (
+      current.voAlfId === undefined ||
+      current.voAlfId === null
+    ) {
 
       return 1;
 
@@ -1149,20 +1624,24 @@ export class InterestComponent implements OnInit {
 
     for (
       let i = index + 1;
-
       i <
       this.filteredInterestRecords.length;
-
       i++
     ) {
 
       const next =
-        this.filteredInterestRecords[i];
+        this.filteredInterestRecords[
+          i
+        ];
 
 
       if (
-        Number(next.voAlfId) ===
-        Number(current.voAlfId)
+        Number(
+          next.voAlfId
+        ) ===
+        Number(
+          current.voAlfId
+        )
       ) {
 
         count++;
@@ -1181,9 +1660,9 @@ export class InterestComponent implements OnInit {
   }
 
 
-  // =========================================================
-  // FIRST VO / ALF ROW
-  // =========================================================
+  /* =======================================================
+     FIRST VO / ALF ROW
+  ======================================================= */
 
   isFirstVoAlfRow(
     index: number
@@ -1197,8 +1676,9 @@ export class InterestComponent implements OnInit {
 
 
     const current =
-      this.filteredInterestRecords[index];
-
+      this.filteredInterestRecords[
+        index
+      ];
 
     const previous =
       this.filteredInterestRecords[
@@ -1206,30 +1686,30 @@ export class InterestComponent implements OnInit {
       ];
 
 
-    return (
-      Number(current.voAlfId) !==
-      Number(previous.voAlfId)
+    return Number(
+      current.voAlfId
+    ) !==
+    Number(
+      previous.voAlfId
     );
 
   }
 
 
-  // =========================================================
-  // GROUP SERIAL NUMBER
-  // =========================================================
+  /* =======================================================
+     GROUP SERIAL NUMBER
+  ======================================================= */
 
   getGroupSerialNumber(
     index: number
   ): number {
 
-    let serialNumber = 0;
+    let serial = 1;
 
 
     for (
       let i = 0;
-
-      i <= index;
-
+      i < index;
       i++
     ) {
 
@@ -1237,178 +1717,155 @@ export class InterestComponent implements OnInit {
         this.isFirstVoAlfRow(i)
       ) {
 
-        serialNumber++;
+        serial++;
 
       }
 
     }
 
 
-    return serialNumber;
+    return serial;
 
   }
 
 
-  // =========================================================
-  // GROUP COLOR
-  // =========================================================
+  /* =======================================================
+     GROUP COLOR
+  ======================================================= */
 
   getGroupColorIndex(
-    voAlfId: number
+    voAlfId: number | undefined
   ): number {
 
-    const index =
-      this.voAlfList.findIndex(
-        voAlf =>
-          Number(voAlf.id) ===
-          Number(voAlfId)
-      );
-
-
-    if (index === -1) {
+    if (!voAlfId) {
 
       return 0;
 
     }
 
 
-    return index % 8;
+    const uniqueVoAlfIds =
+      Array.from(
+        new Set(
+          this.filteredInterestRecords
+            .map(
+              (
+                record: InterestRecord
+              ) =>
+                record.voAlfId
+            )
+            .filter(
+              (
+                id:
+                  | number
+                  | undefined
+              ): id is number =>
+                id !== undefined
+            )
+        )
+      );
+
+
+    const index =
+      uniqueVoAlfIds.findIndex(
+        (
+          id: number
+        ) =>
+          Number(id) ===
+          Number(voAlfId)
+      );
+
+
+    return index >= 0
+      ? index % 8
+      : 0;
 
   }
 
 
-  // =========================================================
-  // EXPORT INTEREST DETAILS TO EXCEL
-  // =========================================================
+  /* =======================================================
+     EXPORT EXCEL
+     
+     CLOSED filtered records only.
+  ======================================================= */
 
   exportToExcel(): void {
 
     if (
-      !this.filteredInterestRecords ||
       this.filteredInterestRecords.length === 0
     ) {
-
-      alert(
-        'No interest data available to export.'
-      );
 
       return;
 
     }
 
 
-    const excelData =
+    const exportData =
       this.filteredInterestRecords.map(
         (
           record: InterestRecord,
           index: number
-        ) => {
+        ) => ({
 
-          return {
+          '#':
+            index + 1,
 
-            'Sr. No.':
-              index + 1,
+          'CMRC':
+            record.cmrcName,
 
-            'CMRC Name':
-              record.cmrcName,
+          'VO / ALF':
+            record.voAlfName,
 
-            'VO / ALF Name':
-              record.voAlfName,
+          'Village':
+            record.villageName,
 
-            'Village':
-              record.villageName,
+          'Woman':
+            record.womanName,
 
-            'Woman Name':
-              record.womanName,
+          'Women':
+            record.womenCount,
 
-            'Women Count':
-              record.womenCount,
+          'Group':
+            record.groupName,
 
-            'Group Name':
-              record.groupName,
+          'VO / ALF Received':
+            record.receivedFund,
 
-            'VO / ALF Received Amount':
-              Number(
-                record.receivedFund || 0
-              ),
+          'Financial Year':
+            this.getFinancialYearLabel(
+              record.financialYear
+            ),
 
-            'Financial Year':
-              this.getFinancialYearLabel(
-                record.financialYear
-              ),
+          'Rate':
+            record.interestRate !== null
+              ? record.interestRate + '%'
+              : '-',
 
-            'Interest Rate':
-              record.interestRate !== null
-                ? record.interestRate + '%'
-                : '-',
+          'Loan Amount':
+            record.sanctionedAmount,
 
-            // IMPORTANT:
-            // Loan Amount = Sanctioned Amount
-            'Loan Amount':
-              Number(
-                record.sanctionedAmount || 0
-              ),
+          'Interest Received':
+            record.totalInterestReceived,
 
-            'Interest Received':
-              Number(
-                record.totalInterestReceived || 0
-              ),
+          'Status':
+            record.loanStatus,
 
-            'Loan Status':
-              record.loanStatus || '-',
+          'VO / ALF Interest Received':
+            this.getVoAlfFilteredInterest(
+              record.voAlfId
+            )
 
-            'VO / ALF Interest Received':
-              Number(
-                this.getVoAlfFilteredInterest(
-                  record.voAlfId
-                )
-              )
-
-          };
-
-        }
+        })
       );
 
 
-    // =======================================================
-    // CREATE WORKSHEET
-    // =======================================================
-
-    const worksheet: XLSX.WorkSheet =
+    const worksheet =
       XLSX.utils.json_to_sheet(
-        excelData
+        exportData
       );
 
 
-    // =======================================================
-    // COLUMN WIDTH
-    // =======================================================
-
-    worksheet['!cols'] = [
-
-      { wch: 10 },
-      { wch: 22 },
-      { wch: 25 },
-      { wch: 20 },
-      { wch: 25 },
-      { wch: 14 },
-      { wch: 20 },
-      { wch: 24 },
-      { wch: 18 },
-      { wch: 16 },
-      { wch: 18 },
-      { wch: 20 },
-      { wch: 16 },
-      { wch: 25 }
-
-    ];
-
-
-    // =======================================================
-    // CREATE WORKBOOK
-    // =======================================================
-
-    const workbook: XLSX.WorkBook =
+    const workbook =
       XLSX.utils.book_new();
 
 
@@ -1419,39 +1876,9 @@ export class InterestComponent implements OnInit {
     );
 
 
-    // =======================================================
-    // FILE NAME
-    // =======================================================
-
-    const selectedCmrc =
-      this.cmrcList.find(
-        cmrc =>
-          Number(cmrc.id) ===
-          Number(this.selectedCmrcId)
-      );
-
-
-    const cmrcName =
-      selectedCmrc?.cmrcName
-        ? selectedCmrc.cmrcName
-            .replace(
-              /[^a-zA-Z0-9]/g,
-              '_'
-            )
-        : 'CMRC';
-
-
-    const fileName =
-      `Interest_Details_${cmrcName}.xlsx`;
-
-
-    // =======================================================
-    // DOWNLOAD EXCEL
-    // =======================================================
-
     XLSX.writeFile(
       workbook,
-      fileName
+      'Interest_Details.xlsx'
     );
 
   }

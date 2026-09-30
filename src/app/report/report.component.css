@@ -3,10 +3,11 @@
 ============================================================ */
 
 .report-page {
-  padding: 20px;
+  width: 100%;
+  padding: 24px;
   background: #f5f7fb;
   min-height: 100vh;
-  color: #212529;
+  box-sizing: border-box;
 }
 
 
@@ -23,15 +24,61 @@
 
 .page-title {
   margin: 0;
-  font-size: 25px;
+  font-size: 26px;
   font-weight: 700;
   color: #1f2937;
 }
 
 .page-subtitle {
-  margin: 5px 0 0;
-  font-size: 14px;
+  margin: 6px 0 0;
   color: #6b7280;
+  font-size: 14px;
+}
+
+
+/* ============================================================
+   HIERARCHY INFO CARD
+============================================================ */
+
+.hierarchy-info-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.hierarchy-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.hierarchy-path {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hierarchy-path span:not(.arrow) {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.hierarchy-path .arrow {
+  color: #9ca3af;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 
@@ -42,27 +89,26 @@
 .filter-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 18px;
+  border-radius: 12px;
+  padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
 }
 
 .filter-row {
-  display: flex;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: 220px 220px minmax(250px, 1fr) auto;
   gap: 16px;
-  flex-wrap: wrap;
+  align-items: end;
 }
 
 .filter-group {
-  flex: 1;
-  min-width: 190px;
+  min-width: 0;
 }
 
 .filter-group label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 7px;
   font-size: 13px;
   font-weight: 600;
   color: #374151;
@@ -70,20 +116,27 @@
 
 .form-select,
 .form-control {
-  height: 40px;
+  width: 100%;
+  min-height: 40px;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 7px;
+  padding: 8px 12px;
   font-size: 14px;
+  color: #374151;
+  background: #ffffff;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
 }
 
 .form-select:focus,
 .form-control:focus {
   border-color: #6366f1;
-  box-shadow: 0 0 0 0.15rem rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  outline: none;
 }
 
 .search-group {
-  flex: 2;
+  min-width: 0;
 }
 
 .filter-actions {
@@ -91,9 +144,12 @@
   align-items: center;
 }
 
-.filter-actions .btn {
-  height: 40px;
+.filter-actions button {
+  min-height: 40px;
   white-space: nowrap;
+  border-radius: 7px;
+  padding: 8px 16px;
+  font-size: 14px;
 }
 
 
@@ -104,59 +160,56 @@
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 15px;
+  gap: 16px;
   margin-bottom: 20px;
 }
 
 .summary-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 16px;
   display: flex;
   align-items: center;
-  gap: 13px;
-  min-height: 90px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: transform 0.2s ease,
-              box-shadow 0.2s ease;
+  gap: 14px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 18px;
+  min-height: 92px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .summary-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
 }
 
 .summary-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 8px;
-  background: #eef2ff;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  flex-shrink: 0;
-}
-
-.summary-icon i {
+  justify-content: center;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #4b5563;
   font-size: 21px;
-  color: #4f46e5;
 }
 
 .summary-label {
   display: block;
-  font-size: 12px;
   color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
   margin-bottom: 5px;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .summary-value {
   display: block;
-  font-size: 18px;
-  font-weight: 700;
   color: #111827;
-  line-height: 1.2;
+  font-size: 19px;
+  font-weight: 700;
 }
 
 
@@ -165,21 +218,21 @@
 ============================================================ */
 
 .loading-container {
-  min-height: 250px;
-  background: #ffffff;
-  border-radius: 10px;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   gap: 12px;
-  color: #6b7280;
+  min-height: 180px;
+  background: #ffffff;
   border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  color: #6b7280;
+  font-size: 14px;
 }
 
 .loading-container .spinner-border {
-  width: 35px;
-  height: 35px;
+  width: 24px;
+  height: 24px;
 }
 
 
@@ -190,31 +243,36 @@
 .report-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
 }
 
+
+/* ============================================================
+   REPORT CARD HEADER
+============================================================ */
+
 .report-card-header {
-  min-height: 72px;
-  padding: 15px 18px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 15px;
+  padding: 18px 20px;
   border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
 }
 
 .report-card-header h5 {
-  margin: 0 0 4px;
+  margin: 0 0 5px;
+  color: #1f2937;
   font-size: 17px;
   font-weight: 700;
-  color: #1f2937;
 }
 
 .report-card-header span {
-  font-size: 13px;
   color: #6b7280;
+  font-size: 13px;
 }
 
 .report-card-header strong {
@@ -222,7 +280,36 @@
 }
 
 .report-card-header .btn {
+  min-height: 38px;
+  padding: 8px 15px;
+  font-size: 13px;
+  border-radius: 7px;
   white-space: nowrap;
+}
+
+
+/* ============================================================
+   REPORT DESCRIPTION
+============================================================ */
+
+.report-description {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 12px 20px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.report-description strong {
+  color: #374151;
+}
+
+.report-description span:not(:nth-child(2n)) {
+  font-weight: 500;
 }
 
 
@@ -234,81 +321,73 @@
   width: 100%;
   overflow-x: auto;
   overflow-y: visible;
-  max-height: 650px;
 }
 
 
 /* ============================================================
-   REPORT TABLE
+   TABLE
 ============================================================ */
 
 .report-table {
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
+  min-width: 1550px;
   margin: 0;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 12px;
+  color: #374151;
 }
 
-.report-table th,
-.report-table td {
-  border-right: 1px solid #dee2e6;
-  border-bottom: 1px solid #dee2e6;
-  padding: 9px 10px;
+
+/* ============================================================
+   TABLE HEADER - MAIN
+============================================================ */
+
+.report-table thead .main-header-row th {
+  background: #1f2937;
+  color: #ffffff;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid #111827;
+  text-align: center;
   vertical-align: middle;
+  padding: 12px 10px;
+  font-size: 12px;
+  font-weight: 700;
   white-space: nowrap;
 }
 
-
-/* ============================================================
-   MAIN HEADER
-============================================================ */
-
-.main-header-row th {
-  background: #1f2937;
-  color: #ffffff;
-  text-align: center;
-  font-weight: 700;
-  height: 58px;
+.report-table thead .main-header-row th:last-child {
+  border-right: none;
 }
 
-.main-header-row .group-header {
-  background: #374151;
-  font-size: 13px;
-  letter-spacing: 0.1px;
+.report-table .group-header {
+  letter-spacing: 0.2px;
 }
 
-.main-header-row small {
+.report-table .group-header small {
+  display: inline-block;
+  margin-top: 3px;
   font-size: 10px;
   font-weight: 500;
-  opacity: 0.85;
+  opacity: 0.8;
 }
 
 
 /* ============================================================
-   SUB HEADER
+   TABLE HEADER - SUB
 ============================================================ */
 
-.sub-header-row th {
-  background: #f3f4f6;
-  color: #374151;
+.report-table thead .sub-header-row th {
+  background: #374151;
+  color: #ffffff;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 2px solid #d1d5db;
   text-align: center;
+  vertical-align: middle;
+  padding: 10px 8px;
   font-size: 11px;
-  font-weight: 700;
-  line-height: 1.25;
-  min-width: 95px;
-  height: 55px;
-}
-
-
-/* ============================================================
-   FIXED FIRST COLUMNS
-============================================================ */
-
-.fixed-header {
-  background: #1f2937 !important;
-  color: #ffffff !important;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 
@@ -316,41 +395,125 @@
    TABLE BODY
 ============================================================ */
 
-.report-table tbody tr {
+.report-table tbody td {
+  padding: 11px 10px;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
   background: #ffffff;
-  transition: background 0.15s ease;
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
-.report-table tbody tr:nth-child(even) {
+.report-table tbody tr:hover td {
   background: #f9fafb;
 }
 
-.report-table tbody tr:hover {
-  background: #eef2ff;
+.report-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
-.report-table tbody td {
+
+/* ============================================================
+   FIRST COLUMNS
+============================================================ */
+
+.report-table tbody td:first-child {
+  text-align: center;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.report-table tbody td:nth-child(2),
+.report-table tbody td:nth-child(3),
+.report-table tbody td:nth-child(4) {
+  font-weight: 600;
   color: #374151;
 }
 
 
 /* ============================================================
-   NUMBER / AMOUNT CELLS
+   NUMBER CELLS
 ============================================================ */
 
 .number-cell {
   text-align: center;
-  font-weight: 500;
+  font-weight: 600;
 }
+
+
+/* ============================================================
+   AMOUNT CELLS
+============================================================ */
 
 .amount-cell {
   text-align: right;
-  font-weight: 500;
-  min-width: 125px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #374151;
 }
 
-.total-cell {
+
+/* ============================================================
+   FIXED HEADER
+   Sticky only when horizontal scrolling
+============================================================ */
+
+.fixed-header {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+}
+
+
+/*
+ * Different left positions for the first five columns.
+ * These values correspond to the approximate column widths.
+ */
+
+.report-table th:nth-child(1),
+.report-table td:nth-child(1) {
+  min-width: 65px;
+}
+
+.report-table th:nth-child(2),
+.report-table td:nth-child(2) {
+  min-width: 160px;
+}
+
+.report-table th:nth-child(3),
+.report-table td:nth-child(3) {
+  min-width: 150px;
+}
+
+.report-table th:nth-child(4),
+.report-table td:nth-child(4) {
+  min-width: 160px;
+}
+
+.report-table th:nth-child(5),
+.report-table td:nth-child(5) {
+  min-width: 150px;
+}
+
+
+/* ============================================================
+   TOTAL ROW
+============================================================ */
+
+.report-table tfoot .total-row th {
+  background: #f3f4f6;
+  color: #111827;
+  border-top: 2px solid #9ca3af;
+  border-right: 1px solid #d1d5db;
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 12px;
   font-weight: 700;
+  white-space: nowrap;
+}
+
+.report-table tfoot .total-row th.amount-cell {
+  text-align: right;
 }
 
 
@@ -359,16 +522,19 @@
 ============================================================ */
 
 .no-data {
+  height: 180px;
   text-align: center !important;
-  padding: 55px 20px !important;
+  vertical-align: middle !important;
   color: #9ca3af !important;
   background: #ffffff !important;
+  font-weight: 500 !important;
 }
 
 .no-data i {
   display: block;
-  font-size: 40px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  font-size: 30px;
+  color: #cbd5e1;
 }
 
 .no-data div {
@@ -377,29 +543,24 @@
 
 
 /* ============================================================
-   TOTAL ROW
+   BOOTSTRAP BUTTON OVERRIDE
 ============================================================ */
 
-.total-row th,
-.total-row td {
-  background: #e5e7eb;
-  color: #111827;
-  font-weight: 700;
-  text-align: center;
-  border-top: 2px solid #9ca3af;
+.btn {
+  transition: all 0.2s ease;
 }
 
-.total-row th:first-child {
-  text-align: right;
+.btn-success {
+  border: none;
 }
 
-.total-row th:nth-child(n + 8) {
-  text-align: right;
+.btn-outline-secondary:hover {
+  transform: translateY(-1px);
 }
 
 
 /* ============================================================
-   SCROLLBAR
+   TABLE SCROLLBAR
 ============================================================ */
 
 .report-table-wrapper::-webkit-scrollbar {
@@ -407,109 +568,177 @@
 }
 
 .report-table-wrapper::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f1f5f9;
 }
 
 .report-table-wrapper::-webkit-scrollbar-thumb {
-  background: #9ca3af;
+  background: #cbd5e1;
   border-radius: 10px;
 }
 
 .report-table-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+  background: #94a3b8;
 }
 
 
 /* ============================================================
-   BOOTSTRAP BUTTON
+   RESPONSIVE - LARGE TABLET
 ============================================================ */
 
-.report-card-header .btn-success {
-  font-size: 13px;
-  padding: 8px 14px;
-}
-
-
-/* ============================================================
-   RESPONSIVE
-============================================================ */
-
-@media (max-width: 1400px) {
+@media (max-width: 1200px) {
 
   .summary-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 
+  .filter-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .search-group {
+    grid-column: span 2;
+  }
+
+  .filter-actions {
+    grid-column: span 2;
+    justify-content: flex-end;
+  }
+
 }
 
 
-@media (max-width: 992px) {
+/* ============================================================
+   RESPONSIVE - TABLET
+============================================================ */
+
+@media (max-width: 768px) {
 
   .report-page {
     padding: 15px;
   }
 
-  .summary-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .page-header {
+    align-items: flex-start;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  .hierarchy-path {
+    gap: 5px;
+  }
+
+  .hierarchy-path span:not(.arrow) {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .filter-card {
+    padding: 15px;
   }
 
   .filter-row {
-    align-items: stretch;
+    grid-template-columns: 1fr;
+    gap: 13px;
   }
 
-  .filter-group {
-    min-width: 220px;
+  .search-group {
+    grid-column: span 1;
   }
 
   .filter-actions {
-    align-items: flex-end;
+    grid-column: span 1;
+    justify-content: flex-start;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .summary-card {
+    padding: 14px;
+  }
+
+  .summary-value {
+    font-size: 17px;
+  }
+
+  .report-card-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .report-card-header .btn {
+    width: 100%;
   }
 
 }
 
 
-@media (max-width: 576px) {
+/* ============================================================
+   RESPONSIVE - MOBILE
+============================================================ */
+
+@media (max-width: 480px) {
 
   .report-page {
     padding: 10px;
   }
 
   .page-title {
-    font-size: 21px;
+    font-size: 20px;
   }
 
   .page-subtitle {
     font-size: 12px;
   }
 
-  .summary-grid {
-    grid-template-columns: 1fr;
+  .hierarchy-info-card {
+    padding: 12px;
+  }
+
+  .hierarchy-path .arrow {
+    display: none;
+  }
+
+  .hierarchy-path span:not(.arrow) {
+    font-size: 10px;
   }
 
   .filter-card {
     padding: 12px;
   }
 
-  .filter-group {
-    width: 100%;
-    min-width: 100%;
+  .summary-grid {
+    grid-template-columns: 1fr;
   }
 
-  .filter-actions {
-    width: 100%;
+  .summary-card {
+    min-height: 78px;
   }
 
-  .filter-actions .btn {
-    width: 100%;
+  .summary-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
   }
 
   .report-card-header {
-    flex-direction: column;
-    align-items: flex-start;
+    padding: 15px;
   }
 
-  .report-card-header .btn {
-    width: 100%;
+  .report-description {
+    padding: 10px 15px;
+  }
+
+  .report-table {
+    min-width: 1550px;
   }
 
 }

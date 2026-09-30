@@ -1,12 +1,11 @@
 /* =========================================================
-   LOAN MANAGEMENT PAGE
+   LOAN PAGE
 ========================================================= */
 
-.loan-management-page {
-  width: 100%;
-  min-height: 100%;
-  padding: 20px;
-  background: #f8f9fa;
+.loan-page {
+  padding: 24px;
+  background: #f5f7fb;
+  min-height: 100vh;
 }
 
 
@@ -15,524 +14,315 @@
 ========================================================= */
 
 .page-header {
-  margin-bottom: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.header-content {
+  flex: 1;
 }
 
 .page-title {
   margin: 0;
-  color: #212529;
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.2px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.page-title i {
+  margin-right: 8px;
 }
 
 .page-subtitle {
-  margin: 5px 0 0;
-  color: #6c757d;
-  font-size: 13px;
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 
 /* =========================================================
-   COMMON CARD
+   COMMON CONTENT CARD
 ========================================================= */
 
-.card {
+.content-card {
+  background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 9px;
-  background: #ffffff;
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 24px;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
 }
 
-.card-header {
-  background: #ffffff;
-  border-bottom: 1px solid #e9ecef;
+.card-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 20px;
 }
 
-
-/* =========================================================
-   FORM CONTROLS
-========================================================= */
-
-.form-label {
-  display: block;
-  margin-bottom: 6px;
-
-  color: #495057;
-  font-size: 12px;
-  font-weight: 600;
+.card-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
 }
 
-.form-control,
-.form-select {
-  min-height: 38px;
+.card-title i {
+  color: #4f46e5;
+}
 
-  color: #343a40;
-  background: #ffffff;
-
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-
+.card-subtitle {
+  margin: 5px 0 0;
+  color: #6b7280;
   font-size: 13px;
 }
 
-.form-control::placeholder {
-  color: #adb5bd;
-  font-size: 12px;
-}
-
-.form-control:focus,
-.form-select:focus {
-  border-color: #86b7fe;
-
-  box-shadow:
-    0 0 0 0.15rem
-    rgba(13, 110, 253, 0.12);
-}
-
-.input-group-text {
-  min-height: 38px;
-
-  background: #f8f9fa;
-  border-color: #ced4da;
-
-  color: #6c757d;
-  font-size: 12px;
-}
-
 
 /* =========================================================
-   VO / ALF RECEIVED FUND
+   HIERARCHY FILTER
 ========================================================= */
 
-.fund-info-box {
-  width: 100%;
-  min-height: 66px;
+.filter-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(5, minmax(150px, 1fr));
+  gap: 16px;
+}
 
-  padding: 10px 14px;
-
+.filter-item {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-
-  background: #f8f9fa;
-
-  border: 1px solid #dee2e6;
-  border-radius: 7px;
 }
 
-.fund-label {
-  display: block;
-
-  margin-bottom: 3px;
-
-  color: #6c757d;
-
-  font-size: 10px;
-  font-weight: 600;
-
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.fund-info-box strong {
-  color: #212529;
-
-  font-size: 17px;
-  font-weight: 700;
-
-  font-variant-numeric: tabular-nums;
-}
-
-
-/* =========================================================
-   SUMMARY CARDS
-========================================================= */
-
-.summary-card {
-  width: 100%;
-  min-height: 88px;
-
-  padding: 15px 16px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 13px;
-
-  background: #ffffff;
-
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-
-  box-shadow:
-    0 2px 6px
-    rgba(0, 0, 0, 0.035);
-
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.summary-card:hover {
-  transform: translateY(-1px);
-
-  box-shadow:
-    0 4px 10px
-    rgba(0, 0, 0, 0.06);
-}
-
-.summary-icon {
-  width: 42px;
-  height: 42px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: #f1f3f5;
-
-  border-radius: 8px;
-
-  color: #495057;
-  font-size: 18px;
-}
-
-.summary-card span {
-  display: block;
-
-  margin-bottom: 4px;
-
-  color: #6c757d;
-
-  font-size: 10px;
-  font-weight: 600;
-
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.summary-card strong {
-  display: block;
-
-  color: #212529;
-
-  font-size: 17px;
-  font-weight: 700;
-
-  line-height: 1.2;
-
-  font-variant-numeric: tabular-nums;
-}
-
-.negative-value {
-  color: #dc3545 !important;
-}
-
-
-/* =========================================================
-   LOAN TOOLBAR
-========================================================= */
-
-.loan-toolbar {
-  width: 100%;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 20px;
-}
-
-.section-title {
-  margin: 0;
-
-  color: #212529;
-
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.section-subtitle {
-  margin: 4px 0 0;
-
-  color: #6c757d;
-
-  font-size: 12px;
-}
-
-.toolbar-actions {
-  display: flex;
-  align-items: center;
-
-  gap: 8px;
-}
-
-
-/* =========================================================
-   SEARCH
-========================================================= */
-
-.search-box {
-  position: relative;
-
-  width: 240px;
-}
-
-.search-box i {
-  position: absolute;
-
-  left: 11px;
-  top: 50%;
-
-  transform: translateY(-50%);
-
-  color: #868e96;
-
+.filter-item label,
+.form-group label {
   font-size: 13px;
-
-  pointer-events: none;
-}
-
-.search-box .form-control {
-  padding-left: 32px;
-}
-
-
-/* =========================================================
-   BUTTONS
-========================================================= */
-
-.btn {
-  border-radius: 6px;
-
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.btn-primary {
-  min-height: 38px;
-}
-
-.btn-outline-success,
-.btn-outline-primary,
-.btn-outline-info,
-.btn-outline-danger {
-  font-size: 11px;
-}
-
-
-/* =========================================================
-   ADD LOAN FORM HEADER
-========================================================= */
-
-.form-header {
-  min-height: 58px;
-
-  padding: 12px 16px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.form-header h5 {
-  margin: 0;
-
-  color: #212529;
-
-  font-size: 16px;
   font-weight: 600;
+  color: #374151;
+  margin-bottom: 7px;
 }
 
-.form-header h5 i {
-  color: #495057;
-}
-
-.form-header small {
-  display: block;
-
-  margin-top: 3px;
-
-  color: #6c757d;
-
-  font-size: 11px;
-}
-
-
-/* =========================================================
-   FORM SECTION
-========================================================= */
-
-.form-section {
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-
-  border-bottom: 1px solid #eeeeee;
-}
-
-.form-section:last-of-type {
-  border-bottom: none;
-}
-
-.form-section-title {
-  margin-bottom: 15px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 7px;
-
-  color: #343a40;
-
+.form-select,
+.form-control {
+  min-height: 42px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
   font-size: 14px;
-  font-weight: 600;
+  color: #1f2937;
+  background-color: #fff;
+  transition: all 0.2s ease;
 }
 
-.form-section-title i {
-  color: #6c757d;
-
-  font-size: 15px;
+.form-select:focus,
+.form-control:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
-
-/* =========================================================
-   CALCULATED FIELD
-========================================================= */
-
-.calculated-field {
-  background: #f8f9fa !important;
-
-  color: #343a40 !important;
-
-  font-weight: 600;
-
+.form-select:disabled,
+.form-control:disabled {
+  background-color: #f3f4f6;
   cursor: not-allowed;
 }
 
 
 /* =========================================================
-   FINANCIAL CALCULATION STRIP
+   SELECTED HIERARCHY CONTEXT
 ========================================================= */
 
-.calculation-strip {
-  margin-top: 18px;
-
-  padding: 12px 15px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 18px;
-
-  background: #f8f9fa;
-
-  border: 1px solid #e9ecef;
-  border-radius: 7px;
+.loan-context {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
 }
 
-.calculation-strip > div:not(.operator) {
+.context-item {
   display: flex;
   flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
-.calculation-strip span {
-  color: #6c757d;
-
-  font-size: 10px;
-  font-weight: 600;
-
+.context-label {
+  font-size: 11px;
+  color: #6b7280;
   text-transform: uppercase;
-  letter-spacing: 0.2px;
-}
-
-.calculation-strip strong {
-  margin-top: 3px;
-
-  color: #212529;
-
-  font-size: 14px;
-  font-weight: 700;
-
-  font-variant-numeric: tabular-nums;
-}
-
-.calculation-strip .operator {
-  color: #adb5bd;
-
-  font-size: 18px;
+  letter-spacing: 0.5px;
   font-weight: 600;
 }
 
-.calculation-strip .highlight {
-  padding: 7px 13px;
-
-  background: #ffffff;
-
-  border: 1px solid #ced4da;
-  border-radius: 6px;
+.context-item strong {
+  font-size: 14px;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 
 /* =========================================================
-   LOAN CALCULATION SUMMARY
+   FUND SUMMARY
 ========================================================= */
 
-.loan-calculation-summary {
+.fund-summary {
   display: grid;
-
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
-
-  gap: 12px;
-
-  margin-top: 5px;
-  margin-bottom: 20px;
+  grid-template-columns: minmax(280px, 420px);
+  gap: 18px;
+  margin-bottom: 24px;
 }
 
-.mini-summary {
-  min-height: 68px;
-
-  padding: 12px 15px;
-
-  background: #f8f9fa;
-
-  border: 1px solid #e5e7eb;
-  border-radius: 7px;
+.summary-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 125px;
+  padding: 20px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
 }
 
-.mini-summary span {
+.summary-purple {
+  background: linear-gradient(
+    135deg,
+    #eef2ff 0%,
+    #e0e7ff 100%
+  );
+  border: 1px solid #c7d2fe;
+}
+
+.summary-icon {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 12px;
+  background: #6366f1;
+  color: #ffffff;
+  font-size: 23px;
+}
+
+.summary-content {
+  min-width: 0;
+}
+
+.summary-label {
   display: block;
-
-  color: #6c757d;
-
-  font-size: 10px;
+  color: #4b5563;
+  font-size: 13px;
   font-weight: 600;
-
-  text-transform: uppercase;
-  letter-spacing: 0.2px;
+  margin-bottom: 4px;
 }
 
-.mini-summary strong {
-  display: block;
-
-  margin-top: 5px;
-
-  color: #212529;
-
-  font-size: 16px;
+.summary-content h3 {
+  margin: 0;
+  font-size: 25px;
   font-weight: 700;
-
-  font-variant-numeric: tabular-nums;
+  color: #312e81;
 }
 
-.mini-summary.total {
-  background: #f1f3f5;
+.summary-content small {
+  display: block;
+  margin-top: 5px;
+  color: #6b7280;
+  font-size: 11px;
 }
 
-.mini-summary.total strong {
-  font-size: 17px;
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.form-card {
+  border-top: 4px solid #6366f1;
+}
+
+.form-context {
+  margin-top: 0;
+  margin-bottom: 22px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(200px, 1fr));
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+}
+
+.form-group input[readonly] {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  cursor: not-allowed;
+}
+
+.form-group small {
+  margin-top: 5px;
+  font-size: 11px;
+}
+
+.required {
+  color: #dc2626;
+}
+
+
+/* =========================================================
+   EMI PREVIEW
+========================================================= */
+
+.emi-preview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-top: 22px;
+  padding: 17px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.emi-preview > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.emi-preview span {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.emi-preview strong {
+  font-size: 18px;
+  color: #111827;
 }
 
 
@@ -541,72 +331,43 @@
 ========================================================= */
 
 .form-actions {
-  padding-top: 4px;
-
   display: flex;
-  align-items: center;
   justify-content: flex-end;
-
-  gap: 8px;
-}
-
-.form-actions .btn {
-  min-width: 95px;
-  min-height: 36px;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
 }
 
 
 /* =========================================================
-   LOAN TABLE HEADER
+   TABLE TOOLBAR
 ========================================================= */
 
-.table-header {
-  min-height: 60px;
-
-  padding: 12px 16px;
-
+.table-toolbar {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-
-  gap: 15px;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 18px;
 }
 
-.table-header h5 {
-  margin: 0;
-
-  color: #212529;
-
-  font-size: 16px;
-  font-weight: 600;
+.search-box {
+  position: relative;
+  width: 330px;
 }
 
-.table-header small {
-  display: block;
-
-  margin-top: 3px;
-
-  color: #6c757d;
-
-  font-size: 11px;
+.search-box i {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  z-index: 2;
 }
 
-.table-total {
-  color: #6c757d;
-
-  font-size: 11px;
-
-  white-space: nowrap;
-}
-
-.table-total strong {
-  margin-left: 3px;
-
-  color: #212529;
-
-  font-size: 14px;
-
-  font-variant-numeric: tabular-nums;
+.search-box .form-control {
+  padding-left: 38px;
 }
 
 
@@ -616,194 +377,57 @@
 
 .table-responsive {
   width: 100%;
-
   overflow-x: auto;
-  overflow-y: hidden;
-
-  scrollbar-width: thin;
 }
 
 .loan-table {
   width: 100%;
+  min-width: 1250px;
+  margin-bottom: 0;
+  vertical-align: middle;
+}
 
-  min-width: 1600px;
-
-  margin: 0;
-
-  border-collapse: separate;
-  border-spacing: 0;
-
+.loan-table thead th {
+  background: #f8fafc;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 13px 12px;
+  border-bottom: 2px solid #e5e7eb;
   white-space: nowrap;
 }
 
-
-/* =========================================================
-   TABLE HEADER
-========================================================= */
-
-.loan-table thead th {
-  padding: 11px 9px;
-
-  background: #f8f9fa;
-
-  color: #495057;
-
-  border-top: none;
-  border-bottom: 1px solid #dee2e6;
-  border-right: 1px solid #eeeeee;
-
-  font-size: 11px;
-  font-weight: 700;
-
-  text-align: center;
-  vertical-align: middle;
-
-  position: sticky;
-  top: 0;
-
-  z-index: 2;
-}
-
-.loan-table thead th:last-child {
-  border-right: none;
-}
-
-
-/* =========================================================
-   TABLE BODY
-========================================================= */
-
 .loan-table tbody td {
-  padding: 10px 9px;
-
-  color: #343a40;
-
-  border-bottom: 1px solid #eeeeee;
-  border-right: 1px solid #f0f0f0;
-
-  font-size: 12px;
-
-  vertical-align: middle;
-
-  font-variant-numeric: tabular-nums;
+  padding: 13px 12px;
+  font-size: 13px;
+  color: #374151;
+  border-bottom: 1px solid #edf0f4;
 }
 
-.loan-table tbody td:last-child {
-  border-right: none;
+.loan-table tbody tr {
+  transition: background-color 0.15s ease;
 }
 
-.loan-table tbody tr:hover td {
-  background: #f8f9fa;
+.loan-table tbody tr:hover {
+  background-color: #f8fafc;
 }
 
-
-/* =========================================================
-   SERIAL NUMBER
-========================================================= */
-
-.serial-cell {
-  width: 50px;
-  min-width: 50px;
-
-  text-align: center;
-
-  color: #212529 !important;
-
-  font-weight: 700;
+.loan-table tfoot td {
+  background: #f8fafc;
+  padding: 14px 12px;
+  border-top: 2px solid #e5e7eb;
+  color: #1f2937;
 }
 
-
-/* =========================================================
-   TABLE COLUMN WIDTHS
-========================================================= */
-
-.loan-table th:nth-child(2),
-.loan-table td:nth-child(2) {
-  min-width: 150px;
+.table-primary-text {
+  font-weight: 600;
+  color: #1f2937;
 }
 
-.loan-table th:nth-child(3),
-.loan-table td:nth-child(3) {
-  min-width: 170px;
-}
-
-.loan-table th:nth-child(4),
-.loan-table td:nth-child(4) {
-  min-width: 160px;
-}
-
-.loan-table th:nth-child(5),
-.loan-table td:nth-child(5) {
-  min-width: 110px;
-}
-
-.loan-table th:nth-child(6),
-.loan-table td:nth-child(6) {
-  min-width: 135px;
-}
-
-.loan-table th:nth-child(7),
-.loan-table td:nth-child(7) {
-  min-width: 125px;
-}
-
-.loan-table th:nth-child(8),
-.loan-table td:nth-child(8) {
-  min-width: 135px;
-}
-
-.loan-table th:nth-child(9),
-.loan-table td:nth-child(9) {
-  min-width: 120px;
-}
-
-.loan-table th:nth-child(10),
-.loan-table td:nth-child(10) {
-  min-width: 90px;
-}
-
-.loan-table th:nth-child(11),
-.loan-table td:nth-child(11) {
-  min-width: 90px;
-}
-
-.loan-table th:nth-child(12),
-.loan-table td:nth-child(12) {
-  min-width: 100px;
-}
-
-.loan-table th:nth-child(13),
-.loan-table td:nth-child(13) {
-  min-width: 170px;
-}
-
-
-/* =========================================================
-   TABLE AMOUNTS
-========================================================= */
-
-.amount {
-  text-align: right;
-
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
-}
-
-.loan-table td.fw-semibold {
-  color: #212529;
-}
-
-
-/* =========================================================
-   PERIOD
-========================================================= */
-
-.loan-table td small {
-  margin-left: 2px;
-
-  color: #868e96;
-
-  font-size: 9px;
+.loan-table small {
+  font-size: 11px;
 }
 
 
@@ -812,279 +436,366 @@
 ========================================================= */
 
 .status-badge {
-  display: inline-block;
-
-  min-width: 58px;
-
-  padding: 4px 9px;
-
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+  padding: 5px 10px;
   border-radius: 20px;
-
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-
-  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .status-active {
-  background: #e8f5e9;
-
-  color: #198754;
+  background: #dcfce7;
+  color: #166534;
 }
 
 .status-closed {
-  background: #e9ecef;
+  background: #e5e7eb;
+  color: #374151;
+}
 
-  color: #495057;
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
 }
 
 
 /* =========================================================
-   TABLE ACTION BUTTONS
+   ACTION BUTTONS
 ========================================================= */
 
 .action-buttons {
   display: flex;
-  align-items: center;
   justify-content: center;
-
-  gap: 5px;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .action-buttons .btn {
-  width: 31px;
-  height: 31px;
-
+  width: 34px;
+  height: 34px;
   padding: 0;
-
   display: inline-flex;
-  align-items: center;
   justify-content: center;
-
-  border-radius: 5px;
-}
-
-.action-buttons .btn i {
-  font-size: 13px;
-}
-
-
-/* =========================================================
-   TABLE FOOTER
-========================================================= */
-
-.loan-table tfoot th {
-  padding: 11px 9px;
-
-  background: #f8f9fa;
-
-  color: #212529;
-
-  border-top: 2px solid #adb5bd;
-  border-bottom: none;
-
-  font-size: 12px;
-  font-weight: 700;
-
-  font-variant-numeric: tabular-nums;
-}
-
-
-/* =========================================================
-   NO DATA
-========================================================= */
-
-.no-data {
-  padding: 45px 20px !important;
-
-  background: #ffffff !important;
-
-  color: #6c757d !important;
-
-  text-align: center;
-}
-
-.no-data i {
-  display: block;
-
-  margin-bottom: 8px;
-
-  color: #adb5bd;
-
-  font-size: 28px;
-}
-
-.no-data strong {
-  display: block;
-
-  color: #495057;
-
-  font-size: 13px;
-}
-
-.no-data small {
-  display: block;
-
-  margin-top: 4px;
-
-  color: #868e96;
-
-  font-size: 11px;
-}
-
-
-/* =========================================================
-   LOAN DETAILS
-========================================================= */
-
-.detail-header {
-  min-height: 58px;
-
-  padding: 12px 16px;
-
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.detail-header h5 {
-  margin: 0;
-
-  color: #212529;
-
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.detail-header small {
-  display: block;
-
-  margin-top: 3px;
-
-  color: #6c757d;
-
-  font-size: 11px;
-}
-
-.detail-item {
-  min-height: 65px;
-
-  padding: 11px 13px;
-
-  background: #f8f9fa;
-
-  border: 1px solid #eeeeee;
   border-radius: 7px;
 }
 
-.detail-item span {
+.action-buttons .btn i {
+  font-size: 14px;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty-state {
+  padding: 20px;
+}
+
+.empty-state i {
   display: block;
+  font-size: 42px;
+  color: #9ca3af;
+  margin-bottom: 10px;
+}
 
-  margin-bottom: 4px;
+.empty-state h6 {
+  margin-bottom: 5px;
+  font-size: 15px;
+  color: #374151;
+}
 
-  color: #6c757d;
 
-  font-size: 10px;
+/* =========================================================
+   DETAILS CARD
+========================================================= */
+
+.details-card {
+  border-top: 4px solid #0ea5e9;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(180px, 1fr));
+  gap: 1px;
+  background: #e5e7eb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.detail-item {
+  min-height: 82px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 16px;
+  background: #ffffff;
+}
+
+.detail-item span:first-child {
+  color: #6b7280;
+  font-size: 11px;
   font-weight: 600;
-
   text-transform: uppercase;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.4px;
 }
 
 .detail-item strong {
-  display: block;
-
-  color: #212529;
-
-  font-size: 13px;
-  font-weight: 600;
-
-  font-variant-numeric: tabular-nums;
+  color: #1f2937;
+  font-size: 14px;
+  word-break: break-word;
 }
 
 
 /* =========================================================
-   CL SCHEDULE / REPAYMENT CLOSE
+   DETAILS FOOTER
 ========================================================= */
 
-.close-section-button {
-  margin-top: 10px;
-
+.details-footer {
   display: flex;
   justify-content: flex-end;
-}
-
-.close-section-button .btn {
-  min-height: 34px;
-}
-
-
-/* =========================================================
-   SCROLLBAR
-========================================================= */
-
-.table-responsive::-webkit-scrollbar {
-  height: 7px;
-}
-
-.table-responsive::-webkit-scrollbar-track {
-  background: #f1f3f5;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-  background: #ced4da;
-
-  border-radius: 10px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb:hover {
-  background: #adb5bd;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
 }
 
 
 /* =========================================================
-   LARGE SCREEN
+   BUTTONS
 ========================================================= */
 
-@media (max-width: 1400px) {
+.btn {
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 40px;
+  padding: 8px 15px;
+}
 
-  .loan-table {
-    min-width: 1550px;
+.btn-primary {
+  background-color: #4f46e5;
+  border-color: #4f46e5;
+}
+
+.btn-primary:hover {
+  background-color: #4338ca;
+  border-color: #4338ca;
+}
+
+.btn-outline-success {
+  border-width: 1px;
+}
+
+.btn-secondary {
+  background-color: #6b7280;
+  border-color: #6b7280;
+}
+
+
+/* =========================================================
+   CLOSE BUTTON
+========================================================= */
+
+.btn-close {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.btn-close:hover {
+  opacity: 1;
+}
+
+
+/* =========================================================
+   SPINNER
+========================================================= */
+
+.spinner-border {
+  width: 2rem;
+  height: 2rem;
+}
+
+
+/* =========================================================
+   RESPONSIVE - LARGE TABLET
+========================================================= */
+
+@media (max-width: 1200px) {
+
+  .filter-grid {
+    grid-template-columns:
+      repeat(3, minmax(180px, 1fr));
+  }
+
+  .form-grid {
+    grid-template-columns:
+      repeat(2, minmax(200px, 1fr));
+  }
+
+  .details-grid {
+    grid-template-columns:
+      repeat(3, minmax(180px, 1fr));
   }
 
 }
 
 
 /* =========================================================
-   TABLET
+   RESPONSIVE - TABLET
 ========================================================= */
 
-@media (max-width: 1100px) {
+@media (max-width: 992px) {
 
-  .loan-toolbar {
+  .loan-page {
+    padding: 18px;
+  }
+
+  .page-header {
     align-items: flex-start;
+    flex-direction: column;
   }
 
-  .toolbar-actions {
-    flex-wrap: wrap;
-    justify-content: flex-end;
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions .btn {
+    flex: 1;
+  }
+
+  .filter-grid {
+    grid-template-columns:
+      repeat(2, minmax(180px, 1fr));
+  }
+
+  .loan-context {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .fund-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .emi-preview {
+    grid-template-columns:
+      repeat(3, 1fr);
+  }
+
+  .details-grid {
+    grid-template-columns:
+      repeat(2, minmax(180px, 1fr));
+  }
+
+  .table-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .search-box {
-    width: 220px;
+    width: 100%;
   }
 
 }
 
 
 /* =========================================================
-   MOBILE
+   RESPONSIVE - MOBILE
 ========================================================= */
 
 @media (max-width: 768px) {
 
-  .loan-management-page {
+  .loan-page {
     padding: 12px;
+  }
+
+  .content-card {
+    padding: 16px;
+    border-radius: 10px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
+  .header-actions {
+    flex-direction: column;
+  }
+
+  .header-actions .btn {
+    width: 100%;
+  }
+
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .loan-context {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .emi-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions .btn {
+    width: 100%;
+  }
+
+  .details-footer {
+    flex-direction: column-reverse;
+  }
+
+  .details-footer .btn {
+    width: 100%;
+  }
+
+  .summary-card {
+    min-height: 110px;
+  }
+
+  .summary-content h3 {
+    font-size: 22px;
+  }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - SMALL MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .loan-page {
+    padding: 8px;
+  }
+
+  .content-card {
+    padding: 13px;
   }
 
   .page-title {
@@ -1095,106 +806,28 @@
     font-size: 12px;
   }
 
-  .loan-toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .toolbar-actions {
-    width: 100%;
-
-    display: grid;
-
-    grid-template-columns: 1fr 1fr;
-
-    gap: 8px;
-  }
-
-  .search-box {
-    width: 100%;
-
-    grid-column: 1 / -1;
-  }
-
-  .toolbar-actions .btn {
-    width: 100%;
-  }
-
-  .calculation-strip {
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .loan-calculation-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .table-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .table-total {
-    align-self: flex-start;
-  }
-
-}
-
-
-/* =========================================================
-   SMALL MOBILE
-========================================================= */
-
-@media (max-width: 480px) {
-
-  .loan-management-page {
-    padding: 10px;
+  .card-title {
+    font-size: 16px;
   }
 
   .summary-card {
-    min-height: 76px;
-
-    padding: 12px;
+    padding: 15px;
+    gap: 12px;
   }
 
   .summary-icon {
-    width: 36px;
-    height: 36px;
-
-    font-size: 15px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    font-size: 19px;
   }
 
-  .summary-card strong {
-    font-size: 14px;
+  .summary-content h3 {
+    font-size: 20px;
   }
 
-  .form-actions {
-    flex-direction: column;
-  }
-
-  .form-actions .btn {
-    width: 100%;
-  }
-
-  .toolbar-actions {
-    grid-template-columns: 1fr;
-  }
-
-  .search-box {
-    grid-column: auto;
-  }
-
-  .calculation-strip {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .calculation-strip .operator {
-    display: none;
-  }
-
-  .detail-item {
-    min-height: 58px;
+  .loan-table {
+    min-width: 1100px;
   }
 
 }

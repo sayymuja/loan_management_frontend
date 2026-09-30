@@ -4,14 +4,18 @@ import { Observable } from 'rxjs';
 
 export interface VoAlf {
   id?: number;
-  serialNo?: number;
-  cmrcId?: number;
+
+  cmrcId: number;
+
+  voAlfName: string;
+
+  // Village information
+  villageId?: number;
   villageName?: string;
-  voAlfName?: string;
+
   accountNo?: string;
+
   receivedFund?: number;
-  cmrcName?: string;
-  voAlfId?: number;
 }
 
 @Injectable({
@@ -48,10 +52,15 @@ export class VoAlfService {
     );
   }
 
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(
-      `${this.apiUrl}/${id}`
-    );
-  }
+delete(id: number): Observable<string> {
+  return this.http.delete(
+    `${this.apiUrl}/${id}`,
+    {
+      responseType: 'text'
+    }
+  );
+}
+
+
   
 }

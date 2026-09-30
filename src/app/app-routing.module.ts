@@ -14,6 +14,9 @@ import { ClScheduleComponent } from './cl-schedule/cl-schedule.component';
 import { BankBalanceComponent } from './bank-balance/bank-balance.component';
 import { InterestComponent } from './interest/interest.component';
 import { ReportComponent } from './report/report.component';
+import { VillageComponent } from './village/village.component';
+import { GroupComponent } from './group/group.component';
+import { WomenComponent } from './women/women.component';
 
 const routes: Routes = [
   {
@@ -77,6 +80,21 @@ const routes: Routes = [
   {
     path: 'reports',
     component: ReportComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'village',
+    component: VillageComponent,
+    canActivate: [AuthGuard]
+  },
+   {
+    path: 'group',
+    component: GroupComponent,
+    canActivate: [AuthGuard]
+  },
+   {
+    path: 'women',
+    component: WomenComponent,
     canActivate: [AuthGuard]
   },
   

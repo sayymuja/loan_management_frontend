@@ -20,10 +20,15 @@ import { FundManagementComponent } from './fund-management/fund-management.compo
 import { LoanManagementComponent } from './loan-management/loan-management.component';
 import { RepaymentManagementComponent } from './repayment-management/repayment-management.component';
 import { ClScheduleComponent } from './cl-schedule/cl-schedule.component';
-import { BankBalanceComponent } from './bank-balance/bank-balance.component';
 import { InterestComponent } from './interest/interest.component';
 import { NgChartsModule } from 'ng2-charts';
 import { ReportComponent } from './report/report.component';
+import { VillageComponent } from './village/village.component';
+import { WomenComponent } from './women/women.component';
+import { CommonModule } from '@angular/common';
+import { BankBalanceComponent } from './bank-balance/bank-balance.component';
+import { GroupComponent } from './group/group.component';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -39,16 +44,21 @@ import { ReportComponent } from './report/report.component';
     LoanManagementComponent,
     RepaymentManagementComponent,
     ClScheduleComponent,
-    BankBalanceComponent,
     InterestComponent,
-    ReportComponent
+    ReportComponent,
+    VillageComponent,
+    WomenComponent,
+    BankBalanceComponent,
+    GroupComponent
+
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
     FormsModule,
-    NgChartsModule
+    NgChartsModule,
+    CommonModule
     
   ],
   providers: [{

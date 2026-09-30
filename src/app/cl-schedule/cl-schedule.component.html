@@ -1,517 +1,526 @@
-<div class="page-container">
+<div class="cl-schedule-page">
 
-  <!-- =====================================================
-       SELECT LOAN
-  ====================================================== -->
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <i class="bi bi-calendar2-week"></i>
+      </div>
 
-  <div class="selection-card">
+      <div>
+        <h2 class="page-title">CL Schedule</h2>
+        <p class="page-subtitle">
+          Manage and view loan repayment schedules
+        </p>
+      </div>
+    </div>
 
-
-<div class="selection-header">
-
-  <div>
-    <h5>
-      <i class="bi bi-search me-2"></i>
-      Select Loan
-    </h5>
-
-    <p>
-      Select CMRC, VO / ALF and Loan
-    </p>
+    <div class="header-actions">
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        (click)="closeClScheduleView()">
+        <i class="bi bi-x-lg"></i>
+        Close
+      </button>
+    </div>
   </div>
 
-</div>
+  <!-- HIERARCHY FILTER -->
+  <div class="filter-card">
 
+    <div class="section-heading">
+      <div class="section-icon">
+        <i class="bi bi-diagram-3"></i>
+      </div>
 
-<div class="selection-body">
+      <div>
+        <h5>Loan Hierarchy</h5>
+        <p>Select hierarchy levels to find a loan</p>
+      </div>
+    </div>
 
-  <!-- CMRC -->
+    <div class="hierarchy-grid">
 
-  <div class="form-group">
+      <!-- CMRC -->
+      <div class="form-field">
+        <label for="cmrcSelect">
+          CMRC
+        </label>
 
-    <label>
-      CMRC
-    </label>
+        <select
+          id="cmrcSelect"
+          class="form-select"
+          [(ngModel)]="selectedCmrcId"
+          (ngModelChange)="onCmrcChange()">
 
-    <select
-      class="form-select"
-      [(ngModel)]="selectedCmrcId"
-      (change)="onCmrcChange()">
+          <option [ngValue]="null">All CMRCs</option>
 
-      <option [ngValue]="null">
-        Select CMRC
-      </option>
+          <option
+            *ngFor="let cmrc of cmrcList"
+            [ngValue]="cmrc.id">
+            {{ cmrc.cmrcName }}
+          </option>
+        </select>
+      </div>
 
-      <option
-        *ngFor="let cmrc of cmrcList"
-        [ngValue]="cmrc.id">
+      <!-- VO / ALF -->
+      <div class="form-field">
+        <label for="voAlfSelect">
+          VO / ALF
+        </label>
 
-        {{ cmrc.cmrcName}}
+        <select
+          id="voAlfSelect"
+          class="form-select"
+          [(ngModel)]="selectedVoAlfId"
+          (ngModelChange)="onVoAlfChange()"
+          [disabled]="!selectedCmrcId">
 
-      </option>
+          <option [ngValue]="null">All VO / ALF</option>
 
-    </select>
+          <option
+            *ngFor="let voAlf of voAlfList"
+            [ngValue]="voAlf.id">
+            {{ voAlf.voAlfName }}
+          </option>
+        </select>
+      </div>
+
+      <!-- GROUP -->
+      <div class="form-field">
+        <label for="groupSelect">
+          Group
+        </label>
+
+        <select
+          id="groupSelect"
+          class="form-select"
+          [(ngModel)]="selectedGroupId"
+          (ngModelChange)="onGroupChange()"
+          [disabled]="!selectedVoAlfId">
+
+          <option [ngValue]="null">All Groups</option>
+
+          <option
+            *ngFor="let group of groupList"
+            [ngValue]="group.id">
+            {{ group.groupName }}
+          </option>
+        </select>
+      </div>
+
+      <!-- WOMAN -->
+      <div class="form-field">
+        <label for="womanSelect">
+          Woman
+        </label>
+
+        <select
+          id="womanSelect"
+          class="form-select"
+          [(ngModel)]="selectedWomanId"
+          (ngModelChange)="onWomanChange()"
+          [disabled]="!selectedGroupId">
+
+          <option [ngValue]="null">All Women</option>
+
+          <option
+            *ngFor="let woman of womenList"
+            [ngValue]="woman.id">
+            {{ woman.womanName }}
+          </option>
+        </select>
+      </div>
+
+      <!-- LOAN -->
+      <div class="form-field loan-field">
+        <label for="loanSelect">
+          Select Loan <span class="required">*</span>
+        </label>
+
+        <select
+          id="loanSelect"
+          class="form-select"
+          [(ngModel)]="selectedLoanId"
+          (ngModelChange)="onLoanChange()"
+          [disabled]="filteredLoanList.length === 0">
+
+          <option [ngValue]="null">
+            Select Loan
+          </option>
+
+          <option
+            *ngFor="let loan of filteredLoanList"
+            [ngValue]="loan.id">
+
+            Loan #{{ loan.id }}
+            -
+            {{ loan.womanName || 'Woman not assigned' }}
+            -
+            ₹{{ getSanctionedAmount(loan) | number:'1.2-2' }}
+
+          </option>
+        </select>
+      </div>
+
+    </div>
+
+    <!-- FILTER FOOTER -->
+    <div class="filter-footer">
+      <div class="filter-info">
+        <i class="bi bi-info-circle"></i>
+        Select a loan to view its CL repayment schedule.
+      </div>
+
+      <div class="filter-count">
+        <span>Available Loans</span>
+        <strong>{{ filteredLoanList.length }}</strong>
+      </div>
+    </div>
 
   </div>
 
-
-  <!-- VO / ALF -->
-
-  <div class="form-group">
-
-    <label>
-      VO / ALF
-    </label>
-
-    <select
-      class="form-select"
-      [(ngModel)]="selectedVoAlfId"
-      (change)="onVoAlfChange()"
-      [disabled]="!selectedCmrcId">
-
-      <option [ngValue]="null">
-        Select VO / ALF
-      </option>
-
-      <option
-        *ngFor="let voAlf of voAlfList"
-        [ngValue]="voAlf.id">
-
-        {{ voAlf.voAlfName }}
-
-      </option>
-
-    </select>
-
-  </div>
-
-
-  <!-- LOAN -->
-
-  <div class="form-group">
-
-    <label>
-      Loan
-    </label>
-
-    <select
-      class="form-select"
-      [(ngModel)]="selectedLoanId"
-      (change)="onLoanChange()"
-      [disabled]="!selectedVoAlfId">
-
-      <option [ngValue]="null">
-        Select Loan
-      </option>
-
-      <option
-        *ngFor="let loan of filteredLoanList"
-        [ngValue]="loan.id">
-
-        Loan #{{ loan.id }}
-        -
-        {{ loan.womanName }}
-        -
-        ₹{{ loan.loanAmount | number:'1.2-2' }}
-
-      </option>
-
-    </select>
-
-  </div>
-
-
-  <!-- GENERATE -->
-
-  <div class="form-action">
-
-    <button
-      type="button"
-      class="btn btn-primary"
-      (click)="generateSchedule()"
-      [disabled]="!selectedLoanId || loading">
-
-      <i class="bi bi-calendar-check me-1"></i>
-
-      {{ loading ? 'Loading...' : 'Generate Schedule' }}
-
-    </button>
-
-  </div>
-
-</div>
-
-
-  </div>
-
-  <!-- =====================================================
-       LOAN SUMMARY
-  ====================================================== -->
-
+  <!-- SELECTED LOAN SUMMARY -->
   <div
-    class="loan-summary-card"
-    *ngIf="selectedLoan">
+    class="summary-card"
+    *ngIf="selectedLoan as loan">
 
+    <div class="summary-header">
+      <div class="section-heading">
+        <div class="section-icon summary-icon">
+          <i class="bi bi-file-earmark-text"></i>
+        </div>
 
-<div class="summary-header">
+        <div>
+          <h5>Selected Loan Summary</h5>
+          <p>Loan and beneficiary information</p>
+        </div>
+      </div>
 
-  <div>
+      <span class="loan-id-badge">
+        <i class="bi bi-hash"></i>
+        Loan {{ loan.id }}
+      </span>
+    </div>
 
-    <h5>
-      CL Schedule
-    </h5>
+    <!-- HIERARCHY DETAILS -->
+    <div class="summary-section">
 
-    <span>
-      Loan repayment schedule
-    </span>
+      <div class="summary-section-title">
+        <i class="bi bi-diagram-3"></i>
+        Hierarchy Details
+      </div>
+
+      <div class="summary-grid">
+
+        <div class="summary-item">
+          <span class="summary-label">CMRC Name</span>
+          <strong>
+            {{ getSelectedCmrcName() || loan.cmrcName || '-' }}
+          </strong>
+        </div>
+
+        <div class="summary-item">
+          <span class="summary-label">VO / ALF Name</span>
+          <strong>
+            {{ getSelectedVoAlfName() || loan.voAlfName || '-' }}
+          </strong>
+        </div>
+
+        <div class="summary-item">
+          <span class="summary-label">Village</span>
+          <strong>
+            {{ loan.villageName || selectedVillageName || '-' }}
+          </strong>
+        </div>
+
+        <div class="summary-item">
+          <span class="summary-label">Group Name</span>
+          <strong>{{ loan.groupName || '-' }}</strong>
+        </div>
+
+        <div class="summary-item">
+          <span class="summary-label">Woman Name</span>
+          <strong>{{ loan.womanName || '-' }}</strong>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- FINANCIAL DETAILS -->
+    <div class="summary-section">
+
+      <div class="summary-section-title">
+        <i class="bi bi-currency-rupee"></i>
+        Financial Details
+      </div>
+
+      <div class="summary-grid financial-grid">
+
+        <div class="summary-item amount-item">
+          <span class="summary-label">Sanctioned Amount</span>
+          <strong class="amount-value">
+            ₹{{ getSanctionedAmount(loan) | number:'1.2-2' }}
+          </strong>
+        </div>
+
+        <div class="summary-item amount-item">
+          <span class="summary-label">Disbursed Amount</span>
+          <strong class="amount-value">
+            ₹{{ getDisbursedAmount(loan) | number:'1.2-2' }}
+          </strong>
+        </div>
+
+        <div class="summary-item amount-item">
+          <span class="summary-label">Processing Fee</span>
+          <strong class="amount-value">
+            ₹{{ getProcessingFee(loan) | number:'1.2-2' }}
+          </strong>
+        </div>
+
+        <div class="summary-item amount-item">
+          <span class="summary-label">Monthly EMI</span>
+          <strong class="amount-value">
+            ₹{{ (loan.monthlyEmi || 0) | number:'1.2-2' }}
+          </strong>
+        </div>
+
+        <div class="summary-item">
+          <span class="summary-label">Interest Rate</span>
+          <strong>{{ loan.interestRate || 0 }}%</strong>
+        </div>
+
+        <div class="summary-item">
+          <span class="summary-label">Interest Type</span>
+          <strong>{{ loan.interestType || '-' }}</strong>
+        </div>
+
+        <div class="summary-item">
+          <span class="summary-label">Total Installments</span>
+          <strong>{{ loan.repaymentPeriodMonths || 0 }}</strong>
+        </div>
+
+        <div class="summary-item">
+          <span class="summary-label">Loan Given Date</span>
+          <strong>
+            {{
+              loan.loanGivenDate
+                ? (loan.loanGivenDate | date:'dd-MMM-yyyy')
+                : '-'
+            }}
+          </strong>
+        </div>
+
+        <div class="summary-item summary-purpose">
+          <span class="summary-label">Loan Purpose</span>
+          <strong>{{ loan.loanPurpose || '-' }}</strong>
+        </div>
+
+      </div>
+    </div>
 
   </div>
 
-
-  <button
-    type="button"
-    class="btn btn-success btn-sm"
-    (click)="exportToExcel()"
-    [disabled]="scheduleList.length === 0">
-
-    <i class="bi bi-file-earmark-excel me-1"></i>
-
-    Export Excel
-
-  </button>
-
-</div>
-
-
-<div class="loan-details-grid">
-
-  <!-- Loan # -->
-
-  <div class="loan-detail">
-
-    <span class="detail-label">
-      Loan #
-    </span>
-
-    <span class="detail-value">
-      {{ selectedLoan.id }}
-    </span>
-
-  </div>
-
-
-  <!-- Group -->
-
-  <div class="loan-detail">
-
-    <span class="detail-label">
-      Group Name
-    </span>
-
-    <span class="detail-value">
-
-      {{ selectedLoan.groupName || '-' }}
-
-    </span>
-
-  </div>
-
-
-  <!-- Woman -->
-
-  <div class="loan-detail">
-
-    <span class="detail-label">
-      Woman Name
-    </span>
-
-    <span class="detail-value">
-
-      {{ selectedLoan.womanName || '-' }}
-
-    </span>
-
-  </div>
-
-
-  <!-- Loan Amount -->
-
-  <div class="loan-detail">
-
-    <span class="detail-label">
-      Loan Amount
-    </span>
-
-    <span class="detail-value amount">
-
-      ₹{{ selectedLoan.loanAmount | number:'1.2-2' }}
-
-    </span>
-
-  </div>
-
-
-  <!-- EMI -->
-
-  <div class="loan-detail">
-
-    <span class="detail-label">
-      Monthly EMI
-    </span>
-
-    <span class="detail-value amount">
-
-      ₹{{ selectedLoan.monthlyEmi | number:'1.2-2' }}
-
-    </span>
-
-  </div>
-
-
-  <!-- Installments -->
-
-  <div class="loan-detail">
-
-    <span class="detail-label">
-      Installments
-    </span>
-
-    <span class="detail-value">
-
-      {{ selectedLoan.repaymentPeriodMonths }}
-
-    </span>
-
-  </div>
-
-</div>
-
-
-  </div>
-
-  <!-- =====================================================
-       CL SCHEDULE TABLE
-  ====================================================== -->
-
+  <!-- CL REPAYMENT SCHEDULE -->
   <div
     class="schedule-card"
-    *ngIf="scheduleList.length > 0">
+    *ngIf="selectedLoan as loan">
 
+    <!-- SCHEDULE HEADER -->
+    <div class="schedule-header">
 
-<div class="schedule-header">
+      <div class="section-heading">
+        <div class="section-icon schedule-icon">
+          <i class="bi bi-calendar2-check"></i>
+        </div>
 
-  <div>
+        <div>
+          <h5>CL Repayment Schedule</h5>
+          <p>
+            Loan #{{ loan.id }}
+            <span class="header-separator">|</span>
+            {{ loan.womanName || 'Woman not assigned' }}
+            <span class="header-separator">|</span>
+            {{ loan.repaymentPeriodMonths || 0 }} Installments
+          </p>
+        </div>
+      </div>
 
-    <h5>
-      CL Schedule
-    </h5>
+      <div class="schedule-actions">
 
-    <span>
-      {{ scheduleList.length }} installments
-    </span>
+        <span class="record-count">
+          <i class="bi bi-list-ol"></i>
+          {{ scheduleList.length }} Records
+        </span>
+
+        <button
+          type="button"
+          class="btn btn-success"
+          (click)="exportToExcel()"
+          [disabled]="loading || scheduleList.length === 0">
+
+          <i class="bi bi-file-earmark-excel"></i>
+          Export Excel
+        </button>
+
+      </div>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div
+      class="loading-state"
+      *ngIf="loading">
+
+      <div
+        class="spinner-border text-primary"
+        role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+
+      <p>Loading CL repayment schedule...</p>
+    </div>
+
+    <!-- SCHEDULE TABLE -->
+    <div
+      class="table-responsive schedule-table-wrapper"
+      *ngIf="!loading && scheduleList.length > 0">
+
+      <table class="table schedule-table">
+
+        <thead>
+          <tr>
+            <th class="col-number">#</th>
+            <th class="col-date">Installment Date</th>
+            <th class="text-end col-amount">Outstanding Amount</th>
+            <th class="text-end col-amount">Principal</th>
+            <th class="text-end col-amount">Interest</th>
+            <th class="text-end col-amount">Installment Amount</th>
+            <th class="text-end col-amount">Closing Balance</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr
+            *ngFor="let schedule of scheduleList; let i = index">
+
+            <!-- INSTALLMENT NUMBER -->
+            <td class="col-number">
+              <span class="installment-number">
+                {{ schedule.installmentNo || (i + 1) }}
+              </span>
+            </td>
+
+            <!-- INSTALLMENT DATE -->
+            <td class="col-date">
+              <span class="date-value">
+                {{
+                  schedule.installmentDate
+                    ? (schedule.installmentDate | date:'dd-MMM-yyyy')
+                    : '-'
+                }}
+              </span>
+            </td>
+
+            <!-- OUTSTANDING AMOUNT -->
+            <td class="text-end amount-cell">
+              ₹{{ (schedule.outstandingAmount || 0) | number:'1.2-2' }}
+            </td>
+
+            <!-- PRINCIPAL -->
+            <td class="text-end amount-cell">
+              ₹{{ (schedule.principalAmount || 0) | number:'1.2-2' }}
+            </td>
+
+            <!-- INTEREST -->
+            <td class="text-end amount-cell">
+              ₹{{ (schedule.interestAmount || 0) | number:'1.2-2' }}
+            </td>
+
+            <!-- INSTALLMENT AMOUNT -->
+            <td class="text-end amount-cell installment-cell">
+              ₹{{ (schedule.averageMonthlyInstallment || 0) | number:'1.2-2' }}
+            </td>
+
+            <!-- CLOSING BALANCE -->
+            <td class="text-end amount-cell closing-cell">
+              ₹{{ (schedule.closingBalance || 0) | number:'1.2-2' }}
+            </td>
+
+          </tr>
+        </tbody>
+
+        <!-- TOTAL ROW -->
+      <tfoot>
+  <tr>
+    <td colspan="2" class="total-label">
+      Total
+    </td>
+
+    <!-- Outstanding Amount -->
+    <td class="text-end amount-cell">
+      <!-- ₹{{ getTotalOutstandingAmount() | number:'1.2-2' }} -->
+    </td>
+
+    <!-- Principal -->
+    <td class="text-end amount-cell">
+      ₹{{ getTotalPrincipalAmount() | number:'1.2-2' }}
+    </td>
+
+    <!-- Interest -->
+    <td class="text-end amount-cell">
+      ₹{{ getTotalInterestAmount() | number:'1.2-2' }}
+    </td>
+
+    <!-- Installment Amount -->
+    <td class="text-end amount-cell installment-cell">
+      ₹{{ getTotalInstallmentAmount() | number:'1.2-2' }}
+    </td>
+
+    <!-- Closing Balance -->
+    <td class="text-end amount-cell closing-cell">
+      —
+    </td>
+  </tr>
+</tfoot>
+
+      </table>
+    </div>
+
+    <!-- EMPTY SCHEDULE STATE -->
+    <div
+      class="empty-state"
+      *ngIf="!loading && scheduleList.length === 0">
+
+      <div class="empty-icon">
+        <i class="bi bi-calendar-x"></i>
+      </div>
+
+      <h6>No Installment Schedule Found</h6>
+
+      <p>
+        No CL repayment schedule records are available
+        for this selected loan.
+      </p>
+    </div>
 
   </div>
 
-</div>
-
-
-<div class="table-wrapper">
-
-  <table class="schedule-table">
-
-    <thead>
-
-      <tr>
-
-        <th class="center">
-          #
-        </th>
-
-        <th>
-          Installment Date
-        </th>
-
-        <th class="amount-column">
-          Outstanding Principal
-        </th>
-
-        <th class="amount-column">
-          Principal
-        </th>
-
-        <th class="amount-column">
-          Interest
-        </th>
-
-        <th class="amount-column">
-          Monthly Installment
-        </th>
-
-        <th class="amount-column">
-          Average Installment
-        </th>
-
-        <th class="amount-column">
-          Closing Balance
-        </th>
-
-        <th class="center">
-          Remark
-        </th>
-
-      </tr>
-
-    </thead>
-
-
-    <tbody>
-
-      <tr
-        *ngFor="let schedule of scheduleList">
-
-        <td class="center installment-no">
-
-          {{ schedule.installmentNo }}
-
-        </td>
-
-
-        <td class="date-cell">
-
-          {{
-            schedule.installmentDate
-              ? (schedule.installmentDate | date:'dd-MMM-yyyy')
-              : '-'
-          }}
-
-        </td>
-
-
-        <td class="amount-cell">
-
-          ₹{{
-            schedule.outstandingAmount
-              | number:'1.2-2'
-          }}
-
-        </td>
-
-
-        <td class="amount-cell">
-
-          ₹{{
-            schedule.principalAmount
-              | number:'1.2-2'
-          }}
-
-        </td>
-
-
-        <td class="amount-cell">
-
-          ₹{{
-            schedule.interestAmount
-              | number:'1.2-2'
-          }}
-
-        </td>
-
-
-        <td class="amount-cell highlight">
-
-          ₹{{
-            schedule.monthlyInstallment
-              | number:'1.2-2'
-          }}
-
-        </td>
-
-
-        <td class="amount-cell">
-
-          ₹{{
-            schedule.averageMonthlyInstallment
-              | number:'1.2-2'
-          }}
-
-        </td>
-
-
-        <td class="amount-cell closing-balance">
-
-          ₹{{
-            schedule.closingBalance
-              | number:'1.2-2'
-          }}
-
-        </td>
-
-
-        <td class="center">
-
-          <span
-            class="remark-badge"
-            [class.final]="schedule.remark === 'Final'">
-
-            {{ schedule.remark || '-' }}
-
-          </span>
-
-        </td>
-
-      </tr>
-
-    </tbody>
-
-  </table>
-
-</div>
-
-
-  </div>
-
-  <!-- =====================================================
-       EMPTY
-  ====================================================== -->
-
+  <!-- INITIAL STATE -->
   <div
-    class="empty-card"
-    *ngIf="scheduleList.length === 0 && !loading">
+    class="initial-state"
+    *ngIf="!selectedLoan && !loading">
 
+    <div class="initial-icon">
+      <i class="bi bi-list-check"></i>
+    </div>
 
-<div class="empty-icon">
+    <h5>Select a Loan</h5>
 
-  <i class="bi bi-calendar3"></i>
-
-</div>
-
-<h5>
-  No Schedule Available
-</h5>
-
-<p>
-  Select CMRC, VO / ALF and Loan to view the CL Schedule.
-</p>
-
-
-  </div>
-
-  <!-- =====================================================
-       LOADING
-  ====================================================== -->
-
-  <div
-    class="loading-card"
-    *ngIf="loading">
-
-
-<div
-  class="spinner-border spinner-border-sm me-2">
-</div>
-
-Loading CL Schedule...
-
-
+    <p>
+      Select the hierarchy and loan above to view
+      the CL repayment schedule.
+    </p>
   </div>
 
 </div>

@@ -4,16 +4,20 @@ import { Observable } from 'rxjs';
 
 export interface ClSchedule {
   id?: number;
-  loanId: number;
+  loanId?: number;
   installmentNo?: number;
-  outstandingAmount?: number;
-  principalAmount?: number;
-  interestAmount?: number;
-  monthlyInstallment?: number;
-  averageMonthlyInstallment?: number;
-  remark?: string;
-  closingBalance?: number;
   installmentDate?: string;
+averageMonthlyInstallment?: number;
+interestAmount?: number;
+principalAmount?: number;
+  principal?: number;
+  interest?: number;
+  installmentAmount?: number;
+
+  outstandingAmount?: number;
+  closingBalance?: number;
+
+  remark?: string;
 }
 
 @Injectable({

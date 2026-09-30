@@ -3,29 +3,26 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Cmrc {
+
   id?: number;
+
   serialNo?: number;
+
   cmrcName?: string;
+
   accountNo?: string;
+
   accountOpeningDate?: string;
+
+  district?: string;
+
+  taluka?: string;
+
+  status?: string;
+
   totalFund?: number;
-  serviceFeeReceived?: number;
-  recordsPrinted?: number;
-  printedRecordsAmount?: number;
-  recordsDistributedVillages?: number;
-  expectedRecordAmount?: number;
-  actualRecordAmountReceived?: number;
 
-  tezshreeFundReceivedUltraPoor?: number;
-  tezshreeFundReceivedDebtTrappedWomen?: number;
-  tezshreeFundReceivedTotal?: number;
-
-  fundDistributedVillageCount?: number;
-  distributedUltraPoorWomenCount?: number;
-  distributedUltraPoorFund?: number;
-  distributedDebtTrappedWomenCount?: number;
-  distributedDebtTrappedFund?: number;
-  distributedTotalFund?: number;
+  // baaki existing fields...
 }
 
 @Injectable({
@@ -53,7 +50,9 @@ export class CmrcService {
     return this.http.put<Cmrc>(`${this.apiUrl}/${id}`, cmrc);
   }
 
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  delete(id: number): Observable<string> {
+    return this.http.delete(`${this.apiUrl}/${id}`, {
+      responseType: 'text'
+    });
   }
 }
