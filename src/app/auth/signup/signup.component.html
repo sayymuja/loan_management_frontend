@@ -12,12 +12,14 @@
             Create Account
           </h2>
 
+          <!-- Success Message -->
           <div
             *ngIf="message"
             class="alert alert-success">
             {{ message }}
           </div>
 
+          <!-- Error Message -->
           <div
             *ngIf="errorMessage"
             class="alert alert-danger">
@@ -26,6 +28,7 @@
 
           <form (ngSubmit)="signup()">
 
+            <!-- Name -->
             <div class="mb-3">
 
               <label class="form-label">
@@ -42,6 +45,8 @@
 
             </div>
 
+
+            <!-- Email -->
             <div class="mb-3">
 
               <label class="form-label">
@@ -58,6 +63,88 @@
 
             </div>
 
+
+            <!-- CMRC Name -->
+            <div class="mb-3">
+
+              <label class="form-label">
+                CMRC Name
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                name="cmrcName"
+                [(ngModel)]="cmrcName"
+                placeholder="Enter CMRC name"
+                required>
+
+            </div>
+
+
+            <!-- District -->
+            <div class="mb-3">
+
+              <label class="form-label">
+                District
+              </label>
+
+              <select
+                class="form-select"
+                name="district"
+                [(ngModel)]="district"
+                (change)="onDistrictChange()"
+                required>
+
+                <option value="">
+                  Select District
+                </option>
+
+                <option
+                  *ngFor="let districtName of districts"
+                  [value]="districtName">
+
+                  {{ districtName }}
+
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <!-- Taluka -->
+            <div class="mb-3">
+
+              <label class="form-label">
+                Taluka
+              </label>
+
+              <select
+                class="form-select"
+                name="taluka"
+                [(ngModel)]="taluka"
+                [disabled]="!district"
+                required>
+
+                <option value="">
+                  Select Taluka
+                </option>
+
+                <option
+                  *ngFor="let talukaName of selectedTalukas"
+                  [value]="talukaName">
+
+                  {{ talukaName }}
+
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <!-- Password -->
             <div class="mb-3">
 
               <label class="form-label">
@@ -74,6 +161,8 @@
 
             </div>
 
+
+            <!-- Signup Button -->
             <button
               type="submit"
               class="btn btn-primary w-100">
@@ -84,6 +173,8 @@
 
           </form>
 
+
+          <!-- Login Link -->
           <div class="text-center mt-3">
 
             Already have an account?

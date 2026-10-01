@@ -95,6 +95,10 @@ export class InterestComponent implements OnInit {
 
   selectedCmrcId: number | null = null;
 
+  selectedVoAlfId: number | null = null;
+
+  selectedWomanId: number | null = null;
+
 
   /* =======================================================
      INTEREST RECORDS
@@ -139,8 +143,7 @@ export class InterestComponent implements OnInit {
   /* =======================================================
      CONSTRUCTOR
   ======================================================= */
-  selectedVoAlfId: number | null = null;
-  selectedWomanId: number | null = null;
+
   constructor(
     private cmrcService: CmrcService,
     private voAlfService: VoAlfService,
@@ -154,6 +157,9 @@ export class InterestComponent implements OnInit {
 
   ngOnInit(): void {
 
+    /*
+     * Automatically load logged-in user's CMRC.
+     */
     this.loadCmrc();
 
   }
@@ -161,6 +167,14 @@ export class InterestComponent implements OnInit {
 
   /* =======================================================
      LOAD CMRC
+     
+     IMPORTANT:
+     
+     cmrcService.getAll()
+     already returns only the CMRC assigned to
+     the logged-in user from backend.
+     
+     Therefore we automatically select that CMRC.
   ======================================================= */
 
   loadCmrc(): void {
@@ -172,6 +186,73 @@ export class InterestComponent implements OnInit {
       next: (data: Cmrc[]) => {
 
         this.cmrcList = data || [];
+
+
+        /* =================================================
+           AUTOMATIC CMRC SELECTION
+        ================================================= */
+
+        if (
+          this.cmrcList.length > 0 &&
+          this.cmrcList[0].id !== undefined &&
+          this.cmrcList[0].id !== null
+        ) {
+
+          this.selectedCmrcId =
+            Number(this.cmrcList[0].id);
+
+
+          console.log(
+            'AUTOMATICALLY SELECTED CMRC:',
+            this.selectedCmrcId
+          );
+
+
+          console.log(
+            'CMRC DETAILS:',
+            this.cmrcList[0]
+          );
+
+
+          /*
+           * Automatically load:
+           *
+           * CMRC
+           *   ↓
+           * VO / ALF
+           *   ↓
+           * Loans
+           *   ↓
+           * CLOSED Interest Records
+           */
+
+          this.onCmrcChange();
+
+        } else {
+
+          /*
+           * No CMRC found
+           */
+
+          this.selectedCmrcId = null;
+
+          this.voAlfList = [];
+
+          this.loanList = [];
+
+          this.allLoanList = [];
+
+          this.interestRecords = [];
+
+          this.filteredInterestRecords = [];
+
+          this.availableYears = [];
+
+          this.availableInterestRates = [];
+
+          this.voAlfTotalInterest = {};
+
+        }
 
         this.loading = false;
 
@@ -186,6 +267,24 @@ export class InterestComponent implements OnInit {
 
         this.cmrcList = [];
 
+        this.selectedCmrcId = null;
+
+        this.voAlfList = [];
+
+        this.loanList = [];
+
+        this.allLoanList = [];
+
+        this.interestRecords = [];
+
+        this.filteredInterestRecords = [];
+
+        this.availableYears = [];
+
+        this.availableInterestRates = [];
+
+        this.voAlfTotalInterest = {};
+
         this.loading = false;
 
       }
@@ -197,6 +296,11 @@ export class InterestComponent implements OnInit {
 
   /* =======================================================
      CMRC CHANGE
+     
+     This is called automatically after CMRC is loaded.
+     
+     If HTML still has a CMRC dropdown and user changes it,
+     this method will also continue to work.
   ======================================================= */
 
   onCmrcChange(): void {
@@ -204,6 +308,7 @@ export class InterestComponent implements OnInit {
     /*
      * Reset filters
      */
+
     this.searchText = '';
 
     this.selectedYear = null;
@@ -212,8 +317,18 @@ export class InterestComponent implements OnInit {
 
 
     /*
+     * Reset optional selections
+     */
+
+    this.selectedVoAlfId = null;
+
+    this.selectedWomanId = null;
+
+
+    /*
      * Reset data
      */
+
     this.voAlfList = [];
 
     this.loanList = [];
@@ -231,23 +346,34 @@ export class InterestComponent implements OnInit {
     this.voAlfTotalInterest = {};
 
 
-    if (!this.selectedCmrcId) {
+    if (
+      this.selectedCmrcId === null ||
+      this.selectedCmrcId === undefined
+    ) {
+
+      this.loading = false;
+
       return;
+
     }
 
 
     /*
-     * IMPORTANT:
-     *
      * First load VO / ALF.
+     *
      * After VO / ALF is loaded,
      * load loans.
      *
      * This allows us to identify loans
      * through VO / ALF hierarchy also.
      */
+
+    this.loading = true;
+
     this.voAlfService
-      .getByCmrcId(this.selectedCmrcId)
+      .getByCmrcId(
+        Number(this.selectedCmrcId)
+      )
       .subscribe({
 
         next: (data: VoAlf[]) => {
@@ -280,6 +406,7 @@ export class InterestComponent implements OnInit {
            * Some LoanDto responses contain cmrcId
            * directly.
            */
+
           this.loadClosedLoansByCmrc();
 
         }
@@ -299,7 +426,10 @@ export class InterestComponent implements OnInit {
 
   loadClosedLoansByCmrc(): void {
 
-    if (!this.selectedCmrcId) {
+    if (
+      this.selectedCmrcId === null ||
+      this.selectedCmrcId === undefined
+    ) {
 
       this.loanList = [];
 
@@ -308,6 +438,8 @@ export class InterestComponent implements OnInit {
       this.interestRecords = [];
 
       this.filteredInterestRecords = [];
+
+      this.loading = false;
 
       return;
 
@@ -354,13 +486,16 @@ export class InterestComponent implements OnInit {
            GET ALL LOANS OF SELECTED CMRC
            
            Match:
+           
            1. Direct cmrcId
+           
            OR
+           
            2. voAlfId belongs to selected CMRC
         ================================================= */
 
         this.allLoanList =
-          allLoans.filter(
+          (allLoans || []).filter(
             (loan: Loan) => {
 
               const directCmrcMatch =
@@ -499,7 +634,10 @@ export class InterestComponent implements OnInit {
     this.voAlfTotalInterest = {};
 
 
-    if (!this.selectedCmrcId) {
+    if (
+      this.selectedCmrcId === null ||
+      this.selectedCmrcId === undefined
+    ) {
 
       this.filteredInterestRecords = [];
 
@@ -516,6 +654,7 @@ export class InterestComponent implements OnInit {
      * Even if loanList somehow contains ACTIVE records,
      * they will never be added to Interest Records.
      */
+
     const closedLoans =
       this.loanList.filter(
         (loan: Loan) =>
@@ -1012,6 +1151,7 @@ export class InterestComponent implements OnInit {
     /*
      * Always start with CLOSED records.
      */
+
     let records =
       this.interestRecords.filter(
         (
@@ -1205,6 +1345,7 @@ export class InterestComponent implements OnInit {
      April to March.
      
      Example:
+     
      Sep 2026 => FY 2026-27
      Feb 2027 => FY 2026-27
      Mar 2027 => FY 2026-27
@@ -1430,7 +1571,10 @@ export class InterestComponent implements OnInit {
     status: string
   ): number {
 
-    if (!this.selectedCmrcId) {
+    if (
+      this.selectedCmrcId === null ||
+      this.selectedCmrcId === undefined
+    ) {
 
       return 0;
 
@@ -1443,6 +1587,7 @@ export class InterestComponent implements OnInit {
      * Do NOT use loanList here because loanList
      * contains CLOSED loans only.
      */
+
     let loans =
       this.allLoanList.filter(
         (loan: Loan) =>
@@ -1484,6 +1629,7 @@ export class InterestComponent implements OnInit {
      OLD METHOD SUPPORT
      
      If old HTML has:
+     
      {{ getActiveLoans() }}
      
      it will still work.
@@ -1785,6 +1931,42 @@ export class InterestComponent implements OnInit {
 
 
   /* =======================================================
+     SELECTED VO / ALF NAME
+     
+     Kept for existing HTML support.
+  ======================================================= */
+
+  getSelectedVoAlfName(): string {
+
+    if (
+      this.selectedVoAlfId === null ||
+      this.selectedVoAlfId === undefined
+    ) {
+
+      return '-';
+
+    }
+
+
+    const selectedVoAlf =
+      this.voAlfList.find(
+        (vo: VoAlf) =>
+          Number(vo.id) ===
+          Number(this.selectedVoAlfId)
+      );
+
+
+    return selectedVoAlf
+      ? (
+          selectedVoAlf.voAlfName ||
+          '-'
+        )
+      : '-';
+
+  }
+
+
+  /* =======================================================
      EXPORT EXCEL
      
      CLOSED filtered records only.
@@ -1883,17 +2065,5 @@ export class InterestComponent implements OnInit {
     );
 
   }
-getSelectedVoAlfName(): string {
-  if (!this.selectedVoAlfId) {
-    return '-';
-  }
 
-  const selectedVoAlf = this.voAlfList.find(
-    vo => vo.id === this.selectedVoAlfId
-  );
-
-  return selectedVoAlf
-    ? (selectedVoAlf.voAlfName || '-')
-    : '-';
-}
 }

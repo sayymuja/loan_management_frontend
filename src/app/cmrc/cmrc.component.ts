@@ -1,9 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-
-import {
-  CmrcService,
-  Cmrc
-} from '../services/cmrc.service';
+import { Cmrc, CmrcService } from '../services/cmrc.service';
 
 @Component({
   selector: 'app-cmrc',
@@ -12,16 +8,16 @@ import {
 })
 export class CmrcComponent implements OnInit {
 
-  // =========================================================
+  // =====================================================
   // CMRC LIST
-  // =========================================================
+  // =====================================================
 
   cmrcList: Cmrc[] = [];
 
 
-  // =========================================================
+  // =====================================================
   // FORM STATE
-  // =========================================================
+  // =====================================================
 
   showForm = false;
   isEditMode = false;
@@ -29,747 +25,253 @@ export class CmrcComponent implements OnInit {
   deletingId: number | null = null;
 
 
-  // =========================================================
-  // MAHARASHTRA DISTRICTS
-  // =========================================================
+  // =====================================================
+  // CURRENT LOGGED-IN USER CMRC
+  // =====================================================
 
-  districts: string[] = [
-
-    'Ahmednagar',
-    'Akola',
-    'Amravati',
-    'Aurangabad',
-    'Beed',
-    'Bhandara',
-    'Buldhana',
-    'Chandrapur',
-    'Dhule',
-    'Gadchiroli',
-    'Gondia',
-    'Hingoli',
-    'Jalgaon',
-    'Jalna',
-    'Kolhapur',
-    'Latur',
-    'Mumbai City',
-    'Mumbai Suburban',
-    'Nagpur',
-    'Nanded',
-    'Nandurbar',
-    'Nashik',
-    'Osmanabad',
-    'Palghar',
-    'Parbhani',
-    'Pune',
-    'Raigad',
-    'Ratnagiri',
-    'Sangli',
-    'Satara',
-    'Sindhudurg',
-    'Solapur',
-    'Thane',
-    'Wardha',
-    'Washim',
-    'Yavatmal'
-
-  ];
+  currentUserCmrcId: number | null = null;
+  currentUserCmrcName = '';
+  currentUserDistrict = '';
+  currentUserTaluka = '';
 
 
-  // =========================================================
-  // DISTRICT → TALUKA
-  // =========================================================
-
-  talukaMap: { [key: string]: string[] } = {
-
-    'Ahmednagar': [
-      'Ahmednagar',
-      'Akole',
-      'Jamkhed',
-      'Karjat',
-      'Kopargaon',
-      'Nevasa',
-      'Parner',
-      'Pathardi',
-      'Rahata',
-      'Rahuri',
-      'Sangamner',
-      'Shevgaon',
-      'Shrigonda',
-      'Shrirampur'
-    ],
-
-    'Akola': [
-      'Akola',
-      'Akot',
-      'Balapur',
-      'Barshitakli',
-      'Murtizapur',
-      'Patur',
-      'Telhara'
-    ],
-
-    'Amravati': [
-      'Achalpur',
-      'Amravati',
-      'Anjangaon Surji',
-      'Bhatkuli',
-      'Chandur Bazar',
-      'Chandur Railway',
-      'Chikhaldara',
-      'Daryapur',
-      'Dhamangaon Railway',
-      'Dharni',
-      'Morshi',
-      'Nandgaon Khandeshwar',
-      'Teosa',
-      'Warud'
-    ],
-
-    'Aurangabad': [
-      'Aurangabad',
-      'Kannad',
-      'Khuldabad',
-      'Paithan',
-      'Phulambri',
-      'Sillod',
-      'Soegaon',
-      'Vaijapur',
-      'Gangapur'
-    ],
-
-    'Beed': [
-      'Ambajogai',
-      'Ashti',
-      'Beed',
-      'Dharur',
-      'Georai',
-      'Kaij',
-      'Majalgaon',
-      'Parli',
-      'Patoda',
-      'Shirur Kasar',
-      'Wadwani'
-    ],
-
-    'Bhandara': [
-      'Bhandara',
-      'Lakhandur',
-      'Lakhani',
-      'Mohadi',
-      'Pauni',
-      'Sakoli',
-      'Tumsar'
-    ],
-
-    'Buldhana': [
-      'Buldhana',
-      'Chikhli',
-      'Deulgaon Raja',
-      'Jalgaon Jamod',
-      'Khamgaon',
-      'Lonar',
-      'Malkapur',
-      'Mehkar',
-      'Motala',
-      'Nandura',
-      'Shegaon',
-      'Sindkhed Raja'
-    ],
-
-    'Chandrapur': [
-      'Ballarpur',
-      'Bhadravati',
-      'Brahmapuri',
-      'Chimur',
-      'Chandrapur',
-      'Gondpipri',
-      'Jiwati',
-      'Korpana',
-      'Mul',
-      'Nagbhir',
-      'Pombhurna',
-      'Rajura',
-      'Sawali',
-      'Sindewahi',
-      'Warora'
-    ],
-
-    'Dhule': [
-      'Dhule',
-      'Sakri',
-      'Shirpur',
-      'Shindkheda'
-    ],
-
-    'Gadchiroli': [
-      'Aheri',
-      'Armori',
-      'Bhamragad',
-      'Chamorshi',
-      'Dhanora',
-      'Desaiganj',
-      'Etapalli',
-      'Gadchiroli',
-      'Korchi',
-      'Kurkheda',
-      'Mulchera',
-      'Sironcha'
-    ],
-
-    'Gondia': [
-      'Amgaon',
-      'Arjuni Morgaon',
-      'Deori',
-      'Gondia',
-      'Goregaon',
-      'Sadak Arjuni',
-      'Salekasa',
-      'Tirora'
-    ],
-
-    'Hingoli': [
-      'Aundha Nagnath',
-      'Basmath',
-      'Hingoli',
-      'Kalamnuri',
-      'Sengaon'
-    ],
-
-    'Jalgaon': [
-      'Amalner',
-      'Bhadgaon',
-      'Bhusawal',
-      'Bodwad',
-      'Chalisgaon',
-      'Chopda',
-      'Dharangaon',
-      'Erandol',
-      'Jalgaon',
-      'Jamner',
-      'Muktainagar',
-      'Pachora',
-      'Parola',
-      'Raver',
-      'Yawal'
-    ],
-
-    'Jalna': [
-      'Ambad',
-      'Badnapur',
-      'Bhokardan',
-      'Ghansawangi',
-      'Jafferabad',
-      'Jalna',
-      'Mantha',
-      'Partur'
-    ],
-
-    'Kolhapur': [
-      'Ajra',
-      'Bavda',
-      'Bhudargad',
-      'Chandgad',
-      'Gadhinglaj',
-      'Gaganbawada',
-      'Hatkanangale',
-      'Kagal',
-      'Karveer',
-      'Panhala',
-      'Radhanagari',
-      'Shahuwadi',
-      'Shirol'
-    ],
-
-    'Latur': [
-      'Ahmedpur',
-      'Ausa',
-      'Chakur',
-      'Deoni',
-      'Jalkot',
-      'Latur',
-      'Nilanga',
-      'Renapur',
-      'Shirur Anantpal',
-      'Udgir'
-    ],
-
-    'Mumbai City': [
-      'Mumbai City'
-    ],
-
-    'Mumbai Suburban': [
-      'Andheri',
-      'Borivali',
-      'Kurla'
-    ],
-
-    'Nagpur': [
-      'Bhiwapur',
-      'Hingna',
-      'Kalameshwar',
-      'Kamptee',
-      'Katol',
-      'Kuhi',
-      'Mouda',
-      'Nagpur Rural',
-      'Nagpur Urban',
-      'Narkhed',
-      'Parseoni',
-      'Ramtek',
-      'Savner',
-      'Umred'
-    ],
-
-    'Nanded': [
-      'Ardhapur',
-      'Bhokar',
-      'Biloli',
-      'Deglur',
-      'Dharmabad',
-      'Hadgaon',
-      'Himayatnagar',
-      'Kandhar',
-      'Kinwat',
-      'Loha',
-      'Mahur',
-      'Mudkhed',
-      'Mukhed',
-      'Nanded',
-      'Naigaon',
-      'Umri'
-    ],
-
-    'Nandurbar': [
-      'Akkalkuwa',
-      'Akrani',
-      'Nandurbar',
-      'Navapur',
-      'Shahada',
-      'Taloda'
-    ],
-
-    'Nashik': [
-      'Baglan',
-      'Chandwad',
-      'Deola',
-      'Dindori',
-      'Igatpuri',
-      'Kalwan',
-      'Malegaon',
-      'Nandgaon',
-      'Nashik',
-      'Niphad',
-      'Peint',
-      'Sinnar',
-      'Surgana',
-      'Trimbakeshwar',
-      'Yeola'
-    ],
-
-    'Osmanabad': [
-      'Bhoom',
-      'Kalamb',
-      'Lohara',
-      'Omerga',
-      'Osmanabad',
-      'Paranda',
-      'Tuljapur',
-      'Washi'
-    ],
-
-    'Palghar': [
-      'Dahanu',
-      'Jawhar',
-      'Mokhada',
-      'Palghar',
-      'Talasari',
-      'Vasai',
-      'Vikramgad',
-      'Wada'
-    ],
-
-    'Parbhani': [
-      'Gangakhed',
-      'Jintur',
-      'Manwath',
-      'Manwat',
-      'Palam',
-      'Parbhani',
-      'Pathri',
-      'Purna',
-      'Sonpeth'
-    ],
-
-    'Pune': [
-      'Ambegaon',
-      'Baramati',
-      'Bhor',
-      'Daund',
-      'Haveli',
-      'Indapur',
-      'Junnar',
-      'Khed',
-      'Mawal',
-      'Mulshi',
-      'Purandar',
-      'Shirur',
-      'Velhe'
-    ],
-
-    'Raigad': [
-      'Alibag',
-      'Karjat',
-      'Khalapur',
-      'Mahad',
-      'Mangaon',
-      'Mhasla',
-      'Murud',
-      'Panvel',
-      'Pen',
-      'Poladpur',
-      'Roha',
-      'Shrivardhan',
-      'Sudhagad',
-      'Tala',
-      'Uran'
-    ],
-
-    'Ratnagiri': [
-      'Chiplun',
-      'Dapoli',
-      'Guhagar',
-      'Khed',
-      'Lanja',
-      'Mandangad',
-      'Rajapur',
-      'Ratnagiri',
-      'Sangameshwar'
-    ],
-
-    'Sangli': [
-      'Atpadi',
-      'Jat',
-      'Kadegaon',
-      'Kavathe Mahankal',
-      'Khanapur',
-      'Miraj',
-      'Palus',
-      'Shirala',
-      'Tasgaon',
-      'Walwa'
-    ],
-
-    'Satara': [
-      'Jaoli',
-      'Karad',
-      'Khandala',
-      'Khatav',
-      'Koregaon',
-      'Mahabaleshwar',
-      'Man',
-      'Patan',
-      'Phaltan',
-      'Satara',
-      'Wai'
-    ],
-
-    'Sindhudurg': [
-      'Deogad',
-      'Dodamarg',
-      'Kankavli',
-      'Kudal',
-      'Malvan',
-      'Sawantwadi',
-      'Vaibhavwadi',
-      'Vengurla'
-    ],
-
-    'Solapur': [
-      'Akkalkot',
-      'Barshi',
-      'Karmala',
-      'Madha',
-      'Malshiras',
-      'Mangalvedhe',
-      'Mohol',
-      'Pandharpur',
-      'Sangole',
-      'Solapur North',
-      'Solapur South'
-    ],
-
-    'Thane': [
-      'Ambernath',
-      'Bhiwandi',
-      'Kalyan',
-      'Murbad',
-      'Shahapur',
-      'Thane',
-      'Ulhasnagar'
-    ],
-
-    'Wardha': [
-      'Arvi',
-      'Ashti',
-      'Deoli',
-      'Hinganghat',
-      'Karanja',
-      'Samudrapur',
-      'Seloo',
-      'Wardha'
-    ],
-
-    'Washim': [
-      'Karanja',
-      'Malegaon',
-      'Mangrulpir',
-      'Manora',
-      'Risod',
-      'Washim'
-    ],
-
-    'Yavatmal': [
-      'Arni',
-      'Babhulgaon',
-      'Darwha',
-      'Digras',
-      'Ghatanji',
-      'Kalamb',
-      'Kelapur',
-      'Mahagaon',
-      'Maregaon',
-      'Ner',
-      'Pusad',
-      'Ralegaon',
-      'Umarkhed',
-      'Wani',
-      'Yavatmal',
-      'Zari-Jamani'
-    ]
-
-  };
-
-
-  // =========================================================
-  // SELECTED DISTRICT KE TALUKA
-  // =========================================================
-
-  get talukas(): string[] {
-
-    if (!this.newCmrc.district) {
-      return [];
-    }
-
-    return this.talukaMap[this.newCmrc.district] || [];
-
-  }
-
-
-  // =========================================================
-  // DISTRICT CHANGE
-  // =========================================================
-
-  onDistrictChange(): void {
-
-    /*
-     * District change hone par
-     * purana Taluka clear hoga.
-     */
-
-    this.newCmrc.taluka = '';
-
-  }
-
-
-  // =========================================================
-  // NEW / EDIT CMRC
-  // =========================================================
+  // =====================================================
+  // FORM MODEL
+  // =====================================================
 
   newCmrc: Cmrc = {
-
     cmrcName: '',
-    accountNo: '',
-    accountOpeningDate: '',
     district: '',
     taluka: '',
+    accountNo: '',
+    accountOpeningDate: '',
     status: 'ACTIVE',
     totalFund: 0
-
   };
 
 
-  // =========================================================
+  // =====================================================
   // SEARCH
-  // =========================================================
+  // =====================================================
 
   searchText = '';
 
 
-  // =========================================================
-  // CONSTRUCTOR
-  // =========================================================
+  // =====================================================
+  // AMOUNT IN WORDS
+  // =====================================================
+
+  amountInWords = '';
+
 
   constructor(
     private cmrcService: CmrcService
   ) {}
 
 
-  // =========================================================
-  // ON INIT
-  // =========================================================
+  // =====================================================
+  // INIT
+  // =====================================================
 
   ngOnInit(): void {
 
-    this.loadCmrc();
+    this.loadCurrentUserDetails();
 
+    this.loadCmrc();
   }
 
 
-  // =========================================================
-  // LOAD ALL CMRC
-  // =========================================================
+  // =====================================================
+  // LOAD CURRENT USER DETAILS
+  // =====================================================
+
+  loadCurrentUserDetails(): void {
+
+    const userData =
+      localStorage.getItem('user');
+
+    if (!userData) {
+      return;
+    }
+
+    try {
+
+      const user = JSON.parse(userData);
+
+      this.currentUserCmrcId =
+        user.cmrcId || null;
+
+      this.currentUserCmrcName =
+        user.cmrcName || '';
+
+      this.currentUserDistrict =
+        user.district || '';
+
+      this.currentUserTaluka =
+        user.taluka || '';
+
+
+      this.newCmrc = {
+        cmrcName:
+          this.currentUserCmrcName,
+
+        district:
+          this.currentUserDistrict,
+
+        taluka:
+          this.currentUserTaluka,
+
+        accountNo: '',
+
+        accountOpeningDate:
+          this.getTodayDate(),
+
+        status: 'ACTIVE',
+
+        totalFund: 0
+      };
+
+    } catch (error) {
+
+      console.error(
+        'Unable to read logged-in user',
+        error
+      );
+    }
+  }
+
+
+  // =====================================================
+  // LOAD CMRC
+  // =====================================================
 
   loadCmrc(): void {
 
-    this.cmrcService.getAll().subscribe({
+    this.cmrcService
+      .getAll()
+      .subscribe({
 
-      next: (data: Cmrc[]) => {
+        next: (data: Cmrc[]) => {
 
-        this.cmrcList = data || [];
+          this.cmrcList = data || [];
 
-        console.log(
-          'CMRC List:',
-          this.cmrcList
-        );
+        },
 
-      },
+        error: (error) => {
 
-      error: (error) => {
+          console.error(
+            'Load CMRC Error:',
+            error
+          );
 
-        console.error(
-          'Load CMRC Error:',
-          error
-        );
+          this.cmrcList = [];
+        }
 
-        alert(
-          'Unable to load CMRC records'
-        );
-
-      }
-
-    });
-
+      });
   }
 
 
-  // =========================================================
-  // GET TODAY DATE
-  // =========================================================
-
-  private getTodayDate(): string {
-
-    const today = new Date();
-
-    const year =
-      today.getFullYear();
-
-    const month =
-      String(
-        today.getMonth() + 1
-      ).padStart(2, '0');
-
-    const day =
-      String(
-        today.getDate()
-      ).padStart(2, '0');
-
-    return `${year}-${month}-${day}`;
-
-  }
-
-
-  // =========================================================
-  // OPEN ADD FORM
-  // =========================================================
+  // =====================================================
+  // OPEN ADD BALANCE FORM
+  // =====================================================
 
   openAddForm(): void {
 
     this.isEditMode = false;
 
+    this.showForm = true;
+
     this.isSaving = false;
+
+    this.amountInWords = '';
+
+
+    /*
+     * IMPORTANT:
+     *
+     * Find the existing CMRC record.
+     * We are NOT creating a new CMRC.
+     */
+
+    const existingCmrc =
+      this.cmrcList.find(
+        (cmrc: Cmrc) =>
+          cmrc.id === this.currentUserCmrcId
+      );
+
 
     this.newCmrc = {
 
-      cmrcName: '',
+      id:
+        existingCmrc?.id ||
+        this.currentUserCmrcId ||
+        undefined,
 
-      accountNo: '',
+      cmrcName:
+        this.currentUserCmrcName,
+
+      district:
+        this.currentUserDistrict,
+
+      taluka:
+        this.currentUserTaluka,
+
+      accountNo:
+        existingCmrc?.accountNo || '',
 
       accountOpeningDate:
+        existingCmrc?.accountOpeningDate ||
         this.getTodayDate(),
 
-      district: '',
+      status:
+        existingCmrc?.status ||
+        'ACTIVE',
 
-      taluka: '',
-
-      status: 'ACTIVE',
-
+      /*
+       * This field contains ONLY the new amount
+       * entered by the user.
+       */
       totalFund: 0
-
     };
-
-    this.showForm = true;
-
   }
 
 
-  // =========================================================
+  // =====================================================
   // OPEN EDIT FORM
-  // =========================================================
+  // =====================================================
 
   openEditForm(cmrc: Cmrc): void {
 
     this.isEditMode = true;
 
+    this.showForm = true;
+
     this.isSaving = false;
+
 
     this.newCmrc = {
 
       ...cmrc,
 
       cmrcName:
-        cmrc.cmrcName || '',
-
-      accountNo:
-        cmrc.accountNo || '',
-
-      accountOpeningDate:
-        cmrc.accountOpeningDate ||
-        this.getTodayDate(),
+        this.currentUserCmrcName,
 
       district:
-        cmrc.district || '',
+        this.currentUserDistrict,
 
       taluka:
-        cmrc.taluka || '',
-
-      status:
-        cmrc.status || 'ACTIVE',
-
-      totalFund:
-        Number(
-          cmrc.totalFund || 0
-        )
+        this.currentUserTaluka
 
     };
 
-    this.showForm = true;
 
+    this.updateAmountInWords();
   }
 
 
-  // =========================================================
+  // =====================================================
   // CLOSE FORM
-  // =========================================================
+  // =====================================================
 
   closeForm(): void {
 
@@ -781,43 +283,13 @@ export class CmrcComponent implements OnInit {
 
     this.isEditMode = false;
 
-    this.isSaving = false;
-
-    this.resetForm();
-
+    this.amountInWords = '';
   }
 
 
-  // =========================================================
-  // RESET FORM
-  // =========================================================
-
-  private resetForm(): void {
-
-    this.newCmrc = {
-
-      cmrcName: '',
-
-      accountNo: '',
-
-      accountOpeningDate: '',
-
-      district: '',
-
-      taluka: '',
-
-      status: 'ACTIVE',
-
-      totalFund: 0
-
-    };
-
-  }
-
-
-  // =========================================================
-  // SAVE / UPDATE CMRC
-  // =========================================================
+  // =====================================================
+  // SAVE CMRC / ADD BALANCE
+  // =====================================================
 
   saveCmrc(): void {
 
@@ -825,167 +297,337 @@ export class CmrcComponent implements OnInit {
       return;
     }
 
-    this.isSaving = true;
+
+    // =================================================
+    // ADD BALANCE TO EXISTING CMRC
+    // =================================================
+
+    if (!this.isEditMode) {
+
+      const amount =
+        Number(this.newCmrc.totalFund || 0);
 
 
-    // =======================================================
-    // UPDATE
-    // =======================================================
+      // -----------------------------------------------
+      // Validate amount
+      // -----------------------------------------------
 
-    if (this.isEditMode) {
-
-      if (this.newCmrc.id == null) {
+      if (amount <= 0) {
 
         alert(
-          'CMRC ID is missing'
+          'Please enter a balance amount greater than 0.'
         );
 
-        this.isSaving = false;
-
         return;
-
       }
 
-      const id =
-        this.newCmrc.id;
+
+      // -----------------------------------------------
+      // Existing CMRC ID
+      // -----------------------------------------------
+
+      const cmrcId =
+        this.newCmrc.id ||
+        this.currentUserCmrcId;
+
+
+      if (!cmrcId) {
+
+        alert(
+          'Existing CMRC ID is missing.'
+        );
+
+        return;
+      }
+
+
+      // -----------------------------------------------
+      // Find existing CMRC
+      // -----------------------------------------------
+
+      const existingCmrc =
+        this.cmrcList.find(
+          (cmrc: Cmrc) =>
+            cmrc.id === cmrcId
+        );
+
+
+      if (!existingCmrc) {
+
+        alert(
+          'Existing CMRC record was not found.'
+        );
+
+        return;
+      }
+
+
+      // -----------------------------------------------
+      // Calculate NEW balance
+      // -----------------------------------------------
+
+      const existingBalance =
+        Number(
+          existingCmrc.totalFund || 0
+        );
+
+
+      const updatedBalance =
+        existingBalance + amount;
+
+
+      // -----------------------------------------------
+      // Prepare existing CMRC update
+      // -----------------------------------------------
+
+      const updatedCmrc: Cmrc = {
+
+        ...existingCmrc,
+
+        id: cmrcId,
+
+        cmrcName:
+          this.currentUserCmrcName,
+
+        district:
+          this.currentUserDistrict,
+
+        taluka:
+          this.currentUserTaluka,
+
+        /*
+         * IMPORTANT:
+         *
+         * Existing balance + new amount
+         */
+        totalFund:
+          updatedBalance
+      };
+
+
+      console.log(
+        'Existing CMRC ID:',
+        cmrcId
+      );
+
+      console.log(
+        'Existing Balance:',
+        existingBalance
+      );
+
+      console.log(
+        'Amount Added:',
+        amount
+      );
+
+      console.log(
+        'Updated Balance:',
+        updatedBalance
+      );
+
+      console.log(
+        'PUT CMRC Payload:',
+        updatedCmrc
+      );
+
+
+      this.isSaving = true;
+
+
+      // -----------------------------------------------
+      // UPDATE EXISTING CMRC
+      // -----------------------------------------------
 
       this.cmrcService
         .update(
-          id,
-          this.newCmrc
+          cmrcId,
+          updatedCmrc
         )
         .subscribe({
 
-          next: (response) => {
+          next: (response: Cmrc) => {
 
             console.log(
-              'CMRC Updated:',
+              'Existing CMRC Updated:',
               response
             );
 
+
             alert(
-              'CMRC updated successfully'
+              'Balance added successfully.'
             );
+
+
+            this.isSaving = false;
 
             this.showForm = false;
 
             this.isEditMode = false;
 
-            this.isSaving = false;
+            this.amountInWords = '';
 
-            this.resetForm();
+
+            // -----------------------------------------
+            // Refresh from database
+            // -----------------------------------------
 
             this.loadCmrc();
-
           },
+
 
           error: (error) => {
 
             console.error(
-              'Update CMRC Error:',
+              'Add Balance / Update CMRC Error:',
               error
             );
 
-            alert(
-              'CMRC update failed. Please check the backend API.'
-            );
 
             this.isSaving = false;
+
+
+            if (error.status === 403) {
+
+              alert(
+                'Access denied for this CMRC.'
+              );
+
+            } else if (error.status === 401) {
+
+              alert(
+                'Session expired. Please login again.'
+              );
+
+            } else {
+
+              alert(
+                error?.error?.message ||
+                error?.error ||
+                'Unable to update CMRC balance.'
+              );
+            }
 
           }
 
         });
 
-      return;
 
+      return;
     }
 
 
-    // =======================================================
-    // CREATE
-    // =======================================================
+    // =================================================
+    // EDIT EXISTING CMRC DETAILS
+    // =================================================
+
+    if (!this.newCmrc.id) {
+
+      alert(
+        'CMRC ID is missing.'
+      );
+
+      return;
+    }
+
+
+    this.isSaving = true;
+
 
     this.cmrcService
-      .create(
+      .update(
+        this.newCmrc.id,
         this.newCmrc
       )
       .subscribe({
 
-        next: (response) => {
+        next: (response: Cmrc) => {
 
           console.log(
-            'CMRC Created:',
+            'CMRC Updated:',
             response
           );
 
+
           alert(
-            'CMRC added successfully'
+            'CMRC updated successfully.'
           );
+
+
+          this.isSaving = false;
 
           this.showForm = false;
 
           this.isEditMode = false;
 
-          this.isSaving = false;
+          this.amountInWords = '';
 
-          this.resetForm();
 
           this.loadCmrc();
-
         },
+
 
         error: (error) => {
 
           console.error(
-            'Create CMRC Error:',
+            'Update CMRC Error:',
             error
           );
 
-          alert(
-            'CMRC creation failed. Please check the backend API.'
-          );
 
           this.isSaving = false;
+
+
+          if (error.status === 403) {
+
+            alert(
+              'Access denied for this CMRC.'
+            );
+
+          } else if (error.status === 401) {
+
+            alert(
+              'Session expired. Please login again.'
+            );
+
+          } else {
+
+            alert(
+              error?.error?.message ||
+              error?.error ||
+              'Unable to update CMRC.'
+            );
+          }
 
         }
 
       });
-
   }
 
 
-  // =========================================================
+  // =====================================================
   // DELETE CMRC
-  // =========================================================
+  // =====================================================
 
-  deleteCmrc(
-    id: number | undefined
-  ): void {
+  deleteCmrc(id?: number): void {
 
-    if (id == null) {
-
-      alert(
-        'CMRC ID is missing'
-      );
-
-      return;
-
-    }
-
-    if (this.deletingId !== null) {
+    if (!id) {
       return;
     }
+
 
     const confirmed =
       confirm(
         'Are you sure you want to delete this CMRC?'
       );
 
+
     if (!confirmed) {
       return;
     }
 
+
     this.deletingId = id;
+
 
     this.cmrcService
       .delete(id)
@@ -993,20 +635,15 @@ export class CmrcComponent implements OnInit {
 
         next: () => {
 
-          console.log(
-            'CMRC Deleted. ID:',
-            id
-          );
-
           alert(
-            'CMRC deleted successfully'
+            'CMRC deleted successfully.'
           );
 
           this.deletingId = null;
 
           this.loadCmrc();
-
         },
+
 
         error: (error) => {
 
@@ -1017,42 +654,31 @@ export class CmrcComponent implements OnInit {
 
           this.deletingId = null;
 
-          if (error.status === 0) {
+
+          if (error.status === 403) {
 
             alert(
-              'Backend server is not reachable'
-            );
-
-          } else if (error.status === 404) {
-
-            alert(
-              'CMRC record not found'
-            );
-
-          } else if (error.status === 409) {
-
-            alert(
-              'This CMRC is linked to other records and cannot be deleted'
+              'Access denied for this CMRC.'
             );
 
           } else {
 
             alert(
-              'CMRC delete failed. Please check the backend API.'
+              error?.error?.message ||
+              error?.error ||
+              'Unable to delete CMRC.'
             );
-
           }
 
         }
 
       });
-
   }
 
 
-  // =========================================================
-  // FILTERED CMRC LIST
-  // =========================================================
+  // =====================================================
+  // FILTERED CMRC
+  // =====================================================
 
   get filteredCmrcList(): Cmrc[] {
 
@@ -1061,157 +687,166 @@ export class CmrcComponent implements OnInit {
         .trim()
         .toLowerCase();
 
+
     if (!search) {
-
       return this.cmrcList;
-
     }
 
+
     return this.cmrcList.filter(
-      (cmrc: Cmrc) => {
+      (cmrc: Cmrc) =>
 
-        return (
+        (cmrc.cmrcName || '')
+          .toLowerCase()
+          .includes(search)
 
-          (cmrc.cmrcName || '')
-            .toLowerCase()
-            .includes(search)
+        ||
 
-          ||
+        (cmrc.accountNo || '')
+          .toLowerCase()
+          .includes(search)
 
-          (cmrc.accountNo || '')
-            .toLowerCase()
-            .includes(search)
+        ||
 
-          ||
+        (cmrc.district || '')
+          .toLowerCase()
+          .includes(search)
 
-          (cmrc.district || '')
-            .toLowerCase()
-            .includes(search)
+        ||
 
-          ||
+        (cmrc.taluka || '')
+          .toLowerCase()
+          .includes(search)
 
-          (cmrc.taluka || '')
-            .toLowerCase()
-            .includes(search)
+        ||
 
-          ||
-
-          (cmrc.status || '')
-            .toLowerCase()
-            .includes(search)
-
-        );
-
-      }
+        (cmrc.status || '')
+          .toLowerCase()
+          .includes(search)
     );
-
   }
 
 
-  // =========================================================
-  // TOTAL CMRC COUNT
-  // =========================================================
-
-  get totalCmrc(): number {
-
-    return this.cmrcList.length;
-
-  }
-
-
-  // =========================================================
-  // TOTAL CMRC AMOUNT
-  // =========================================================
+  // =====================================================
+  // TOTAL CMRC BALANCE
+  // =====================================================
 
   get totalCmrcAmount(): number {
 
     return this.cmrcList.reduce(
-
       (
         total: number,
         cmrc: Cmrc
-      ) => {
-
-        return total +
-          Number(
-            cmrc.totalFund || 0
-          );
-
-      },
-
+      ) =>
+        total +
+        Number(cmrc.totalFund || 0),
       0
-
     );
-
   }
 
 
-  // =========================================================
-  // TOTAL CMRC AMOUNT IN WORDS
-  // =========================================================
+  // =====================================================
+  // AMOUNT CHANGE
+  // =====================================================
 
-  get totalCmrcAmountInWords(): string {
-
-    if (
-      this.totalCmrcAmount <= 0
-    ) {
-
-      return '';
-
-    }
-
-    return this.numberToWordsIndian(
-      this.totalCmrcAmount
-    );
-
-  }
-
-
-  // =========================================================
-  // LIVE FORM AMOUNT IN WORDS
-  // =========================================================
-
-  get amountInWords(): string {
+  updateAmountInWords(): void {
 
     const amount =
-      Number(
-        this.newCmrc.totalFund || 0
-      );
+      Number(this.newCmrc.totalFund || 0);
 
-    if (
-      !amount ||
-      amount <= 0
-    ) {
 
-      return '';
+    if (amount <= 0) {
 
+      this.amountInWords = '';
+
+      return;
     }
 
-    return this.numberToWordsIndian(
-      amount
-    );
 
+    this.amountInWords =
+      this.numberToWords(amount);
   }
 
 
-  // =========================================================
-  // NUMBER TO INDIAN WORDS
-  // =========================================================
+  // =====================================================
+  // NUMBER TO WORDS
+  // =====================================================
 
-  private numberToWordsIndian(
+  numberToWords(num: number): string {
+
+    if (!Number.isFinite(num)) {
+      return '';
+    }
+
+
+    if (num === 0) {
+      return 'Zero Rupees Only';
+    }
+
+
+    const integerPart =
+      Math.floor(num);
+
+
+    const decimalPart =
+      Math.round(
+        (num - integerPart) * 100
+      );
+
+
+    let result = '';
+
+
+    if (integerPart > 0) {
+
+      result +=
+        this.convertIndianNumber(
+          integerPart
+        );
+
+      result +=
+        integerPart === 1
+          ? ' Rupee'
+          : ' Rupees';
+    }
+
+
+    if (decimalPart > 0) {
+
+      if (result) {
+        result += ' and ';
+      }
+
+      result +=
+        this.convertIndianNumber(
+          decimalPart
+        );
+
+      result +=
+        decimalPart === 1
+          ? ' Paisa'
+          : ' Paise';
+    }
+
+
+    return result + ' Only';
+  }
+
+
+  // =====================================================
+  // INDIAN NUMBER CONVERSION
+  // =====================================================
+
+  private convertIndianNumber(
     num: number
   ): string {
 
-    if (!num || num <= 0) {
-
-      return '';
-
+    if (num === 0) {
+      return 'Zero';
     }
 
-    num = Math.floor(num);
 
-    const ones: string[] = [
-
+    const ones = [
       '',
       'One',
       'Two',
@@ -1232,11 +867,10 @@ export class CmrcComponent implements OnInit {
       'Seventeen',
       'Eighteen',
       'Nineteen'
-
     ];
 
-    const tens: string[] = [
 
+    const tens = [
       '',
       '',
       'Twenty',
@@ -1247,151 +881,143 @@ export class CmrcComponent implements OnInit {
       'Seventy',
       'Eighty',
       'Ninety'
-
     ];
 
-    const twoDigitWords = (
-      n: number
-    ): string => {
 
-      if (n < 20) {
+    const convertBelowThousand =
+      (n: number): string => {
 
-        return ones[n];
+        let words = '';
 
-      }
 
-      const ten =
-        Math.floor(n / 10);
+        if (n >= 100) {
 
-      const one =
-        n % 10;
+          words +=
+            ones[Math.floor(n / 100)] +
+            ' Hundred';
 
-      return (
-        tens[ten] +
-        (
-          one > 0
-            ? ' ' + ones[one]
-            : ''
-        )
-      );
+          n %= 100;
 
-    };
 
-    const convertBelowThousand = (
-      n: number
-    ): string => {
-
-      let result = '';
-
-      if (n >= 100) {
-
-        result +=
-          ones[
-            Math.floor(n / 100)
-          ] +
-          ' Hundred';
-
-        n = n % 100;
-
-        if (n > 0) {
-
-          result +=
-            ' ' +
-            twoDigitWords(n);
-
+          if (n > 0) {
+            words += ' ';
+          }
         }
 
-      } else if (n > 0) {
 
-        result +=
-          twoDigitWords(n);
+        if (n >= 20) {
 
-      }
+          words +=
+            tens[Math.floor(n / 10)];
 
-      return result;
+          n %= 10;
 
-    };
+
+          if (n > 0) {
+            words +=
+              ' ' + ones[n];
+          }
+
+        } else if (n > 0) {
+
+          words += ones[n];
+        }
+
+
+        return words;
+      };
+
 
     let result = '';
 
+
+    // Crore
     if (num >= 10000000) {
 
-      const crore =
-        Math.floor(
-          num / 10000000
-        );
-
       result +=
-        convertBelowThousand(crore) +
+        this.convertIndianNumber(
+          Math.floor(num / 10000000)
+        ) +
         ' Crore';
 
-      num =
-        num % 10000000;
+      num %= 10000000;
 
       if (num > 0) {
-
         result += ' ';
-
       }
-
     }
 
+
+    // Lakh
     if (num >= 100000) {
 
-      const lakh =
-        Math.floor(
-          num / 100000
-        );
-
       result +=
-        convertBelowThousand(lakh) +
+        this.convertIndianNumber(
+          Math.floor(num / 100000)
+        ) +
         ' Lakh';
 
-      num =
-        num % 100000;
+      num %= 100000;
 
       if (num > 0) {
-
         result += ' ';
-
       }
-
     }
 
+
+    // Thousand
     if (num >= 1000) {
 
-      const thousand =
-        Math.floor(
-          num / 1000
-        );
-
       result +=
-        convertBelowThousand(thousand) +
+        this.convertIndianNumber(
+          Math.floor(num / 1000)
+        ) +
         ' Thousand';
 
-      num =
-        num % 1000;
+      num %= 1000;
 
       if (num > 0) {
-
         result += ' ';
-
       }
-
     }
 
+
+    // Below thousand
     if (num > 0) {
 
       result +=
         convertBelowThousand(num);
-
     }
 
-    return (
-      result.trim() +
-      ' Rupees Only'
-    );
 
+    return result;
+  }
+
+
+  // =====================================================
+  // TODAY DATE
+  // =====================================================
+
+  private getTodayDate(): string {
+
+    const today =
+      new Date();
+
+    const year =
+      today.getFullYear();
+
+    const month =
+      String(
+        today.getMonth() + 1
+      ).padStart(2, '0');
+
+    const day =
+      String(
+        today.getDate()
+      ).padStart(2, '0');
+
+
+    return `${year}-${month}-${day}`;
   }
 
 }

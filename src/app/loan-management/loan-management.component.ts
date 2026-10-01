@@ -13,7 +13,6 @@ import {
   VoAlf,
   VoAlfService
 } from '../services/vo-alf.service';
-import { switchMap, tap } from 'rxjs/operators';
 
 import {
   Group,
@@ -27,11 +26,22 @@ import {
 
 import {
   Loan,
-  LoanService, LoanImage,
+  LoanService,
+  LoanImage
 } from '../services/loan.service';
-import { ClSchedule, ClScheduleService } from '../services/cl-schedule.service';
-import { Repayment, RepaymentService } from '../services/repayment.service';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+
+import {
+  ClScheduleService
+} from '../services/cl-schedule.service';
+
+import {
+  RepaymentService
+} from '../services/repayment.service';
+
+import {
+  DomSanitizer,
+  SafeUrl
+} from '@angular/platform-browser';
 
 
 @Component({
@@ -46,25 +56,35 @@ export class LoanManagementComponent implements OnInit {
   // =====================================================
 
   cmrcList: Cmrc[] = [];
+
   voAlfList: VoAlf[] = [];
+
   groupList: Group[] = [];
+
   womenList: Women[] = [];
+
 
   // =====================================================
   // LOAN LIST
   // =====================================================
 
   loanList: Loan[] = [];
+
   filteredLoanList: Loan[] = [];
+
 
   // =====================================================
   // SELECTED HIERARCHY
   // =====================================================
 
   selectedCmrcId: number | null = null;
+
   selectedVoAlfId: number | null = null;
+
   selectedGroupId: number | null = null;
+
   selectedWomanId: number | null = null;
+
 
   // =====================================================
   // FUND SUMMARY
@@ -75,6 +95,7 @@ export class LoanManagementComponent implements OnInit {
   totalSanctionedAmount = 0;
 
   leftAlfBalance = 0;
+
 
   // =====================================================
   // FORM
@@ -88,18 +109,22 @@ export class LoanManagementComponent implements OnInit {
 
   newLoan: any = this.getEmptyLoan();
 
+
   // =====================================================
   // SEARCH
   // =====================================================
 
   globalSearch = '';
 
+
   // =====================================================
   // DETAILS
   // =====================================================
 
   selectedLoan: Loan | null = null;
-    // =====================================================
+
+
+  // =====================================================
   // LOAN IMAGES
   // =====================================================
 
@@ -111,12 +136,17 @@ export class LoanManagementComponent implements OnInit {
 
   imageUploading = false;
 
+
   // =====================================================
   // LOADING
   // =====================================================
 
   loading = false;
 
+
+  // =====================================================
+  // CONSTRUCTOR
+  // =====================================================
 
   constructor(
     private cmrcService: CmrcService,
@@ -125,13 +155,22 @@ export class LoanManagementComponent implements OnInit {
     private womenService: WomenService,
     private loanService: LoanService,
     private cdRef: ChangeDetectorRef,
-     private clScheduleService: ClScheduleService,
-  private repaymentService: RepaymentService,
-  private sanitizer: DomSanitizer
+    private clScheduleService: ClScheduleService,
+    private repaymentService: RepaymentService,
+    private sanitizer: DomSanitizer
   ) {}
-getSafeImageUrl(url: string): SafeUrl {
-  return this.sanitizer.bypassSecurityTrustUrl(url);
-}
+
+
+  // =====================================================
+  // SAFE IMAGE URL
+  // =====================================================
+
+  getSafeImageUrl(url: string): SafeUrl {
+
+    return this.sanitizer.bypassSecurityTrustUrl(url);
+
+  }
+
 
   // =====================================================
   // INIT
@@ -146,27 +185,38 @@ getSafeImageUrl(url: string): SafeUrl {
 
   // =====================================================
   // INITIAL DATA
+  //
+  // LOGGED-IN USER
+  //       ↓
+  //      CMRC
+  //       ↓
+  //    VO / ALF
+  //       ↓
+  //     GROUP
+  //       ↓
+  //     WOMEN
+  //       ↓
+  //      LOAN
   // =====================================================
 
   loadInitialData(): void {
 
     this.loading = true;
 
+
+    // Load logged-in user's CMRC first.
     this.loadCmrcList();
 
-    this.loadVoAlfList();
 
-    this.loadAllGroups();
-
-    this.loadAllWomen();
-
+    // Loans are already secured by backend
+    // for the logged-in user's CMRC.
     this.loadLoans();
 
   }
 
 
   // =====================================================
-  // LOAD CMRC
+  // LOAD CURRENT USER CMRC
   // =====================================================
 
   loadCmrcList(): void {
@@ -177,6 +227,47 @@ getSafeImageUrl(url: string): SafeUrl {
 
         this.cmrcList = data || [];
 
+
+        // Backend returns only the CMRC
+        // assigned to logged-in user.
+
+        if (this.cmrcList.length === 0) {
+
+          this.selectedCmrcId = null;
+
+          this.voAlfList = [];
+
+          this.groupList = [];
+
+          this.womenList = [];
+
+          return;
+
+        }
+
+
+        const currentCmrc =
+          this.cmrcList[0];
+
+
+        this.selectedCmrcId =
+          currentCmrc.id != null
+            ? Number(currentCmrc.id)
+            : null;
+
+
+        console.log(
+          'CURRENT USER CMRC:',
+          currentCmrc
+        );
+
+
+        if (this.selectedCmrcId !== null) {
+
+          this.loadVoAlfByCmrc();
+
+        }
+
       },
 
       error: (error) => {
@@ -186,33 +277,15 @@ getSafeImageUrl(url: string): SafeUrl {
           error
         );
 
-      }
+        this.cmrcList = [];
 
-    });
+        this.selectedCmrcId = null;
 
-  }
+        this.voAlfList = [];
 
+        this.groupList = [];
 
-  // =====================================================
-  // LOAD ALL VO / ALF
-  // =====================================================
-
-  loadVoAlfList(): void {
-
-    this.voAlfService.getAll().subscribe({
-
-      next: (data: VoAlf[]) => {
-
-        this.voAlfList = data || [];
-
-      },
-
-      error: (error) => {
-
-        console.error(
-          'VO / ALF loading error:',
-          error
-        );
+        this.womenList = [];
 
       }
 
@@ -222,36 +295,92 @@ getSafeImageUrl(url: string): SafeUrl {
 
 
   // =====================================================
-  // LOAD VO / ALF BY CMRC
+  // CMRC CHANGE
+  //
+  // Kept for template compatibility.
+  // CMRC is normally automatic.
+  // =====================================================
+
+  onCmrcChange(): void {
+
+    this.selectedVoAlfId = null;
+
+    this.selectedGroupId = null;
+
+    this.selectedWomanId = null;
+
+    this.voAlfList = [];
+
+    this.groupList = [];
+
+    this.womenList = [];
+
+
+    this.closeForm();
+
+
+    if (this.selectedCmrcId === null) {
+
+      this.resetFundValues();
+
+      this.applyLoanFilters();
+
+      return;
+
+    }
+
+
+    this.loadVoAlfByCmrc();
+
+  }
+
+
+  // =====================================================
+  // LOAD VO / ALF BY CURRENT CMRC
   // =====================================================
 
   loadVoAlfByCmrc(): void {
 
     this.selectedVoAlfId = null;
+
     this.selectedGroupId = null;
+
     this.selectedWomanId = null;
 
     this.groupList = [];
+
     this.womenList = [];
 
-    if (!this.selectedCmrcId) {
+
+    if (this.selectedCmrcId === null) {
+
+      this.voAlfList = [];
 
       this.resetFundValues();
-
-      this.loadVoAlfList();
 
       this.applyLoanFilters();
 
       return;
+
     }
 
+
     this.voAlfService
-      .getByCmrcId(this.selectedCmrcId)
+      .getByCmrcId(
+        Number(this.selectedCmrcId)
+      )
       .subscribe({
 
         next: (data: VoAlf[]) => {
 
           this.voAlfList = data || [];
+
+
+          console.log(
+            'VO / ALF FOR CURRENT CMRC:',
+            this.voAlfList
+          );
+
 
           this.resetFundValues();
 
@@ -272,6 +401,8 @@ getSafeImageUrl(url: string): SafeUrl {
 
           this.resetFundValues();
 
+          this.applyLoanFilters();
+
         }
 
       });
@@ -286,21 +417,28 @@ getSafeImageUrl(url: string): SafeUrl {
   onVoAlfChange(): void {
 
     this.selectedGroupId = null;
+
     this.selectedWomanId = null;
 
     this.groupList = [];
+
     this.womenList = [];
 
-    if (!this.selectedVoAlfId) {
+
+    if (this.selectedVoAlfId === null) {
 
       this.resetFundValues();
 
       this.applyLoanFilters();
 
       return;
+
     }
 
+
     this.loadGroupsByVoAlf();
+
+    this.loadWomenByVoAlf();
 
     this.calculateFundSummary();
 
@@ -315,20 +453,32 @@ getSafeImageUrl(url: string): SafeUrl {
 
   loadGroupsByVoAlf(): void {
 
-    if (!this.selectedVoAlfId) {
+    if (this.selectedVoAlfId === null) {
 
       this.groupList = [];
 
       return;
+
     }
 
+
     this.groupService
-      .getByVoAlfId(this.selectedVoAlfId)
+      .getByVoAlfId(
+        Number(this.selectedVoAlfId)
+      )
       .subscribe({
 
         next: (data: Group[]) => {
 
           this.groupList = data || [];
+
+
+          console.log(
+            'GROUPS FOR VO / ALF:',
+            this.selectedVoAlfId,
+            this.groupList
+          );
+
 
           this.applyLoanFilters();
 
@@ -354,28 +504,19 @@ getSafeImageUrl(url: string): SafeUrl {
 
   // =====================================================
   // LOAD ALL GROUPS
+  //
+  // Kept for template compatibility.
   // =====================================================
 
   loadAllGroups(): void {
 
-    this.groupService.getAll().subscribe({
+    this.groupList = [];
 
-      next: (data: Group[]) => {
+    if (this.selectedVoAlfId !== null) {
 
-        this.groupList = data || [];
+      this.loadGroupsByVoAlf();
 
-      },
-
-      error: (error) => {
-
-        console.error(
-          'All groups loading error:',
-          error
-        );
-
-      }
-
-    });
+    }
 
   }
 
@@ -390,9 +531,10 @@ getSafeImageUrl(url: string): SafeUrl {
 
     this.womenList = [];
 
-    if (!this.selectedGroupId) {
 
-      if (this.selectedVoAlfId) {
+    if (this.selectedGroupId === null) {
+
+      if (this.selectedVoAlfId !== null) {
 
         this.loadWomenByVoAlf();
 
@@ -405,15 +547,27 @@ getSafeImageUrl(url: string): SafeUrl {
       this.applyLoanFilters();
 
       return;
+
     }
 
+
     this.womenService
-      .getByGroupId(this.selectedGroupId)
+      .getByGroupId(
+        Number(this.selectedGroupId)
+      )
       .subscribe({
 
         next: (data: Women[]) => {
 
           this.womenList = data || [];
+
+
+          console.log(
+            'WOMEN FOR GROUP:',
+            this.selectedGroupId,
+            this.womenList
+          );
+
 
           this.applyLoanFilters();
 
@@ -443,35 +597,56 @@ getSafeImageUrl(url: string): SafeUrl {
 
   loadWomenByVoAlf(): void {
 
-    this.womenService.getAll().subscribe({
+    if (this.selectedVoAlfId === null) {
 
-      next: (data: Women[]) => {
+      this.womenList = [];
 
-        const allWomen = data || [];
+      return;
 
-        this.womenList =
-          allWomen.filter(
-            (woman: any) =>
-              Number(woman.voAlfId) ===
-              Number(this.selectedVoAlfId)
+    }
+
+
+    this.womenService
+      .getAll()
+      .subscribe({
+
+        next: (data: Women[]) => {
+
+          const allWomen =
+            data || [];
+
+
+          this.womenList =
+            allWomen.filter(
+              (woman: any) =>
+                Number(woman.voAlfId) ===
+                Number(this.selectedVoAlfId)
+            );
+
+
+          console.log(
+            'WOMEN FOR VO / ALF:',
+            this.selectedVoAlfId,
+            this.womenList
           );
 
-        this.applyLoanFilters();
 
-      },
+          this.applyLoanFilters();
 
-      error: (error) => {
+        },
 
-        console.error(
-          'Women by VO / ALF loading error:',
-          error
-        );
+        error: (error) => {
 
-        this.womenList = [];
+          console.error(
+            'Women by VO / ALF loading error:',
+            error
+          );
 
-      }
+          this.womenList = [];
 
-    });
+        }
+
+      });
 
   }
 
@@ -482,65 +657,75 @@ getSafeImageUrl(url: string): SafeUrl {
 
   loadAllWomen(): void {
 
-    this.womenService.getAll().subscribe({
+    this.womenService
+      .getAll()
+      .subscribe({
 
-      next: (data: Women[]) => {
+        next: (data: Women[]) => {
 
-        this.womenList = data || [];
+          this.womenList =
+            data || [];
 
-      },
+        },
 
-      error: (error) => {
+        error: (error) => {
 
-        console.error(
-          'All women loading error:',
-          error
-        );
+          console.error(
+            'All women loading error:',
+            error
+          );
 
-      }
+          this.womenList = [];
 
-    });
+        }
+
+      });
 
   }
 
 
   // =====================================================
-  // LOAD ALL LOANS
+  // LOAD LOANS
   // =====================================================
 
   loadLoans(): void {
 
-    this.loanService.getAll().subscribe({
+    this.loanService
+      .getAll()
+      .subscribe({
 
-      next: (data: Loan[]) => {
+        next: (data: Loan[]) => {
 
-        this.loanList = data || [];
+          this.loanList =
+            data || [];
 
-        this.applyLoanFilters();
 
-        this.calculateFundSummary();
+          this.applyLoanFilters();
 
-        this.loading = false;
+          this.calculateFundSummary();
 
-        this.cdRef.detectChanges();
+          this.loading = false;
 
-      },
+          this.cdRef.detectChanges();
 
-      error: (error) => {
+        },
 
-        console.error(
-          'Loan loading error:',
-          error
-        );
+        error: (error) => {
 
-        this.loanList = [];
-        this.filteredLoanList = [];
+          console.error(
+            'Loan loading error:',
+            error
+          );
 
-        this.loading = false;
+          this.loanList = [];
 
-      }
+          this.filteredLoanList = [];
 
-    });
+          this.loading = false;
+
+        }
+
+      });
 
   }
 
@@ -551,65 +736,70 @@ getSafeImageUrl(url: string): SafeUrl {
 
   applyLoanFilters(): void {
 
-    let result = [...this.loanList];
+    let result =
+      [...this.loanList];
 
 
     // ===================================================
-    // CMRC FILTER
+    // CMRC
     // ===================================================
 
-    if (this.selectedCmrcId) {
+    if (this.selectedCmrcId !== null) {
 
-      result = result.filter(
-        (loan: any) =>
-          Number(loan.cmrcId) ===
-          Number(this.selectedCmrcId)
-      );
+      result =
+        result.filter(
+          (loan: any) =>
+            Number(loan.cmrcId) ===
+            Number(this.selectedCmrcId)
+        );
 
     }
 
 
     // ===================================================
-    // VO / ALF FILTER
+    // VO / ALF
     // ===================================================
 
-    if (this.selectedVoAlfId) {
+    if (this.selectedVoAlfId !== null) {
 
-      result = result.filter(
-        (loan: any) =>
-          Number(loan.voAlfId) ===
-          Number(this.selectedVoAlfId)
-      );
+      result =
+        result.filter(
+          (loan: any) =>
+            Number(loan.voAlfId) ===
+            Number(this.selectedVoAlfId)
+        );
 
     }
 
 
     // ===================================================
-    // GROUP FILTER
+    // GROUP
     // ===================================================
 
-    if (this.selectedGroupId) {
+    if (this.selectedGroupId !== null) {
 
-      result = result.filter(
-        (loan: any) =>
-          Number(loan.groupId) ===
-          Number(this.selectedGroupId)
-      );
+      result =
+        result.filter(
+          (loan: any) =>
+            Number(loan.groupId) ===
+            Number(this.selectedGroupId)
+        );
 
     }
 
 
     // ===================================================
-    // WOMAN FILTER
+    // WOMAN
     // ===================================================
 
-    if (this.selectedWomanId) {
+    if (this.selectedWomanId !== null) {
 
-      result = result.filter(
-        (loan: any) =>
-          Number(loan.womanId) ===
-          Number(this.selectedWomanId)
-      );
+      result =
+        result.filter(
+          (loan: any) =>
+            Number(loan.womanId) ===
+            Number(this.selectedWomanId)
+        );
 
     }
 
@@ -619,71 +809,77 @@ getSafeImageUrl(url: string): SafeUrl {
     // ===================================================
 
     const search =
-      String(this.globalSearch || '')
+      String(
+        this.globalSearch || ''
+      )
         .trim()
         .toLowerCase();
 
+
     if (search) {
 
-      result = result.filter(
-        (loan: any) => {
+      result =
+        result.filter(
+          (loan: any) => {
 
-          const searchableValues = [
+            const searchableValues = [
 
-            loan.id,
+              loan.id,
 
-            loan.cmrcId,
-            loan.cmrcName,
+              loan.cmrcId,
+              loan.cmrcName,
 
-            loan.voAlfId,
-            loan.voAlfName,
+              loan.voAlfId,
+              loan.voAlfName,
 
-            loan.groupId,
-            loan.groupName,
+              loan.groupId,
+              loan.groupName,
 
-            loan.villageName,
+              loan.villageName,
 
-            loan.womanId,
-            loan.womanName,
+              loan.womanId,
+              loan.womanName,
 
-            loan.sanctionedAmount,
+              loan.sanctionedAmount,
 
-            loan.processingFee,
+              loan.processingFee,
 
-            loan.loanAmount,
+              loan.loanAmount,
 
-            loan.totalAmount,
+              loan.totalAmount,
 
-            loan.loanPurpose,
+              loan.loanPurpose,
 
-            loan.loanGivenDate,
+              loan.loanGivenDate,
 
-            loan.repaymentPeriodMonths,
+              loan.repaymentPeriodMonths,
 
-            loan.interestRate,
+              loan.interestRate,
 
-            loan.interestType,
+              loan.interestType,
 
-            loan.monthlyEmi,
+              loan.monthlyEmi,
 
-            loan.loanStatus
+              loan.loanStatus
 
-          ];
+            ];
 
-          return searchableValues.some(
-            (value: any) =>
-              String(value ?? '')
-                .toLowerCase()
-                .includes(search)
-          );
 
-        }
-      );
+            return searchableValues.some(
+              (value: any) =>
+                String(value ?? '')
+                  .toLowerCase()
+                  .includes(search)
+            );
+
+          }
+        );
 
     }
 
 
-    this.filteredLoanList = result;
+    this.filteredLoanList =
+      result;
 
   }
 
@@ -701,26 +897,18 @@ getSafeImageUrl(url: string): SafeUrl {
 
   // =====================================================
   // FUND SUMMARY
-  //
-  // LEFT ALF =
-  // SELECTED VO/ALF FUND
-  // -
-  // TOTAL SANCTIONED LOAN AMOUNT
   // =====================================================
 
   calculateFundSummary(): void {
 
-    if (!this.selectedVoAlfId) {
+    if (this.selectedVoAlfId === null) {
 
       this.resetFundValues();
 
       return;
+
     }
 
-
-    // ===================================================
-    // SELECTED VO / ALF
-    // ===================================================
 
     const selectedVoAlf: any =
       this.voAlfList.find(
@@ -735,12 +923,9 @@ getSafeImageUrl(url: string): SafeUrl {
       this.resetFundValues();
 
       return;
+
     }
 
-
-    // ===================================================
-    // VO / ALF RECEIVED FUND
-    // ===================================================
 
     this.totalAlfBalance =
       Number(
@@ -753,10 +938,6 @@ getSafeImageUrl(url: string): SafeUrl {
       );
 
 
-    // ===================================================
-    // SELECTED VO / ALF LOANS
-    // ===================================================
-
     const voAlfLoans =
       this.loanList.filter(
         (loan: any) =>
@@ -764,10 +945,6 @@ getSafeImageUrl(url: string): SafeUrl {
           Number(this.selectedVoAlfId)
       );
 
-
-    // ===================================================
-    // TOTAL SANCTIONED AMOUNT
-    // ===================================================
 
     this.totalSanctionedAmount =
       voAlfLoans.reduce(
@@ -788,18 +965,10 @@ getSafeImageUrl(url: string): SafeUrl {
       );
 
 
-    // ===================================================
-    // LEFT ALF BALANCE
-    // ===================================================
-
     this.leftAlfBalance =
       this.totalAlfBalance -
       this.totalSanctionedAmount;
 
-
-    // ===================================================
-    // FLOATING POINT PROTECTION
-    // ===================================================
 
     if (
       Math.abs(
@@ -886,10 +1055,14 @@ getSafeImageUrl(url: string): SafeUrl {
 
   openAddForm(): void {
 
-    if (!this.selectedWomanId) {
+    if (
+      this.selectedCmrcId === null ||
+      this.selectedVoAlfId === null ||
+      this.selectedGroupId === null
+    ) {
 
       alert(
-        'Please select CMRC, VO / ALF, Group and Woman first.'
+        'Please select CMRC, VO / ALF and Group first.'
       );
 
       return;
@@ -901,7 +1074,10 @@ getSafeImageUrl(url: string): SafeUrl {
 
     this.editingLoanId = null;
 
-    this.newLoan = this.getEmptyLoan();
+    this.newLoan =
+      this.getEmptyLoan();
+
+
     this.clearSelectedImages();
 
 
@@ -914,12 +1090,15 @@ getSafeImageUrl(url: string): SafeUrl {
     this.newLoan.groupId =
       this.selectedGroupId;
 
+
+    // Woman is optional
     this.newLoan.womanId =
       this.selectedWomanId;
 
 
     this.newLoan.groupName =
       this.getSelectedGroupName();
+
 
     this.newLoan.womanName =
       this.getSelectedWomanName();
@@ -936,105 +1115,172 @@ getSafeImageUrl(url: string): SafeUrl {
   // CLOSE FORM
   // =====================================================
 
- closeForm(): void {
+  closeForm(): void {
 
-  this.showForm = false;
+    this.showForm = false;
 
-  this.isEditMode = false;
+    this.isEditMode = false;
 
-  this.editingLoanId = null;
+    this.editingLoanId = null;
 
-  this.newLoan = this.getEmptyLoan();
+    this.newLoan =
+      this.getEmptyLoan();
 
-  this.clearSelectedImages();
+    this.clearSelectedImages();
 
-}
+  }
+
+
   // =====================================================
   // IMAGE SELECT
   // =====================================================
 
- onImageSelected(event: Event): void {
+  onImageSelected(
+    event: Event
+  ): void {
 
-  const input = event.target as HTMLInputElement;
+    const input =
+      event.target as HTMLInputElement;
 
-  if (!input.files || input.files.length === 0) {
-    return;
-  }
 
-  const files = Array.from(input.files);
+    if (
+      !input.files ||
+      input.files.length === 0
+    ) {
 
-  for (const file of files) {
-
-    if (!file.type.startsWith('image/')) {
-      alert(`${file.name} is not a valid image.`);
-      input.value = '';
       return;
+
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert(`${file.name} is larger than 5 MB.`);
-      input.value = '';
-      return;
+
+    const files =
+      Array.from(input.files);
+
+
+    for (const file of files) {
+
+      if (
+        !file.type.startsWith('image/')
+      ) {
+
+        alert(
+          `${file.name} is not a valid image.`
+        );
+
+        input.value = '';
+
+        return;
+
+      }
+
+
+      if (
+        file.size >
+        5 * 1024 * 1024
+      ) {
+
+        alert(
+          `${file.name} is larger than 5 MB.`
+        );
+
+        input.value = '';
+
+        return;
+
+      }
+
     }
-  }
 
-  // Add all selected files
-  this.selectedImageFiles = [
-    ...this.selectedImageFiles,
-    ...files
-  ];
 
-  // Create preview for every image
-  files.forEach(file => {
-    this.imagePreviews.push(
-      URL.createObjectURL(file)
+    this.selectedImageFiles = [
+      ...this.selectedImageFiles,
+      ...files
+    ];
+
+
+    files.forEach(
+      file => {
+
+        this.imagePreviews.push(
+          URL.createObjectURL(file)
+        );
+
+      }
     );
-  });
 
-  // Allow selecting same file again
-  input.value = '';
-}
-removeSelectedImage(index: number): void {
 
-  if (
-    index < 0 ||
-    index >= this.selectedImageFiles.length
-  ) {
-    return;
+    input.value = '';
+
   }
 
-  // Browser memory release
-  if (this.imagePreviews[index]) {
-    URL.revokeObjectURL(this.imagePreviews[index]);
+
+  // =====================================================
+  // REMOVE SELECTED IMAGE
+  // =====================================================
+
+  removeSelectedImage(
+    index: number
+  ): void {
+
+    if (
+      index < 0 ||
+      index >=
+      this.selectedImageFiles.length
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      this.imagePreviews[index]
+    ) {
+
+      URL.revokeObjectURL(
+        this.imagePreviews[index]
+      );
+
+    }
+
+
+    this.selectedImageFiles.splice(
+      index,
+      1
+    );
+
+
+    this.imagePreviews.splice(
+      index,
+      1
+    );
+
   }
 
-  // Remove selected file
-  this.selectedImageFiles.splice(index, 1);
-
-  // Remove preview
-  this.imagePreviews.splice(index, 1);
-}
-
-
-  
 
   // =====================================================
   // CLEAR SELECTED IMAGES
   // =====================================================
-clearSelectedImages(): void {
 
-  this.imagePreviews.forEach(url => {
+  clearSelectedImages(): void {
 
-    URL.revokeObjectURL(url);
+    this.imagePreviews.forEach(
+      url => {
 
-  });
+        URL.revokeObjectURL(url);
 
-  this.selectedImageFiles = [];
+      }
+    );
 
-  this.imagePreviews = [];
 
-}
-    // =====================================================
+    this.selectedImageFiles = [];
+
+    this.imagePreviews = [];
+
+  }
+
+
+  // =====================================================
   // UPLOAD LOAN IMAGES
   // =====================================================
 
@@ -1042,7 +1288,6 @@ clearSelectedImages(): void {
     loanId: number
   ): any {
 
-    // No image selected
     if (
       !this.selectedImageFiles ||
       this.selectedImageFiles.length === 0
@@ -1064,10 +1309,9 @@ clearSelectedImages(): void {
 
   }
 
+
   // =====================================================
   // CALCULATE DISBURSED AMOUNT
-  //
-  // DISBURSED = SANCTIONED - PROCESSING FEE
   // =====================================================
 
   calculateDisbursedAmount(): void {
@@ -1077,6 +1321,7 @@ clearSelectedImages(): void {
         this.newLoan.sanctionedAmount
       ) || 0;
 
+
     const processingFee =
       Number(
         this.newLoan.processingFee
@@ -1085,7 +1330,8 @@ clearSelectedImages(): void {
 
     const totalAmount =
       Math.max(
-        sanctioned - processingFee,
+        sanctioned -
+        processingFee,
         0
       );
 
@@ -1093,8 +1339,10 @@ clearSelectedImages(): void {
     this.newLoan.totalAmount =
       totalAmount;
 
+
     this.newLoan.disbursedAmount =
       totalAmount;
+
 
     this.newLoan.loanAmount =
       totalAmount;
@@ -1116,10 +1364,12 @@ clearSelectedImages(): void {
         this.newLoan.loanAmount
       ) || 0;
 
+
     const months =
       Number(
         this.newLoan.repaymentPeriodMonths
       ) || 0;
+
 
     const rate =
       Number(
@@ -1139,10 +1389,7 @@ clearSelectedImages(): void {
     }
 
 
-    // ===================================================
-    // FLAT INTEREST
-    // ===================================================
-
+    // FLAT
     if (
       this.newLoan.interestType ===
       'FLAT'
@@ -1153,22 +1400,23 @@ clearSelectedImages(): void {
         (rate / 100) *
         (months / 12);
 
+
       const totalPayable =
         principal +
         totalInterest;
 
+
       this.newLoan.monthlyEmi =
-        totalPayable / months;
+        totalPayable /
+        months;
+
 
       return;
 
     }
 
 
-    // ===================================================
-    // REDUCING BALANCE
-    // ===================================================
-
+    // REDUCING
     if (
       this.newLoan.interestType ===
       'REDUCING'
@@ -1181,7 +1429,8 @@ clearSelectedImages(): void {
       if (monthlyRate === 0) {
 
         this.newLoan.monthlyEmi =
-          principal / months;
+          principal /
+          months;
 
         return;
 
@@ -1215,16 +1464,12 @@ clearSelectedImages(): void {
   // SAVE LOAN
   // =====================================================
 
-  // =====================================================
-  // SAVE LOAN
-  // =====================================================
-
   saveLoan(): void {
 
     if (
-      !this.newLoan.cmrcId ||
-      !this.newLoan.voAlfId ||
-      !this.newLoan.groupId
+      this.selectedCmrcId === null ||
+      this.selectedVoAlfId === null ||
+      this.selectedGroupId === null
     ) {
 
       alert(
@@ -1232,15 +1477,12 @@ clearSelectedImages(): void {
       );
 
       return;
+
     }
 
 
     this.loading = true;
 
-
-    // =====================================================
-    // LOAN PAYLOAD
-    // =====================================================
 
     const payload: any = {
 
@@ -1262,80 +1504,73 @@ clearSelectedImages(): void {
     };
 
 
-    // =====================================================
-    // EDIT LOAN
-    // =====================================================
+    // ===================================================
+    // UPDATE
+    // ===================================================
 
-    // =====================================================
-// EDIT LOAN
-// =====================================================
+    if (
+      this.isEditMode &&
+      this.editingLoanId
+    ) {
 
-if (
-  this.isEditMode &&
-  this.editingLoanId
-) {
+      this.loanService
+        .update(
+          this.editingLoanId,
+          payload
+        )
+        .subscribe({
 
-  this.loanService
-    .update(
-      this.editingLoanId,
-      payload
-    )
-    .subscribe({
+          next: () => {
 
-      next: () => {
+            this.loading = false;
 
-        this.loading = false;
-
-        alert(
-          'Loan updated successfully.'
-        );
+            alert(
+              'Loan updated successfully.'
+            );
 
 
-        this.showForm = false;
+            this.closeForm();
 
-        this.isEditMode = false;
+            this.loadLoans();
 
-        this.editingLoanId = null;
+          },
 
-        this.clearSelectedImages();
+          error: (error) => {
 
-        this.loadLoans();
+            this.loading = false;
 
-      },
-
-
-      error: (error) => {
-
-        this.loading = false;
-
-        console.error(
-          'Loan update error:',
-          error
-        );
+            console.error(
+              'Loan update error:',
+              error
+            );
 
 
-        alert(
-          error?.error?.message ||
-          'Failed to update loan.'
-        );
+            alert(
+              error?.error?.message ||
+              'Failed to update loan.'
+            );
 
-      }
+          }
 
-    });
-
-  return;
-}
+        });
 
 
-    // =====================================================
-    // CREATE NEW LOAN
-    // =====================================================
+      return;
+
+    }
+
+
+    // ===================================================
+    // CREATE
+    // ===================================================
 
     this.loanService
       .create(payload)
       .subscribe({
 
-        next: (createdLoan: Loan) => {
+        next: (
+          createdLoan: Loan
+        ) => {
 
           console.log(
             'Loan created:',
@@ -1358,19 +1593,15 @@ if (
             );
 
             return;
+
           }
 
-
-          // =================================================
-          // STEP 1 - UPLOAD IMAGES
-          // =================================================
 
           this.uploadImagesAfterLoanCreate(
             loanId
           );
 
         },
-
 
         error: (error) => {
 
@@ -1392,18 +1623,15 @@ if (
       });
 
   }
-    // =====================================================
+
+
+  // =====================================================
   // AFTER LOAN CREATE
-  // IMAGE -> CL SCHEDULE -> REPAYMENT
   // =====================================================
 
   private uploadImagesAfterLoanCreate(
     loanId: number
   ): void {
-
-    // =====================================================
-    // NO IMAGES
-    // =====================================================
 
     if (
       !this.selectedImageFiles ||
@@ -1416,12 +1644,9 @@ if (
       );
 
       return;
+
     }
 
-
-    // =====================================================
-    // UPLOAD IMAGES
-    // =====================================================
 
     this.imageUploading = true;
 
@@ -1433,7 +1658,9 @@ if (
       )
       .subscribe({
 
-        next: (images: LoanImage[]) => {
+        next: (
+          images: LoanImage[]
+        ) => {
 
           console.log(
             'Loan images uploaded:',
@@ -1451,7 +1678,6 @@ if (
 
         },
 
-
         error: (error) => {
 
           console.error(
@@ -1462,13 +1688,6 @@ if (
 
           this.imageUploading = false;
 
-
-          /*
-           * Loan already created.
-           * Do NOT create loan again.
-           *
-           * Continue with schedule generation.
-           */
 
           alert(
             'Loan created successfully, but image upload failed.'
@@ -1485,7 +1704,9 @@ if (
       });
 
   }
-    // =====================================================
+
+
+  // =====================================================
   // GENERATE CL SCHEDULE + REPAYMENT
   // =====================================================
 
@@ -1494,17 +1715,15 @@ if (
     imagesUploaded: boolean
   ): void {
 
-    // =====================================================
-    // GENERATE CL SCHEDULE
-    // =====================================================
-
     this.loanService
       .generateClSchedule(
         loanId
       )
       .subscribe({
 
-        next: (clSchedule) => {
+        next: (
+          clSchedule
+        ) => {
 
           console.log(
             'CL Schedule generated:',
@@ -1512,17 +1731,15 @@ if (
           );
 
 
-          // =================================================
-          // GENERATE REPAYMENT
-          // =================================================
-
           this.loanService
             .generateRepayment(
               loanId
             )
             .subscribe({
 
-              next: (repayment) => {
+              next: (
+                repayment
+              ) => {
 
                 console.log(
                   'Repayment generated:',
@@ -1532,10 +1749,6 @@ if (
 
                 this.loading = false;
 
-
-                // =================================================
-                // SUCCESS MESSAGE
-                // =================================================
 
                 let message =
                   'Loan created successfully.\n' +
@@ -1554,32 +1767,11 @@ if (
                 alert(message);
 
 
-                // =================================================
-                // CLOSE FORM
-                // =================================================
-
-                this.showForm = false;
-
-                this.isEditMode = false;
-
-                this.editingLoanId = null;
-
-
-                // =================================================
-                // CLEAR IMAGE SELECTION
-                // =================================================
-
-                this.clearSelectedImages();
-
-
-                // =================================================
-                // RELOAD LOANS
-                // =================================================
+                this.closeForm();
 
                 this.loadLoans();
 
               },
-
 
               error: (error) => {
 
@@ -1597,13 +1789,7 @@ if (
                 );
 
 
-                this.showForm = false;
-
-                this.isEditMode = false;
-
-                this.editingLoanId = null;
-
-                this.clearSelectedImages();
+                this.closeForm();
 
                 this.loadLoans();
 
@@ -1612,7 +1798,6 @@ if (
             });
 
         },
-
 
         error: (error) => {
 
@@ -1630,13 +1815,7 @@ if (
           );
 
 
-          this.showForm = false;
-
-          this.isEditMode = false;
-
-          this.editingLoanId = null;
-
-          this.clearSelectedImages();
+          this.closeForm();
 
           this.loadLoans();
 
@@ -1646,163 +1825,168 @@ if (
 
   }
 
+
   // =====================================================
   // EDIT LOAN
-  //
-  // totalAmount -> disbursedAmount
   // =====================================================
 
- editLoan(loan: Loan): void {
+  editLoan(
+    loan: Loan
+  ): void {
 
-  // =====================================================
-  // EDIT MODE
-  // =====================================================
+    this.isEditMode = true;
 
-  this.isEditMode = true;
+    this.showForm = true;
 
-  this.showForm = true;
-
-  this.editingLoanId =
-    loan.id || null;
+    this.editingLoanId =
+      loan.id || null;
 
 
-  // =====================================================
-  // CLEAR PREVIOUS NEW IMAGE SELECTION
-  // =====================================================
-
-  this.clearSelectedImages();
+    this.clearSelectedImages();
 
 
-  // =====================================================
-  // LOAD EXISTING LOAN IMAGES
-  // =====================================================
+    this.loanImages = [];
 
-  this.loanImages = [];
 
-  if (loan.id) {
+    if (loan.id) {
 
-    this.loadLoanImages(
-      Number(loan.id)
-    );
+      this.loadLoanImages(
+        Number(loan.id)
+      );
+
+    }
+
+
+    const loanAny: any =
+      loan as any;
+
+
+    const totalAmount =
+      Number(
+        loanAny.totalAmount
+      ) ||
+      Number(
+        loanAny.loanAmount
+      ) ||
+      0;
+
+
+    this.newLoan = {
+
+      id:
+        loan.id || null,
+
+      cmrcId:
+        loan.cmrcId || null,
+
+      voAlfId:
+        loan.voAlfId || null,
+
+      groupId:
+        loan.groupId || null,
+
+      womanId:
+        loan.womanId || null,
+
+      groupName:
+        loan.groupName || '',
+
+      womanName:
+        loan.womanName || '',
+
+      sanctionedAmount:
+        Number(
+          loan.sanctionedAmount
+        ) || 0,
+
+      processingFee:
+        Number(
+          loan.processingFee
+        ) || 0,
+
+      totalAmount:
+        totalAmount,
+
+      disbursedAmount:
+        totalAmount,
+
+      loanAmount:
+        totalAmount,
+
+      loanPurpose:
+        loan.loanPurpose || '',
+
+      loanGivenDate:
+        loan.loanGivenDate || '',
+
+      repaymentPeriodMonths:
+        loan.repaymentPeriodMonths ||
+        12,
+
+      interestRate:
+        loan.interestRate || 0,
+
+      interestType:
+        loan.interestType ||
+        'FLAT',
+
+      monthlyEmi:
+        loan.monthlyEmi || 0,
+
+      loanStatus:
+        loan.loanStatus ||
+        'ACTIVE'
+
+    };
+
+
+    // Important:
+    // When editing, synchronize hierarchy
+    // from the existing loan.
+
+    this.selectedCmrcId =
+      loan.cmrcId != null
+        ? Number(loan.cmrcId)
+        : this.selectedCmrcId;
+
+
+    this.selectedVoAlfId =
+      loan.voAlfId != null
+        ? Number(loan.voAlfId)
+        : this.selectedVoAlfId;
+
+
+    this.selectedGroupId =
+      loan.groupId != null
+        ? Number(loan.groupId)
+        : this.selectedGroupId;
+
+
+    this.selectedWomanId =
+      loan.womanId != null
+        ? Number(loan.womanId)
+        : null;
+
+
+    this.calculateEmi();
+
+    this.scrollToLoanForm();
 
   }
-
-
-  // =====================================================
-  // LOAN DATA
-  // =====================================================
-
-  const loanAny: any =
-    loan as any;
-
-
-  const totalAmount =
-    Number(
-      loanAny.totalAmount
-    ) ||
-    Number(
-      loanAny.loanAmount
-    ) ||
-    0;
-
-
-  this.newLoan = {
-
-    id:
-      loan.id || null,
-
-    cmrcId:
-      loan.cmrcId || null,
-
-    voAlfId:
-      loan.voAlfId || null,
-
-    groupId:
-      loan.groupId || null,
-
-    womanId:
-      loan.womanId || null,
-
-    groupName:
-      loan.groupName || '',
-
-    womanName:
-      loan.womanName || '',
-
-    sanctionedAmount:
-      Number(
-        loan.sanctionedAmount
-      ) || 0,
-
-    processingFee:
-      Number(
-        loan.processingFee
-      ) || 0,
-
-    // ===================================================
-    // IMPORTANT
-    // ===================================================
-
-    totalAmount:
-      totalAmount,
-
-    disbursedAmount:
-      totalAmount,
-
-    loanAmount:
-      totalAmount,
-
-    loanPurpose:
-      loan.loanPurpose || '',
-
-    loanGivenDate:
-      loan.loanGivenDate || '',
-
-    repaymentPeriodMonths:
-      loan.repaymentPeriodMonths ||
-      12,
-
-    interestRate:
-      loan.interestRate || 0,
-
-    interestType:
-      loan.interestType ||
-      'FLAT',
-
-    monthlyEmi:
-      loan.monthlyEmi || 0,
-
-    loanStatus:
-      loan.loanStatus ||
-      'ACTIVE'
-
-  };
-
-
-  // =====================================================
-  // CALCULATE EMI
-  // =====================================================
-
-  this.calculateEmi();
-
-
-  // =====================================================
-  // SCROLL TO FORM
-  // =====================================================
-
-  this.scrollToLoanForm();
-
-}
 
 
   // =====================================================
   // DELETE LOAN
   // =====================================================
 
-  deleteLoan(id: number): void {
+  deleteLoan(
+    id: number
+  ): void {
 
     if (!id) {
+
       return;
+
     }
 
 
@@ -1813,7 +1997,9 @@ if (
 
 
     if (!confirmed) {
+
       return;
+
     }
 
 
@@ -1852,7 +2038,9 @@ if (
             error
           );
 
+
           this.loading = false;
+
 
           alert(
             'Loan delete failed.'
@@ -1875,7 +2063,9 @@ if (
       .getAll()
       .subscribe({
 
-        next: (data: Loan[]) => {
+        next: (
+          data: Loan[]
+        ) => {
 
           this.loanList =
             data || [];
@@ -1908,13 +2098,12 @@ if (
 
 
   // =====================================================
-  // OPEN DETAILS
-  //
-  // Names are resolved from IDs,
-  // NOT from current dropdown selection.
+  // OPEN LOAN DETAILS
   // =====================================================
 
-  openLoanDetails(loan: Loan): void {
+  openLoanDetails(
+    loan: Loan
+  ): void {
 
     const loanAny: any =
       loan as any;
@@ -1949,9 +2138,12 @@ if (
 
     };
 
-this.loadLoanImages(
-  Number(loan.id)
-);
+
+    this.loadLoanImages(
+      Number(loan.id)
+    );
+
+
     setTimeout(() => {
 
       const element =
@@ -1972,6 +2164,8 @@ this.loadLoanImages(
     }, 100);
 
   }
+
+
   // =====================================================
   // LOAD LOAN IMAGES
   // =====================================================
@@ -1984,7 +2178,9 @@ this.loadLoanImages(
 
 
     if (!loanId) {
+
       return;
+
     }
 
 
@@ -1994,7 +2190,9 @@ this.loadLoanImages(
       )
       .subscribe({
 
-        next: (images: LoanImage[]) => {
+        next: (
+          images: LoanImage[]
+        ) => {
 
           this.loanImages =
             images || [];
@@ -2003,7 +2201,6 @@ this.loadLoanImages(
           this.cdRef.detectChanges();
 
         },
-
 
         error: (error) => {
 
@@ -2019,7 +2216,9 @@ this.loadLoanImages(
       });
 
   }
-    // =====================================================
+
+
+  // =====================================================
   // IMAGE VIEW URL
   // =====================================================
 
@@ -2028,8 +2227,11 @@ this.loadLoanImages(
   ): string {
 
     if (!imageId) {
+
       return '';
+
     }
+
 
     return this.loanService
       .getImageViewUrl(
@@ -2048,8 +2250,11 @@ this.loadLoanImages(
   ): string {
 
     if (!imageId) {
+
       return '';
+
     }
+
 
     return this.loanService
       .getImageDownloadUrl(
@@ -2057,7 +2262,9 @@ this.loadLoanImages(
       );
 
   }
-    // =====================================================
+
+
+  // =====================================================
   // DELETE LOAN IMAGE
   // =====================================================
 
@@ -2066,7 +2273,9 @@ this.loadLoanImages(
   ): void {
 
     if (!image.id) {
+
       return;
+
     }
 
 
@@ -2077,7 +2286,9 @@ this.loadLoanImages(
 
 
     if (!confirmed) {
+
       return;
+
     }
 
 
@@ -2094,7 +2305,9 @@ this.loadLoanImages(
           );
 
 
-          if (this.selectedLoan?.id) {
+          if (
+            this.selectedLoan?.id
+          ) {
 
             this.loadLoanImages(
               Number(
@@ -2105,7 +2318,6 @@ this.loadLoanImages(
           }
 
         },
-
 
         error: (error) => {
 
@@ -2126,6 +2338,7 @@ this.loadLoanImages(
 
   }
 
+
   // =====================================================
   // CLOSE DETAILS
   // =====================================================
@@ -2138,7 +2351,7 @@ this.loadLoanImages(
 
 
   // =====================================================
-  // CMRC NAME BY ID
+  // CMRC NAME
   // =====================================================
 
   getCmrcNameById(
@@ -2146,7 +2359,9 @@ this.loadLoanImages(
   ): string {
 
     if (!cmrcId) {
+
       return '';
+
     }
 
 
@@ -2164,7 +2379,7 @@ this.loadLoanImages(
 
 
   // =====================================================
-  // VO / ALF NAME BY ID
+  // VO / ALF NAME
   // =====================================================
 
   getVoAlfNameById(
@@ -2172,7 +2387,9 @@ this.loadLoanImages(
   ): string {
 
     if (!voAlfId) {
+
       return '';
+
     }
 
 
@@ -2190,7 +2407,7 @@ this.loadLoanImages(
 
 
   // =====================================================
-  // GROUP NAME BY ID
+  // GROUP NAME
   // =====================================================
 
   getGroupNameById(
@@ -2198,7 +2415,9 @@ this.loadLoanImages(
   ): string {
 
     if (!groupId) {
+
       return '';
+
     }
 
 
@@ -2261,7 +2480,9 @@ this.loadLoanImages(
   getSelectedWomanName(): string {
 
     if (!this.selectedWomanId) {
+
       return '';
+
     }
 
 
@@ -2283,31 +2504,44 @@ this.loadLoanImages(
   // =====================================================
 
   getSelectedVillageName(): string {
-  if (!this.selectedVoAlfId) {
-    return '';
+
+    if (!this.selectedVoAlfId) {
+
+      return '';
+
+    }
+
+
+    const groups =
+      this.groupList.filter(
+        group =>
+          Number(group.voAlfId) ===
+          Number(this.selectedVoAlfId)
+      );
+
+
+    if (!groups.length) {
+
+      return '';
+
+    }
+
+
+    const village =
+      groups.find(
+        group =>
+          group.villageName &&
+          group.villageName.trim() !== ''
+      );
+
+
+    return village?.villageName || '';
+
   }
-
-  // Selected VO/ALF ke groups find karo
-  const groups = this.groupList.filter(
-    group => group.voAlfId === this.selectedVoAlfId
-  );
-
-  if (!groups.length) {
-    return '';
-  }
-
-  // First available village
-  const village = groups.find(
-    group => group.villageName && group.villageName.trim() !== ''
-  );
-
-  return village?.villageName || '';
-}
 
 
   // =====================================================
   // TOTAL LOAN AMOUNT
-  // FILTERED RECORDS
   // =====================================================
 
   getTotalLoanAmount(): number {
@@ -2334,7 +2568,6 @@ this.loadLoanImages(
 
   // =====================================================
   // TOTAL SANCTIONED
-  // FILTERED RECORDS
   // =====================================================
 
   getTotalSanctionedAmount(): number {
@@ -2405,6 +2638,7 @@ this.loadLoanImages(
             loan.loanAmount
           ) ||
           0;
+
 
         return total + amount;
 
@@ -2540,7 +2774,9 @@ this.loadLoanImages(
 
 
     const convertBelowThousand =
-      (n: number): string => {
+      (
+        n: number
+      ): string => {
 
         let result = '';
 
@@ -2552,6 +2788,7 @@ this.loadLoanImages(
               Math.floor(n / 100)
             ] +
             ' Hundred ';
+
 
           n %= 100;
 
@@ -2565,6 +2802,7 @@ this.loadLoanImages(
               Math.floor(n / 10)
             ] +
             ' ';
+
 
           n %= 10;
 
@@ -2593,6 +2831,7 @@ this.loadLoanImages(
         num / 100000
       );
 
+
     const remainderAfterLakhs =
       num % 100000;
 
@@ -2612,6 +2851,7 @@ this.loadLoanImages(
       Math.floor(
         remainderAfterLakhs / 1000
       );
+
 
     const remainder =
       remainderAfterLakhs % 1000;
@@ -2638,7 +2878,10 @@ this.loadLoanImages(
     }
 
 
-    return result.trim() + ' Rupees Only';
+    return (
+      result.trim() +
+      ' Rupees Only'
+    );
 
   }
 
@@ -2649,20 +2892,11 @@ this.loadLoanImages(
 
   exportToExcel(): void {
 
-    /*
-     * Existing export implementation
-     * can remain here.
-     *
-     * If your previous component already had
-     * exportToExcel(), keep that implementation.
-     */
-
     console.log(
       'Export requested:',
       this.filteredLoanList
     );
 
   }
-  
 
 }

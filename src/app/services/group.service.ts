@@ -8,8 +8,8 @@ export interface Group {
   // =====================================================
   // INTERNAL IDs
   // =====================================================
-  cmrcId: number;
-  voAlfId: number;
+  cmrcId?: number;
+  voAlfId?: number;
 
   // =====================================================
   // VILLAGE

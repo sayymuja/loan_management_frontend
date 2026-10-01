@@ -20,6 +20,7 @@ import {
   Women
 } from '../services/women.service';
 
+
 @Component({
   selector: 'app-women',
   templateUrl: './women.component.html',
@@ -32,7 +33,11 @@ export class WomenComponent implements OnInit {
   // =====================================================
 
   cmrcList: Cmrc[] = [];
+
   selectedCmrcId: number | null = null;
+
+  selectedDistrict = '';
+  selectedTaluka = '';
 
 
   // =====================================================
@@ -40,6 +45,7 @@ export class WomenComponent implements OnInit {
   // =====================================================
 
   voAlfList: VoAlf[] = [];
+
   selectedVoAlfId: number | null = null;
 
 
@@ -48,6 +54,7 @@ export class WomenComponent implements OnInit {
   // =====================================================
 
   groupList: Group[] = [];
+
   selectedGroupId: number | null = null;
 
 
@@ -65,8 +72,11 @@ export class WomenComponent implements OnInit {
   // =====================================================
 
   showForm = false;
+
   isEditMode = false;
+
   isSaving = false;
+
   deletingId: number | null = null;
 
 
@@ -75,12 +85,19 @@ export class WomenComponent implements OnInit {
   // =====================================================
 
   newWomen: Women = {
+
     groupId: 0,
+
     womanName: '',
+
     husbandName: '',
+
     mobileNo: '',
+
     address: '',
+
     status: 'ACTIVE'
+
   };
 
 
@@ -102,88 +119,72 @@ export class WomenComponent implements OnInit {
 
   ngOnInit(): void {
 
-    this.loadCmrc();
+    this.loadCurrentCmrc();
 
-    // Initial load:
-    // Show ALL women
     this.loadAllWomen();
-  }
-
-
-  // =====================================================
-  // LOAD ALL WOMEN
-  // =====================================================
-
-  loadAllWomen(): void {
-
-    this.womenService.getAll().subscribe({
-
-      next: (data: Women[]) => {
-
-        this.womenList = data || [];
-
-        console.log(
-          'ALL WOMEN:',
-          this.womenList
-        );
-
-        console.log(
-          'TOTAL WOMEN FROM API:',
-          this.womenList.length
-        );
-
-        if (this.womenList.length > 0) {
-
-          console.log(
-            'FIRST WOMAN:',
-            this.womenList[0]
-          );
-
-          console.log(
-            'CMRC ID:',
-            this.womenList[0].cmrcId
-          );
-
-          console.log(
-            'VO/ALF ID:',
-            this.womenList[0].voAlfId
-          );
-
-          console.log(
-            'GROUP ID:',
-            this.womenList[0].groupId
-          );
-        }
-
-      },
-
-      error: (error: any) => {
-
-        console.error(
-          'Women API Error:',
-          error
-        );
-
-        this.womenList = [];
-
-      }
-
-    });
 
   }
 
 
   // =====================================================
-  // LOAD CMRC
+  // LOAD CURRENT USER CMRC
   // =====================================================
 
-  loadCmrc(): void {
+  loadCurrentCmrc(): void {
 
     this.cmrcService.getAll().subscribe({
 
       next: (data: Cmrc[]) => {
 
         this.cmrcList = data || [];
+
+        if (this.cmrcList.length === 0) {
+
+          this.selectedCmrcId = null;
+
+          this.selectedDistrict = '';
+          this.selectedTaluka = '';
+
+          this.voAlfList = [];
+          this.groupList = [];
+
+          return;
+        }
+
+
+        /*
+         * Backend already returns only the CMRC
+         * assigned to logged-in user.
+         */
+
+        const cmrc = this.cmrcList[0];
+
+
+        if (cmrc.id === undefined) {
+
+          console.error(
+            'Invalid CMRC ID received.'
+          );
+
+          return;
+        }
+
+
+        this.selectedCmrcId = cmrc.id;
+
+
+        this.selectedDistrict =
+          cmrc.district || '';
+
+
+        this.selectedTaluka =
+          cmrc.taluka || '';
+
+
+        // Load VO / ALF
+        this.loadVoAlfByCmrc(
+          this.selectedCmrcId
+        );
 
       },
 
@@ -204,15 +205,59 @@ export class WomenComponent implements OnInit {
 
 
   // =====================================================
+  // LOAD ALL WOMEN
+  // =====================================================
+
+  loadAllWomen(): void {
+
+    this.womenService.getAll().subscribe({
+
+      next: (data: Women[]) => {
+
+        this.womenList = data || [];
+
+        console.log(
+          'WOMEN:',
+          this.womenList
+        );
+
+      },
+
+      error: (error: any) => {
+
+        console.error(
+          'Women API Error:',
+          error
+        );
+
+        this.womenList = [];
+
+      }
+
+    });
+
+  }
+
+
+  // =====================================================
   // CMRC CHANGE
   // =====================================================
+
+  /*
+   * CMRC is automatic for logged-in user.
+   *
+   * This method is kept for compatibility
+   * with existing HTML.
+   */
 
   onCmrcChange(): void {
 
     this.selectedVoAlfId = null;
+
     this.selectedGroupId = null;
 
     this.voAlfList = [];
+
     this.groupList = [];
 
     this.searchText = '';
@@ -220,7 +265,6 @@ export class WomenComponent implements OnInit {
     this.closeForm();
 
 
-    // No CMRC selected
     if (this.selectedCmrcId === null) {
 
       return;
@@ -229,7 +273,7 @@ export class WomenComponent implements OnInit {
 
 
     this.loadVoAlfByCmrc(
-      Number(this.selectedCmrcId)
+      this.selectedCmrcId
     );
 
   }
@@ -290,7 +334,6 @@ export class WomenComponent implements OnInit {
     this.closeForm();
 
 
-    // No VO / ALF selected
     if (this.selectedVoAlfId === null) {
 
       return;
@@ -299,7 +342,7 @@ export class WomenComponent implements OnInit {
 
 
     this.loadGroupsByVoAlf(
-      Number(this.selectedVoAlfId)
+      this.selectedVoAlfId
     );
 
   }
@@ -322,7 +365,7 @@ export class WomenComponent implements OnInit {
           this.groupList = data || [];
 
           console.log(
-            'GROUPS FOR VO/ALF:',
+            'GROUPS FOR VO / ALF:',
             voAlfId,
             this.groupList
           );
@@ -369,10 +412,30 @@ export class WomenComponent implements OnInit {
 
   openAddForm(): void {
 
+    if (this.selectedCmrcId === null) {
+
+      alert(
+        'CMRC is not available.'
+      );
+
+      return;
+    }
+
+
+    if (this.selectedVoAlfId === null) {
+
+      alert(
+        'Please select VO / ALF first.'
+      );
+
+      return;
+    }
+
+
     if (this.selectedGroupId === null) {
 
       alert(
-        'Please select CMRC, VO / ALF and Group first.'
+        'Please select Group first.'
       );
 
       return;
@@ -388,7 +451,8 @@ export class WomenComponent implements OnInit {
 
     this.newWomen = {
 
-      groupId: Number(this.selectedGroupId),
+      groupId:
+        this.selectedGroupId,
 
       womanName: '',
 
@@ -423,11 +487,28 @@ export class WomenComponent implements OnInit {
     this.isSaving = false;
 
 
+    if (
+      women.groupId === undefined ||
+      women.groupId === null
+    ) {
+
+      alert(
+        'Group information is missing.'
+      );
+
+      this.closeForm();
+
+      return;
+    }
+
+
     this.newWomen = {
 
-      id: women.id,
+      id:
+        women.id,
 
-      groupId: Number(women.groupId),
+      groupId:
+        Number(women.groupId),
 
       womanName:
         women.womanName || '',
@@ -445,6 +526,30 @@ export class WomenComponent implements OnInit {
         women.status || 'ACTIVE'
 
     };
+
+
+    /*
+     * Set selected group for edit.
+     */
+
+    this.selectedGroupId =
+      Number(women.groupId);
+
+
+    /*
+     * If VO / ALF ID is available from
+     * returned Women record, restore it.
+     */
+
+    if (
+      women.voAlfId !== undefined &&
+      women.voAlfId !== null
+    ) {
+
+      this.selectedVoAlfId =
+        Number(women.voAlfId);
+
+    }
 
 
     this.scrollToForm();
@@ -473,10 +578,32 @@ export class WomenComponent implements OnInit {
 
   saveWomen(): void {
 
+    if (this.selectedCmrcId === null) {
+
+      alert(
+        'CMRC is not available.'
+      );
+
+      return;
+
+    }
+
+
+    if (this.selectedVoAlfId === null) {
+
+      alert(
+        'Please select VO / ALF.'
+      );
+
+      return;
+
+    }
+
+
     if (this.selectedGroupId === null) {
 
       alert(
-        'Please select a Group.'
+        'Please select Group.'
       );
 
       return;
@@ -508,9 +635,12 @@ export class WomenComponent implements OnInit {
     this.isSaving = true;
 
 
-    // Always send selected group
+    /*
+     * Always use currently selected group.
+     */
+
     this.newWomen.groupId =
-      Number(this.selectedGroupId);
+      this.selectedGroupId;
 
 
     // ===================================================
@@ -561,6 +691,7 @@ export class WomenComponent implements OnInit {
         });
 
       return;
+
     }
 
 

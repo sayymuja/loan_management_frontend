@@ -17,6 +17,7 @@ import {
   templateUrl: './vo-alf.component.html',
   styleUrls: ['./vo-alf.component.css']
 })
+
 export class VoAlfComponent implements OnInit {
 
   // =====================================================
@@ -25,7 +26,19 @@ export class VoAlfComponent implements OnInit {
 
   cmrcList: Cmrc[] = [];
 
+  /*
+   * Logged-in user's CMRC is automatically selected.
+   */
   selectedCmrcId: number | null = null;
+
+
+  // =====================================================
+  // AUTOMATIC CMRC DETAILS
+  // =====================================================
+
+  selectedCmrcName = '';
+  selectedDistrict = '';
+  selectedTaluka = '';
 
 
   // =====================================================
@@ -62,11 +75,6 @@ export class VoAlfComponent implements OnInit {
   // CMRC BALANCE
   // =====================================================
 
-  /*
-   * CMRC total balance comes directly from
-   * selected CMRC.totalFund
-   */
-
   cmrcBalance = 0;
 
   totalReceivedFund = 0;
@@ -88,13 +96,9 @@ export class VoAlfComponent implements OnInit {
   villages: string[] = [];
 
 
-  /*
-   * Temporary village master.
-   *
-   * Sonpeth Taluka villages are included here.
-   *
-   * Later this can be replaced by Village API.
-   */
+  // =====================================================
+  // VILLAGE MASTER
+  // =====================================================
 
   villageMap: { [key: string]: string[] } = {
 
@@ -180,25 +184,7 @@ export class VoAlfComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCmrc();
-    this.loadAllVoAlf();
   }
-  loadAllVoAlf(): void {
-  this.voAlfService.getAll().subscribe({
-    next: (data: VoAlf[]) => {
-      this.voAlfList = data || [];
-
-      this.totalReceivedFund = this.voAlfList.reduce(
-        (total, item) => total + Number(item.receivedFund || 0),
-        0
-      );
-    },
-    error: (error) => {
-      console.error('Error loading all VO / ALF records:', error);
-      this.voAlfList = [];
-      this.totalReceivedFund = 0;
-    }
-  });
-}
 
 
   // =====================================================
@@ -215,6 +201,52 @@ export class VoAlfComponent implements OnInit {
 
         this.cmrcList = data || [];
 
+        if (this.cmrcList.length > 0) {
+
+          const cmrc = this.cmrcList[0];
+
+          this.selectedCmrcId =
+            cmrc.id ?? null;
+
+          this.selectedCmrcName =
+            cmrc.cmrcName || '';
+
+          this.selectedDistrict =
+            cmrc.district || '';
+
+          this.selectedTaluka =
+            cmrc.taluka || '';
+
+          this.cmrcBalance =
+            Number(cmrc.totalFund || 0);
+
+          this.loadVillagesBySelectedTaluka();
+
+          if (this.selectedCmrcId !== null) {
+            this.loadVoAlfByCmrc();
+          }
+
+        } else {
+
+          this.selectedCmrcId = null;
+
+          this.selectedCmrcName = '';
+
+          this.selectedDistrict = '';
+
+          this.selectedTaluka = '';
+
+          this.cmrcBalance = 0;
+
+          this.voAlfList = [];
+
+          this.totalReceivedFund = 0;
+
+          this.cmrcLeftBalance = 0;
+
+          this.villages = [];
+        }
+
         this.isLoading = false;
 
       },
@@ -228,14 +260,54 @@ export class VoAlfComponent implements OnInit {
 
         this.isLoading = false;
 
+        this.cmrcList = [];
+
+        this.selectedCmrcId = null;
+
+        this.selectedCmrcName = '';
+
+        this.selectedDistrict = '';
+
+        this.selectedTaluka = '';
+
+        this.cmrcBalance = 0;
+
+        this.voAlfList = [];
+
+        this.totalReceivedFund = 0;
+
+        this.cmrcLeftBalance = 0;
+
+        this.villages = [];
+
         alert(
           'Unable to load CMRC data.'
         );
-
       }
 
     });
+  }
 
+
+  // =====================================================
+  // LOAD ALL VO / ALF
+  // =====================================================
+
+  loadAllVoAlf(): void {
+
+    if (
+      this.selectedCmrcId === null ||
+      this.selectedCmrcId === undefined
+    ) {
+
+      this.voAlfList = [];
+
+      this.totalReceivedFund = 0;
+
+      return;
+    }
+
+    this.loadVoAlfByCmrc();
   }
 
 
@@ -266,18 +338,22 @@ export class VoAlfComponent implements OnInit {
     }
 
 
-    // =================================================
-    // GET SELECTED CMRC
-    // =================================================
-
     const selectedCmrc =
       this.getSelectedCmrc();
 
 
-    /*
-     * CMRC Total Balance comes from
-     * CMRC.totalFund
-     */
+    if (selectedCmrc) {
+
+      this.selectedCmrcName =
+        selectedCmrc.cmrcName || '';
+
+      this.selectedDistrict =
+        selectedCmrc.district || '';
+
+      this.selectedTaluka =
+        selectedCmrc.taluka || '';
+    }
+
 
     this.cmrcBalance =
       Number(
@@ -285,16 +361,8 @@ export class VoAlfComponent implements OnInit {
       );
 
 
-    // =================================================
-    // LOAD VILLAGES BY TALUKA
-    // =================================================
-
     this.loadVillagesBySelectedTaluka();
 
-
-    // =================================================
-    // LOAD VO / ALF
-    // =================================================
 
     this.isLoading = true;
 
@@ -336,11 +404,9 @@ export class VoAlfComponent implements OnInit {
           alert(
             'Unable to load VO / ALF data.'
           );
-
         }
 
       });
-
   }
 
 
@@ -351,6 +417,7 @@ export class VoAlfComponent implements OnInit {
   loadVillagesBySelectedTaluka(): void {
 
     const taluka =
+      this.selectedTaluka ||
       this.getSelectedCmrcTaluka();
 
 
@@ -369,11 +436,6 @@ export class VoAlfComponent implements OnInit {
       this.villageMap[taluka] || [];
 
 
-    /*
-     * During edit, keep selected village
-     * visible if it is not in master list.
-     */
-
     if (
       this.newVoAlf.villageName &&
       !this.villages.includes(
@@ -385,9 +447,7 @@ export class VoAlfComponent implements OnInit {
         this.newVoAlf.villageName,
         ...this.villages
       ];
-
     }
-
   }
 
 
@@ -415,7 +475,6 @@ export class VoAlfComponent implements OnInit {
 
 
     this.calculateLeftBalance();
-
   }
 
 
@@ -433,7 +492,6 @@ export class VoAlfComponent implements OnInit {
       Number(
         this.totalReceivedFund || 0
       );
-
   }
 
 
@@ -449,7 +507,7 @@ export class VoAlfComponent implements OnInit {
     ) {
 
       alert(
-        'Please select CMRC first.'
+        'CMRC information is not available.'
       );
 
       return;
@@ -474,14 +532,11 @@ export class VoAlfComponent implements OnInit {
 
     this.originalReceivedFund = 0;
 
-
     this.isEditMode = false;
 
     this.showForm = true;
 
-
     this.loadVillagesBySelectedTaluka();
-
   }
 
 
@@ -494,7 +549,11 @@ export class VoAlfComponent implements OnInit {
   ): void {
 
     this.newVoAlf = {
-      ...voAlf
+
+      ...voAlf,
+
+      cmrcId:
+        this.selectedCmrcId ?? voAlf.cmrcId
     };
 
 
@@ -508,9 +567,7 @@ export class VoAlfComponent implements OnInit {
 
     this.showForm = true;
 
-
     this.loadVillagesBySelectedTaluka();
-
   }
 
 
@@ -539,9 +596,7 @@ export class VoAlfComponent implements OnInit {
       accountNo: '',
 
       receivedFund: 0
-
     };
-
   }
 
 
@@ -551,26 +606,22 @@ export class VoAlfComponent implements OnInit {
 
   saveVoAlf(): void {
 
-    // =================================================
-    // CMRC VALIDATION
-    // =================================================
-
     if (
-      !this.newVoAlf.cmrcId ||
-      this.newVoAlf.cmrcId <= 0
+      !this.selectedCmrcId ||
+      this.selectedCmrcId <= 0
     ) {
 
       alert(
-        'Please select CMRC.'
+        'CMRC information is not available.'
       );
 
       return;
     }
 
 
-    // =================================================
-    // VILLAGE VALIDATION
-    // =================================================
+    this.newVoAlf.cmrcId =
+      this.selectedCmrcId;
+
 
     if (
       !this.newVoAlf.villageName ||
@@ -585,10 +636,6 @@ export class VoAlfComponent implements OnInit {
     }
 
 
-    // =================================================
-    // VO / ALF VALIDATION
-    // =================================================
-
     if (
       !this.newVoAlf.voAlfName ||
       !this.newVoAlf.voAlfName.trim()
@@ -601,10 +648,6 @@ export class VoAlfComponent implements OnInit {
       return;
     }
 
-
-    // =================================================
-    // RECEIVED FUND
-    // =================================================
 
     const receivedFund =
       Number(
@@ -622,10 +665,6 @@ export class VoAlfComponent implements OnInit {
     }
 
 
-    // =================================================
-    // AVAILABLE BALANCE
-    // =================================================
-
     let availableBalance =
       Number(
         this.cmrcBalance || 0
@@ -633,10 +672,6 @@ export class VoAlfComponent implements OnInit {
 
 
     if (this.isEditMode) {
-
-      /*
-       * Remove old amount first.
-       */
 
       availableBalance =
         Number(this.cmrcBalance || 0)
@@ -653,13 +688,8 @@ export class VoAlfComponent implements OnInit {
         Number(this.cmrcBalance || 0)
         -
         Number(this.totalReceivedFund || 0);
-
     }
 
-
-    // =================================================
-    // BALANCE VALIDATION
-    // =================================================
 
     if (
       receivedFund > availableBalance
@@ -675,23 +705,16 @@ export class VoAlfComponent implements OnInit {
     }
 
 
-    // =================================================
-    // NORMALIZE
-    // =================================================
-
     this.newVoAlf.voAlfName =
       this.newVoAlf.voAlfName.trim();
 
-
     this.newVoAlf.villageName =
       this.newVoAlf.villageName.trim();
-
 
     this.newVoAlf.accountNo =
       this.newVoAlf.accountNo
         ? this.newVoAlf.accountNo.trim()
         : '';
-
 
     this.newVoAlf.receivedFund =
       receivedFund;
@@ -726,7 +749,6 @@ export class VoAlfComponent implements OnInit {
             this.closeForm();
 
             this.loadVoAlfByCmrc();
-
           },
 
           error: (error) => {
@@ -741,7 +763,6 @@ export class VoAlfComponent implements OnInit {
             alert(
               'Unable to update VO / ALF.'
             );
-
           }
 
         });
@@ -771,7 +792,6 @@ export class VoAlfComponent implements OnInit {
           this.closeForm();
 
           this.loadVoAlfByCmrc();
-
         },
 
         error: (error) => {
@@ -786,11 +806,9 @@ export class VoAlfComponent implements OnInit {
           alert(
             'Unable to create VO / ALF.'
           );
-
         }
 
       });
-
   }
 
 
@@ -828,7 +846,6 @@ export class VoAlfComponent implements OnInit {
           );
 
           this.loadVoAlfByCmrc();
-
         },
 
         error: (error) => {
@@ -843,11 +860,9 @@ export class VoAlfComponent implements OnInit {
           alert(
             'Unable to delete VO / ALF.'
           );
-
         }
 
       });
-
   }
 
 
@@ -860,7 +875,6 @@ export class VoAlfComponent implements OnInit {
     return this.cmrcList.find(
       c => c.id === this.selectedCmrcId
     );
-
   }
 
 
@@ -870,11 +884,16 @@ export class VoAlfComponent implements OnInit {
 
   getSelectedCmrcName(): string {
 
+    if (this.selectedCmrcName) {
+
+      return this.selectedCmrcName;
+    }
+
+
     const cmrc =
       this.getSelectedCmrc();
 
     return cmrc?.cmrcName || '-';
-
   }
 
 
@@ -884,11 +903,16 @@ export class VoAlfComponent implements OnInit {
 
   getSelectedCmrcDistrict(): string {
 
+    if (this.selectedDistrict) {
+
+      return this.selectedDistrict;
+    }
+
+
     const cmrc =
       this.getSelectedCmrc();
 
     return cmrc?.district || '-';
-
   }
 
 
@@ -898,11 +922,16 @@ export class VoAlfComponent implements OnInit {
 
   getSelectedCmrcTaluka(): string {
 
+    if (this.selectedTaluka) {
+
+      return this.selectedTaluka;
+    }
+
+
     const cmrc =
       this.getSelectedCmrc();
 
     return cmrc?.taluka || '-';
-
   }
 
 
@@ -924,14 +953,12 @@ export class VoAlfComponent implements OnInit {
     ) {
 
       return '';
-
     }
 
 
     return this.numberToWordsIndian(
       amount
     );
-
   }
 
 
@@ -964,9 +991,7 @@ export class VoAlfComponent implements OnInit {
         -
 
         enteredAmount
-
       );
-
     }
 
 
@@ -981,9 +1006,7 @@ export class VoAlfComponent implements OnInit {
       -
 
       enteredAmount
-
     );
-
   }
 
 
@@ -1001,7 +1024,6 @@ export class VoAlfComponent implements OnInit {
     ) {
 
       return '';
-
     }
 
 
@@ -1009,7 +1031,6 @@ export class VoAlfComponent implements OnInit {
 
 
     const ones: string[] = [
-
       '',
       'One',
       'Two',
@@ -1030,12 +1051,10 @@ export class VoAlfComponent implements OnInit {
       'Seventeen',
       'Eighteen',
       'Nineteen'
-
     ];
 
 
     const tens: string[] = [
-
       '',
       '',
       'Twenty',
@@ -1046,7 +1065,6 @@ export class VoAlfComponent implements OnInit {
       'Seventy',
       'Eighty',
       'Ninety'
-
     ];
 
 
@@ -1054,14 +1072,18 @@ export class VoAlfComponent implements OnInit {
       (n: number): string => {
 
         if (n < 20) {
+
           return ones[n];
         }
+
 
         const ten =
           Math.floor(n / 10);
 
+
         const one =
           n % 10;
+
 
         return (
           tens[ten] +
@@ -1071,7 +1093,6 @@ export class VoAlfComponent implements OnInit {
               : ''
           )
         );
-
       };
 
 
@@ -1079,6 +1100,7 @@ export class VoAlfComponent implements OnInit {
       (n: number): string => {
 
         let result = '';
+
 
         if (n >= 100) {
 
@@ -1088,25 +1110,25 @@ export class VoAlfComponent implements OnInit {
             ] +
             ' Hundred';
 
+
           n = n % 100;
+
 
           if (n > 0) {
 
             result +=
               ' ' +
               twoDigitWords(n);
-
           }
 
         } else if (n > 0) {
 
           result =
             twoDigitWords(n);
-
         }
 
-        return result;
 
+        return result;
       };
 
 
@@ -1121,17 +1143,20 @@ export class VoAlfComponent implements OnInit {
           num / 10000000
         );
 
+
       result +=
         convertBelowThousand(crore)
         + ' Crore';
 
+
       num =
         num % 10000000;
 
+
       if (num > 0) {
+
         result += ' ';
       }
-
     }
 
 
@@ -1143,17 +1168,20 @@ export class VoAlfComponent implements OnInit {
           num / 100000
         );
 
+
       result +=
         convertBelowThousand(lakh)
         + ' Lakh';
 
+
       num =
         num % 100000;
 
+
       if (num > 0) {
+
         result += ' ';
       }
-
     }
 
 
@@ -1165,17 +1193,20 @@ export class VoAlfComponent implements OnInit {
           num / 1000
         );
 
+
       result +=
         convertBelowThousand(thousand)
         + ' Thousand';
 
+
       num =
         num % 1000;
 
+
       if (num > 0) {
+
         result += ' ';
       }
-
     }
 
 
@@ -1184,7 +1215,6 @@ export class VoAlfComponent implements OnInit {
 
       result +=
         convertBelowThousand(num);
-
     }
 
 
@@ -1192,8 +1222,6 @@ export class VoAlfComponent implements OnInit {
       result.trim()
       + ' Rupees Only'
     );
-
   }
 
 }
-

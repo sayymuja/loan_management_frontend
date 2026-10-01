@@ -39,6 +39,7 @@ import {
 
 import * as XLSX from 'xlsx';
 
+
 @Component({
   selector: 'app-cl-schedule',
   templateUrl: './cl-schedule.component.html',
@@ -53,6 +54,7 @@ export class ClScheduleComponent implements OnInit {
   @Input() loanId: number | null = null;
 
   @Output() close = new EventEmitter<void>();
+
 
   /* =====================================================
      MASTER DATA
@@ -72,6 +74,7 @@ export class ClScheduleComponent implements OnInit {
 
   scheduleList: ClSchedule[] = [];
 
+
   /* =====================================================
      SELECTED HIERARCHY
   ===================================================== */
@@ -86,6 +89,7 @@ export class ClScheduleComponent implements OnInit {
 
   selectedLoanId: number | null = null;
 
+
   /* =====================================================
      SELECTED LOAN
   ===================================================== */
@@ -94,6 +98,7 @@ export class ClScheduleComponent implements OnInit {
 
   selectedVillageName = '';
 
+
   /* =====================================================
      STATE
   ===================================================== */
@@ -101,6 +106,11 @@ export class ClScheduleComponent implements OnInit {
   loading = false;
 
   private inputLoanResolved = false;
+
+
+  /* =====================================================
+     CONSTRUCTOR
+  ===================================================== */
 
   constructor(
     private clScheduleService: ClScheduleService,
@@ -112,80 +122,166 @@ export class ClScheduleComponent implements OnInit {
     private cdRef: ChangeDetectorRef
   ) {}
 
+
   /* =====================================================
      INIT
   ===================================================== */
 
   ngOnInit(): void {
 
-    this.loadCmrcList();
+    this.loadCurrentCmrc();
 
     this.loadAllLoans();
+
   }
+
 
   /* =====================================================
-     LOAD CMRC
+     LOAD CURRENT USER CMRC
+     
+     Backend /api/cmrc already returns only
+     the CMRC assigned to logged-in user.
   ===================================================== */
 
-  loadCmrcList(): void {
+  loadCurrentCmrc(): void {
 
-    this.cmrcService.getAll().subscribe({
-      next: (data: Cmrc[]) => {
+    this.cmrcService
+      .getAll()
+      .subscribe({
 
-        this.cmrcList = data || [];
+        next: (data: Cmrc[]) => {
 
-        this.tryResolveInputLoan();
+          this.cmrcList =
+            data || [];
 
-        this.cdRef.detectChanges();
-      },
 
-      error: (error) => {
+          if (
+            this.cmrcList.length === 0
+          ) {
 
-        console.error(
-          'CMRC loading error:',
-          error
-        );
+            this.selectedCmrcId = null;
 
-        this.cmrcList = [];
-      }
-    });
+            this.voAlfList = [];
+
+            this.groupList = [];
+
+            this.womenList = [];
+
+            this.filteredLoanList = [];
+
+            return;
+
+          }
+
+
+          const currentCmrc =
+            this.cmrcList[0];
+
+
+          this.selectedCmrcId =
+            currentCmrc.id != null
+              ? Number(currentCmrc.id)
+              : null;
+
+
+          console.log(
+            'CURRENT USER CMRC:',
+            currentCmrc
+          );
+
+
+          if (
+            this.selectedCmrcId !== null
+          ) {
+
+            this.loadVoAlfByCmrc();
+
+          }
+
+
+          this.tryResolveInputLoan();
+
+
+          this.cdRef.detectChanges();
+
+        },
+
+        error: (error) => {
+
+          console.error(
+            'CMRC loading error:',
+            error
+          );
+
+
+          this.cmrcList = [];
+
+          this.selectedCmrcId = null;
+
+          this.voAlfList = [];
+
+          this.groupList = [];
+
+          this.womenList = [];
+
+        }
+
+      });
+
   }
+
 
   /* =====================================================
      LOAD ALL LOANS
+
+     Backend /api/loan is already secured by CMRC.
   ===================================================== */
 
   loadAllLoans(): void {
 
-    this.loanService.getAll().subscribe({
+    this.loanService
+      .getAll()
+      .subscribe({
 
-      next: (data: Loan[]) => {
+        next: (data: Loan[]) => {
 
-        this.allLoanList = data || [];
+          this.allLoanList =
+            data || [];
 
-        this.filteredLoanList = [...this.allLoanList];
 
-        this.tryResolveInputLoan();
+          this.applyLoanFilters();
 
-        this.cdRef.detectChanges();
-      },
+          this.tryResolveInputLoan();
 
-      error: (error) => {
 
-        console.error(
-          'Loan loading error:',
-          error
-        );
+          this.cdRef.detectChanges();
 
-        this.allLoanList = [];
+        },
 
-        this.filteredLoanList = [];
-      }
-    });
+        error: (error) => {
+
+          console.error(
+            'Loan loading error:',
+            error
+          );
+
+
+          this.allLoanList = [];
+
+          this.filteredLoanList = [];
+
+        }
+
+      });
+
   }
+
 
   /* =====================================================
      RESOLVE INPUT LOAN
+
+     Used when Loan Management opens CL Schedule
+     for a specific loan.
   ===================================================== */
 
   private tryResolveInputLoan(): void {
@@ -195,66 +291,159 @@ export class ClScheduleComponent implements OnInit {
       !this.loanId ||
       !this.allLoanList.length
     ) {
+
       return;
+
     }
 
-    const loan = this.allLoanList.find(
-      item =>
-        Number(item.id) === Number(this.loanId)
-    );
+
+    const loan =
+      this.allLoanList.find(
+        item =>
+          Number(item.id) ===
+          Number(this.loanId)
+      );
+
 
     if (!loan) {
+
       return;
+
     }
+
 
     this.inputLoanResolved = true;
 
-    this.selectedLoanId = loan.id || null;
+
+    this.selectedLoanId =
+      loan.id != null
+        ? Number(loan.id)
+        : null;
+
 
     this.selectedCmrcId =
-      loan.cmrcId || null;
+      loan.cmrcId != null
+        ? Number(loan.cmrcId)
+        : this.selectedCmrcId;
+
 
     this.selectedVoAlfId =
-      loan.voAlfId || null;
+      loan.voAlfId != null
+        ? Number(loan.voAlfId)
+        : null;
+
 
     this.selectedGroupId =
-      loan.groupId || null;
+      loan.groupId != null
+        ? Number(loan.groupId)
+        : null;
+
 
     this.selectedWomanId =
-      loan.womanId || null;
+      loan.womanId != null
+        ? Number(loan.womanId)
+        : null;
 
-    this.selectedLoan = loan;
+
+    this.selectedLoan =
+      this.buildSelectedLoan(loan);
+
 
     this.selectedVillageName =
-      loan.villageName || '';
+      this.selectedLoan.villageName || '';
+
 
     this.loadVoAlfForInputLoan();
+
   }
 
+
   /* =====================================================
-     LOAD VO / ALF
+     BUILD SELECTED LOAN
   ===================================================== */
 
-  private loadVoAlfForInputLoan(): void {
+  private buildSelectedLoan(
+    loan: Loan
+  ): Loan {
 
-    if (!this.selectedCmrcId) {
+    const loanAny: any =
+      loan as any;
 
-      this.applyLoanFilters();
 
-      this.loadScheduleForSelectedLoan();
+    return {
+
+      ...loan,
+
+      cmrcName:
+        loan.cmrcName ||
+        this.getCmrcNameById(
+          loan.cmrcId
+        ),
+
+      voAlfName:
+        loan.voAlfName ||
+        this.getVoAlfNameById(
+          loan.voAlfId
+        ),
+
+      groupName:
+        loan.groupName ||
+        this.getGroupNameById(
+          loan.groupId
+        ),
+
+      villageName:
+        loan.villageName ||
+        loanAny.villageName ||
+        this.getVillageNameByGroupId(
+          loan.groupId
+        )
+
+    };
+
+  }
+
+
+  /* =====================================================
+     LOAD VO / ALF FOR CURRENT CMRC
+  ===================================================== */
+
+  private loadVoAlfByCmrc(): void {
+
+    if (
+      this.selectedCmrcId === null
+    ) {
+
+      this.voAlfList = [];
 
       return;
+
     }
 
+
     this.voAlfService
-      .getByCmrcId(this.selectedCmrcId)
+      .getByCmrcId(
+        Number(this.selectedCmrcId)
+      )
       .subscribe({
 
         next: (data: VoAlf[]) => {
 
-          this.voAlfList = data || [];
+          this.voAlfList =
+            data || [];
 
-          this.loadGroupsForInputLoan();
+
+          console.log(
+            'VO / ALF FOR CURRENT CMRC:',
+            this.voAlfList
+          );
+
+
+          this.tryResolveInputLoan();
+
+
+          this.cdRef.detectChanges();
+
         },
 
         error: (error) => {
@@ -264,37 +453,106 @@ export class ClScheduleComponent implements OnInit {
             error
           );
 
+
           this.voAlfList = [];
 
-          this.loadGroupsForInputLoan();
         }
+
       });
+
   }
 
+
   /* =====================================================
-     LOAD GROUP
+     LOAD VO / ALF FOR INPUT LOAN
   ===================================================== */
 
-  private loadGroupsForInputLoan(): void {
+  private loadVoAlfForInputLoan(): void {
 
-    if (!this.selectedVoAlfId) {
+    if (
+      this.selectedCmrcId === null
+    ) {
 
       this.applyLoanFilters();
 
       this.loadScheduleForSelectedLoan();
 
       return;
+
     }
 
+
+    this.voAlfService
+      .getByCmrcId(
+        Number(this.selectedCmrcId)
+      )
+      .subscribe({
+
+        next: (data: VoAlf[]) => {
+
+          this.voAlfList =
+            data || [];
+
+
+          this.loadGroupsForInputLoan();
+
+        },
+
+        error: (error) => {
+
+          console.error(
+            'VO / ALF loading error:',
+            error
+          );
+
+
+          this.voAlfList = [];
+
+          this.loadGroupsForInputLoan();
+
+        }
+
+      });
+
+  }
+
+
+  /* =====================================================
+     LOAD GROUP FOR INPUT LOAN
+  ===================================================== */
+
+  private loadGroupsForInputLoan(): void {
+
+    if (
+      this.selectedVoAlfId === null
+    ) {
+
+      this.applyLoanFilters();
+
+      this.loadScheduleForSelectedLoan();
+
+      return;
+
+    }
+
+
     this.groupService
-      .getByVoAlfId(this.selectedVoAlfId)
+      .getByVoAlfId(
+        Number(this.selectedVoAlfId)
+      )
       .subscribe({
 
         next: (data: Group[]) => {
 
-          this.groupList = data || [];
+          this.groupList =
+            data || [];
+
+
+          this.updateVillageName();
+
 
           this.loadWomenForInputLoan();
+
         },
 
         error: (error) => {
@@ -304,39 +562,53 @@ export class ClScheduleComponent implements OnInit {
             error
           );
 
+
           this.groupList = [];
 
           this.loadWomenForInputLoan();
+
         }
+
       });
+
   }
 
+
   /* =====================================================
-     LOAD WOMEN
+     LOAD WOMEN FOR INPUT LOAN
   ===================================================== */
 
   private loadWomenForInputLoan(): void {
 
-    if (!this.selectedGroupId) {
+    if (
+      this.selectedGroupId === null
+    ) {
 
       this.applyLoanFilters();
 
       this.loadScheduleForSelectedLoan();
 
       return;
+
     }
 
+
     this.womenService
-      .getByGroupId(this.selectedGroupId)
+      .getByGroupId(
+        Number(this.selectedGroupId)
+      )
       .subscribe({
 
         next: (data: Women[]) => {
 
-          this.womenList = data || [];
+          this.womenList =
+            data || [];
+
 
           this.applyLoanFilters();
 
           this.loadScheduleForSelectedLoan();
+
         },
 
         error: (error) => {
@@ -346,17 +618,25 @@ export class ClScheduleComponent implements OnInit {
             error
           );
 
+
           this.womenList = [];
 
           this.applyLoanFilters();
 
           this.loadScheduleForSelectedLoan();
+
         }
+
       });
+
   }
+
 
   /* =====================================================
      CMRC CHANGE
+     
+     CMRC normally stays automatic.
+     Kept for HTML compatibility.
   ===================================================== */
 
   onCmrcChange(): void {
@@ -375,74 +655,44 @@ export class ClScheduleComponent implements OnInit {
 
     this.scheduleList = [];
 
+    this.voAlfList = [];
+
     this.groupList = [];
 
     this.womenList = [];
 
-    if (!this.selectedCmrcId) {
 
-      this.loadAllLoans();
+    if (
+      this.selectedCmrcId === null
+    ) {
 
-      this.voAlfList = [];
-
-      this.loadVoAlfList();
+      this.applyLoanFilters();
 
       return;
+
     }
 
-    this.voAlfService
-      .getByCmrcId(this.selectedCmrcId)
-      .subscribe({
 
-        next: (data: VoAlf[]) => {
+    this.loadVoAlfByCmrc();
 
-          this.voAlfList = data || [];
+    this.applyLoanFilters();
 
-          this.applyLoanFilters();
-
-          this.cdRef.detectChanges();
-        },
-
-        error: (error) => {
-
-          console.error(
-            'VO / ALF by CMRC error:',
-            error
-          );
-
-          this.voAlfList = [];
-
-          this.applyLoanFilters();
-        }
-      });
   }
+
 
   /* =====================================================
      LOAD ALL VO / ALF
+     
+     Kept for old HTML compatibility.
+     It now loads only current CMRC records.
   ===================================================== */
 
   loadVoAlfList(): void {
 
-    this.voAlfService.getAll().subscribe({
+    this.loadVoAlfByCmrc();
 
-      next: (data: VoAlf[]) => {
-
-        this.voAlfList = data || [];
-
-        this.cdRef.detectChanges();
-      },
-
-      error: (error) => {
-
-        console.error(
-          'VO / ALF loading error:',
-          error
-        );
-
-        this.voAlfList = [];
-      }
-    });
   }
+
 
   /* =====================================================
      VO / ALF CHANGE
@@ -466,26 +716,36 @@ export class ClScheduleComponent implements OnInit {
 
     this.scheduleList = [];
 
-    if (!this.selectedVoAlfId) {
+
+    if (
+      this.selectedVoAlfId === null
+    ) {
 
       this.applyLoanFilters();
 
       return;
+
     }
 
+
     this.groupService
-      .getByVoAlfId(this.selectedVoAlfId)
+      .getByVoAlfId(
+        Number(this.selectedVoAlfId)
+      )
       .subscribe({
 
         next: (data: Group[]) => {
 
-          this.groupList = data || [];
+          this.groupList =
+            data || [];
+
 
           this.updateVillageName();
 
           this.applyLoanFilters();
 
           this.cdRef.detectChanges();
+
         },
 
         error: (error) => {
@@ -495,12 +755,17 @@ export class ClScheduleComponent implements OnInit {
             error
           );
 
+
           this.groupList = [];
 
           this.applyLoanFilters();
+
         }
+
       });
+
   }
+
 
   /* =====================================================
      GROUP CHANGE
@@ -518,41 +783,37 @@ export class ClScheduleComponent implements OnInit {
 
     this.womenList = [];
 
-    this.selectedVillageName = '';
 
-    if (!this.selectedGroupId) {
+    this.updateVillageName();
 
-      this.updateVillageName();
+
+    if (
+      this.selectedGroupId === null
+    ) {
 
       this.applyLoanFilters();
 
       return;
+
     }
 
-    const selectedGroup =
-      this.groupList.find(
-        group =>
-          Number(group.id) ===
-          Number(this.selectedGroupId)
-      );
-
-    if (selectedGroup) {
-
-      this.selectedVillageName =
-        selectedGroup.villageName || '';
-    }
 
     this.womenService
-      .getByGroupId(this.selectedGroupId)
+      .getByGroupId(
+        Number(this.selectedGroupId)
+      )
       .subscribe({
 
         next: (data: Women[]) => {
 
-          this.womenList = data || [];
+          this.womenList =
+            data || [];
+
 
           this.applyLoanFilters();
 
           this.cdRef.detectChanges();
+
         },
 
         error: (error) => {
@@ -562,12 +823,17 @@ export class ClScheduleComponent implements OnInit {
             error
           );
 
+
           this.womenList = [];
 
           this.applyLoanFilters();
+
         }
+
       });
+
   }
+
 
   /* =====================================================
      WOMAN CHANGE
@@ -581,10 +847,13 @@ export class ClScheduleComponent implements OnInit {
 
     this.scheduleList = [];
 
+
     this.applyLoanFilters();
 
     this.cdRef.detectChanges();
+
   }
+
 
   /* =====================================================
      LOAN CHANGE
@@ -596,10 +865,15 @@ export class ClScheduleComponent implements OnInit {
 
     this.selectedLoan = null;
 
-    if (!this.selectedLoanId) {
+
+    if (
+      this.selectedLoanId === null
+    ) {
 
       return;
+
     }
+
 
     const loan =
       this.allLoanList.find(
@@ -608,38 +882,29 @@ export class ClScheduleComponent implements OnInit {
           Number(this.selectedLoanId)
       );
 
+
     if (!loan) {
 
       return;
+
     }
 
-    this.selectedLoan = {
-      ...loan,
 
-      cmrcName:
-        loan.cmrcName ||
-        this.getCmrcNameById(loan.cmrcId),
+    this.selectedLoan =
+      this.buildSelectedLoan(loan);
 
-      voAlfName:
-        loan.voAlfName ||
-        this.getVoAlfNameById(loan.voAlfId),
-
-      groupName:
-        loan.groupName ||
-        this.getGroupNameById(loan.groupId),
-
-      villageName:
-        loan.villageName ||
-        this.getVillageNameByGroupId(loan.groupId)
-    };
 
     this.selectedVillageName =
       this.selectedLoan.villageName || '';
 
+
     this.loadScheduleForSelectedLoan();
 
+
     this.scrollToSchedule();
+
   }
+
 
   /* =====================================================
      FILTER LOANS
@@ -647,51 +912,93 @@ export class ClScheduleComponent implements OnInit {
 
   applyLoanFilters(): void {
 
-    let result = [...this.allLoanList];
+    let result =
+      [...this.allLoanList];
 
-    if (this.selectedCmrcId) {
 
-      result = result.filter(
-        (loan: any) =>
-          Number(loan.cmrcId) ===
-          Number(this.selectedCmrcId)
-      );
+    // ===================================================
+    // CMRC
+    // ===================================================
+
+    if (
+      this.selectedCmrcId !== null
+    ) {
+
+      result =
+        result.filter(
+          (loan: any) =>
+            Number(loan.cmrcId) ===
+            Number(this.selectedCmrcId)
+        );
+
     }
 
-    if (this.selectedVoAlfId) {
 
-      result = result.filter(
-        (loan: any) =>
-          Number(loan.voAlfId) ===
-          Number(this.selectedVoAlfId)
-      );
+    // ===================================================
+    // VO / ALF
+    // ===================================================
+
+    if (
+      this.selectedVoAlfId !== null
+    ) {
+
+      result =
+        result.filter(
+          (loan: any) =>
+            Number(loan.voAlfId) ===
+            Number(this.selectedVoAlfId)
+        );
+
     }
 
-    if (this.selectedGroupId) {
 
-      result = result.filter(
-        (loan: any) =>
-          Number(loan.groupId) ===
-          Number(this.selectedGroupId)
-      );
+    // ===================================================
+    // GROUP
+    // ===================================================
+
+    if (
+      this.selectedGroupId !== null
+    ) {
+
+      result =
+        result.filter(
+          (loan: any) =>
+            Number(loan.groupId) ===
+            Number(this.selectedGroupId)
+        );
+
     }
 
-    if (this.selectedWomanId) {
 
-      result = result.filter(
-        (loan: any) =>
-          Number(loan.womanId) ===
-          Number(this.selectedWomanId)
-      );
+    // ===================================================
+    // WOMAN
+    // ===================================================
+
+    if (
+      this.selectedWomanId !== null
+    ) {
+
+      result =
+        result.filter(
+          (loan: any) =>
+            Number(loan.womanId) ===
+            Number(this.selectedWomanId)
+        );
+
     }
 
-    this.filteredLoanList = result;
 
-    /*
-      If current selected loan is not available
-      after hierarchy filtering, clear it.
-    */
-    if (this.selectedLoanId) {
+    this.filteredLoanList =
+      result;
+
+
+    // ===================================================
+    // CHECK SELECTED LOAN
+    // ===================================================
+
+    if (
+      this.selectedLoanId !== null
+    ) {
 
       const exists =
         this.filteredLoanList.some(
@@ -700,6 +1007,7 @@ export class ClScheduleComponent implements OnInit {
             Number(this.selectedLoanId)
         );
 
+
       if (!exists) {
 
         this.selectedLoanId = null;
@@ -707,59 +1015,67 @@ export class ClScheduleComponent implements OnInit {
         this.selectedLoan = null;
 
         this.scheduleList = [];
+
       }
+
     }
+
   }
+
 
   /* =====================================================
      LOAD SCHEDULE
+     
+     Existing schedule is loaded first.
+     If no schedule exists, generate it.
   ===================================================== */
 
   loadScheduleForSelectedLoan(): void {
 
-    if (!this.selectedLoanId) {
+    if (
+      this.selectedLoanId === null
+    ) {
 
       this.scheduleList = [];
 
       return;
+
     }
+
 
     this.loading = true;
 
-    /*
-      STEP 1:
-      Check existing schedule.
-    */
 
     this.clScheduleService
-      .generateSchedule(this.selectedLoanId)
+      .generateSchedule(
+        Number(this.selectedLoanId)
+      )
       .subscribe({
 
-        next: (data: ClSchedule[]) => {
+        next: (
+          data: ClSchedule[]
+        ) => {
 
-          if (data && data.length > 0) {
-
-            /*
-              Existing schedule found.
-            */
+          if (
+            data &&
+            data.length > 0
+          ) {
 
             this.scheduleList =
               this.sortSchedule(data);
+
 
             this.loading = false;
 
             this.cdRef.detectChanges();
 
             return;
+
           }
 
-          /*
-            STEP 2:
-            No schedule found.
-            Automatically generate.
-          */
 
           this.generateSchedule();
+
         },
 
         error: (error) => {
@@ -769,19 +1085,19 @@ export class ClScheduleComponent implements OnInit {
             error
           );
 
-          /*
-            If GET fails, do not blindly generate.
-            First report the error.
-          */
 
           this.scheduleList = [];
 
           this.loading = false;
 
           this.cdRef.detectChanges();
+
         }
+
       });
+
   }
+
 
   /* =====================================================
      GENERATE SCHEDULE
@@ -789,25 +1105,37 @@ export class ClScheduleComponent implements OnInit {
 
   private generateSchedule(): void {
 
-    if (!this.selectedLoanId) {
+    if (
+      this.selectedLoanId === null
+    ) {
 
       this.loading = false;
 
       return;
+
     }
 
+
     this.clScheduleService
-      .generateSchedule(this.selectedLoanId)
+      .generateSchedule(
+        Number(this.selectedLoanId)
+      )
       .subscribe({
 
-        next: (data: ClSchedule[]) => {
+        next: (
+          data: ClSchedule[]
+        ) => {
 
           this.scheduleList =
-            this.sortSchedule(data || []);
+            this.sortSchedule(
+              data || []
+            );
+
 
           this.loading = false;
 
           this.cdRef.detectChanges();
+
         },
 
         error: (error) => {
@@ -817,18 +1145,25 @@ export class ClScheduleComponent implements OnInit {
             error
           );
 
+
           this.scheduleList = [];
 
           this.loading = false;
+
 
           alert(
             'CL repayment schedule could not be generated.'
           );
 
+
           this.cdRef.detectChanges();
+
         }
+
       });
+
   }
+
 
   /* =====================================================
      SORT SCHEDULE
@@ -839,11 +1174,20 @@ export class ClScheduleComponent implements OnInit {
   ): ClSchedule[] {
 
     return [...schedules].sort(
-      (a: ClSchedule, b: ClSchedule) =>
-        Number(a.installmentNo || 0) -
-        Number(b.installmentNo || 0)
+      (
+        a: ClSchedule,
+        b: ClSchedule
+      ) =>
+        Number(
+          a.installmentNo || 0
+        ) -
+        Number(
+          b.installmentNo || 0
+        )
     );
+
   }
+
 
   /* =====================================================
      SELECTED CMRC NAME
@@ -854,15 +1198,20 @@ export class ClScheduleComponent implements OnInit {
     return this.getCmrcNameById(
       this.selectedCmrcId
     );
+
   }
+
 
   getCmrcNameById(
     cmrcId?: number | null
   ): string {
 
     if (!cmrcId) {
+
       return '';
+
     }
+
 
     const cmrc: any =
       this.cmrcList.find(
@@ -871,8 +1220,11 @@ export class ClScheduleComponent implements OnInit {
           Number(cmrcId)
       );
 
+
     return cmrc?.cmrcName || '';
+
   }
+
 
   /* =====================================================
      SELECTED VO / ALF NAME
@@ -883,15 +1235,20 @@ export class ClScheduleComponent implements OnInit {
     return this.getVoAlfNameById(
       this.selectedVoAlfId
     );
+
   }
+
 
   getVoAlfNameById(
     voAlfId?: number | null
   ): string {
 
     if (!voAlfId) {
+
       return '';
+
     }
+
 
     const voAlf: any =
       this.voAlfList.find(
@@ -900,8 +1257,11 @@ export class ClScheduleComponent implements OnInit {
           Number(voAlfId)
       );
 
+
     return voAlf?.voAlfName || '';
+
   }
+
 
   /* =====================================================
      GROUP NAME
@@ -912,8 +1272,11 @@ export class ClScheduleComponent implements OnInit {
   ): string {
 
     if (!groupId) {
+
       return '';
+
     }
+
 
     const group: any =
       this.groupList.find(
@@ -922,15 +1285,20 @@ export class ClScheduleComponent implements OnInit {
           Number(groupId)
       );
 
+
     return group?.groupName || '';
+
   }
+
 
   getSelectedGroupName(): string {
 
     return this.getGroupNameById(
       this.selectedGroupId
     );
+
   }
+
 
   /* =====================================================
      VILLAGE NAME
@@ -941,8 +1309,11 @@ export class ClScheduleComponent implements OnInit {
   ): string {
 
     if (!groupId) {
+
       return '';
+
     }
+
 
     const group: any =
       this.groupList.find(
@@ -951,27 +1322,39 @@ export class ClScheduleComponent implements OnInit {
           Number(groupId)
       );
 
+
     return group?.villageName || '';
+
   }
+
 
   updateVillageName(): void {
 
-    if (this.selectedGroupId) {
+    if (
+      this.selectedGroupId !== null
+    ) {
 
       this.selectedVillageName =
         this.getVillageNameByGroupId(
           this.selectedGroupId
         );
 
+
       return;
+
     }
 
-    if (!this.selectedVoAlfId) {
+
+    if (
+      this.selectedVoAlfId === null
+    ) {
 
       this.selectedVillageName = '';
 
       return;
+
     }
+
 
     const group =
       this.groupList.find(
@@ -981,9 +1364,12 @@ export class ClScheduleComponent implements OnInit {
           !!item.villageName
       );
 
+
     this.selectedVillageName =
       group?.villageName || '';
+
   }
+
 
   /* =====================================================
      WOMAN NAME
@@ -991,9 +1377,14 @@ export class ClScheduleComponent implements OnInit {
 
   getSelectedWomanName(): string {
 
-    if (!this.selectedWomanId) {
+    if (
+      this.selectedWomanId === null
+    ) {
+
       return '';
+
     }
+
 
     const woman: any =
       this.womenList.find(
@@ -1002,8 +1393,11 @@ export class ClScheduleComponent implements OnInit {
           Number(this.selectedWomanId)
       );
 
+
     return woman?.womanName || '';
+
   }
+
 
   /* =====================================================
      SANCTIONED AMOUNT
@@ -1014,16 +1408,22 @@ export class ClScheduleComponent implements OnInit {
   ): number {
 
     if (!loan) {
+
       return 0;
+
     }
 
-    const loanAny: any = loan as any;
+
+    const loanAny: any =
+      loan as any;
+
 
     return Number(
-      loanAny.sanctionedAmount ??
-      0
+      loanAny.sanctionedAmount ?? 0
     );
+
   }
+
 
   /* =====================================================
      DISBURSED AMOUNT
@@ -1034,18 +1434,15 @@ export class ClScheduleComponent implements OnInit {
   ): number {
 
     if (!loan) {
+
       return 0;
+
     }
 
-    const loanAny: any = loan as any;
 
-    /*
-      Backend:
-      disbursed_amount -> loanAmount
+    const loanAny: any =
+      loan as any;
 
-      Also support older frontend:
-      totalAmount / disbursedAmount
-    */
 
     return Number(
       loanAny.loanAmount ??
@@ -1053,7 +1450,9 @@ export class ClScheduleComponent implements OnInit {
       loanAny.totalAmount ??
       0
     );
+
   }
+
 
   /* =====================================================
      PROCESSING FEE
@@ -1064,16 +1463,22 @@ export class ClScheduleComponent implements OnInit {
   ): number {
 
     if (!loan) {
+
       return 0;
+
     }
 
-    const loanAny: any = loan as any;
+
+    const loanAny: any =
+      loan as any;
+
 
     return Number(
-      loanAny.processingFee ??
-      0
+      loanAny.processingFee ?? 0
     );
+
   }
+
 
   /* =====================================================
      EXPORT EXCEL
@@ -1085,12 +1490,18 @@ export class ClScheduleComponent implements OnInit {
       !this.scheduleList ||
       this.scheduleList.length === 0
     ) {
+
       return;
+
     }
+
 
     const exportData =
       this.scheduleList.map(
-        (schedule: ClSchedule, index: number) => {
+        (
+          schedule: ClSchedule,
+          index: number
+        ) => {
 
           return {
 
@@ -1107,39 +1518,49 @@ export class ClScheduleComponent implements OnInit {
 
             'Outstanding Amount':
               Number(
-                schedule.outstandingAmount || 0
+                schedule.outstandingAmount ||
+                0
               ),
 
             'Principal':
               Number(
-                schedule.principalAmount || 0
+                schedule.principalAmount ||
+                0
               ),
 
             'Interest':
               Number(
-                schedule.interestAmount || 0
+                schedule.interestAmount ||
+                0
               ),
 
             'Installment Amount':
               Number(
-                schedule.averageMonthlyInstallment || 0
+                schedule.averageMonthlyInstallment ||
+                0
               ),
 
             'Closing Balance':
               Number(
-                schedule.closingBalance || 0
+                schedule.closingBalance ||
+                0
               )
+
           };
+
         }
       );
+
 
     const worksheet =
       XLSX.utils.json_to_sheet(
         exportData
       );
 
+
     const workbook =
       XLSX.utils.book_new();
+
 
     XLSX.utils.book_append_sheet(
       workbook,
@@ -1147,17 +1568,22 @@ export class ClScheduleComponent implements OnInit {
       'CL Repayment Schedule'
     );
 
+
     const loanNumber =
-      this.selectedLoan?.id || 'Loan';
+      this.selectedLoan?.id ||
+      'Loan';
+
 
     XLSX.writeFile(
       workbook,
       `CL-Repayment-Schedule-${loanNumber}.xlsx`
     );
+
   }
 
+
   /* =====================================================
-     EXCEL DATE FORMAT
+     EXCEL DATE
   ===================================================== */
 
   private formatExcelDate(
@@ -1167,16 +1593,29 @@ export class ClScheduleComponent implements OnInit {
     const date =
       new Date(dateValue);
 
-    if (isNaN(date.getTime())) {
+
+    if (
+      isNaN(
+        date.getTime()
+      )
+    ) {
+
       return dateValue;
+
     }
+
 
     const day =
       String(
         date.getDate()
-      ).padStart(2, '0');
+      ).padStart(
+        2,
+        '0'
+      );
+
 
     const monthNames = [
+
       'Jan',
       'Feb',
       'Mar',
@@ -1189,18 +1628,24 @@ export class ClScheduleComponent implements OnInit {
       'Oct',
       'Nov',
       'Dec'
+
     ];
+
 
     const month =
       monthNames[
         date.getMonth()
       ];
 
+
     const year =
       date.getFullYear();
 
+
     return `${day}-${month}-${year}`;
+
   }
+
 
   /* =====================================================
      SCROLL TO SCHEDULE
@@ -1215,16 +1660,20 @@ export class ClScheduleComponent implements OnInit {
           '.schedule-card'
         );
 
+
       if (element) {
 
         element.scrollIntoView({
           behavior: 'smooth',
           block: 'start'
         });
+
       }
 
     }, 150);
+
   }
+
 
   /* =====================================================
      CLOSE
@@ -1233,36 +1682,99 @@ export class ClScheduleComponent implements OnInit {
   closeClScheduleView(): void {
 
     this.close.emit();
+
   }
+
+
+  /* =====================================================
+     TOTAL OUTSTANDING
+  ===================================================== */
+
   getTotalOutstandingAmount(): number {
-  return this.scheduleList.reduce(
-    (total: number, item: ClSchedule) =>
-      total + (Number(item.outstandingAmount) || 0),
-    0
-  );
-}
 
-getTotalPrincipalAmount(): number {
-  return this.scheduleList.reduce(
-    (total: number, item: ClSchedule) =>
-      total + (Number(item.principalAmount) || 0),
-    0
-  );
-}
+    return this.scheduleList.reduce(
+      (
+        total: number,
+        item: ClSchedule
+      ) =>
+        total +
+        (
+          Number(
+            item.outstandingAmount
+          ) || 0
+        ),
+      0
+    );
 
-getTotalInterestAmount(): number {
-  return this.scheduleList.reduce(
-    (total: number, item: ClSchedule) =>
-      total + (Number(item.interestAmount) || 0),
-    0
-  );
-}
+  }
 
-getTotalInstallmentAmount(): number {
-  return this.scheduleList.reduce(
-    (total: number, item: ClSchedule) =>
-      total + (Number(item.averageMonthlyInstallment) || 0),
-    0
-  );
-}
+
+  /* =====================================================
+     TOTAL PRINCIPAL
+  ===================================================== */
+
+  getTotalPrincipalAmount(): number {
+
+    return this.scheduleList.reduce(
+      (
+        total: number,
+        item: ClSchedule
+      ) =>
+        total +
+        (
+          Number(
+            item.principalAmount
+          ) || 0
+        ),
+      0
+    );
+
+  }
+
+
+  /* =====================================================
+     TOTAL INTEREST
+  ===================================================== */
+
+  getTotalInterestAmount(): number {
+
+    return this.scheduleList.reduce(
+      (
+        total: number,
+        item: ClSchedule
+      ) =>
+        total +
+        (
+          Number(
+            item.interestAmount
+          ) || 0
+        ),
+      0
+    );
+
+  }
+
+
+  /* =====================================================
+     TOTAL INSTALLMENT
+  ===================================================== */
+
+  getTotalInstallmentAmount(): number {
+
+    return this.scheduleList.reduce(
+      (
+        total: number,
+        item: ClSchedule
+      ) =>
+        total +
+        (
+          Number(
+            item.averageMonthlyInstallment
+          ) || 0
+        ),
+      0
+    );
+
+  }
+
 }

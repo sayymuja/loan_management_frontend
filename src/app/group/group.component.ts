@@ -15,6 +15,7 @@ import {
   Cmrc
 } from '../services/cmrc.service';
 
+
 @Component({
   selector: 'app-group',
   templateUrl: './group.component.html',
@@ -30,6 +31,9 @@ export class GroupComponent implements OnInit {
 
   selectedCmrcId: number | null = null;
 
+  selectedCmrcName = '';
+  selectedDistrict = '';
+  selectedTaluka = '';
 
   // =====================================================
   // VO / ALF
@@ -39,24 +43,19 @@ export class GroupComponent implements OnInit {
 
   selectedVoAlfId: number | null = null;
 
+  selectedVoAlfName = '';
 
-  // =====================================================
-  // VILLAGE
-  // =====================================================
-
-  selectedVillageName = '-';
-
-  selectedVoAlfVillageName = '-';
-
+  selectedVoAlfVillageName = '';
 
   // =====================================================
   // GROUP
   // =====================================================
 
-  groupList: Group[] = [];
+  groups: Group[] = [];
 
-  searchText = '';
+  filteredGroupList: Group[] = [];
 
+  totalGroups = 0;
 
   // =====================================================
   // FORM
@@ -70,21 +69,32 @@ export class GroupComponent implements OnInit {
 
   deletingId: number | null = null;
 
+  editingGroupId: number | null = null;
 
   // =====================================================
   // NEW GROUP
   // =====================================================
 
   newGroup: Group = {
-
     cmrcId: 0,
-
     voAlfId: 0,
-
     villageName: '',
-
     groupName: ''
   };
+
+  // =====================================================
+  // MESSAGES
+  // =====================================================
+
+  errorMessage = '';
+
+  successMessage = '';
+
+  // =====================================================
+  // LOADING
+  // =====================================================
+
+  loading = false;
 
 
   // =====================================================
@@ -99,158 +109,105 @@ export class GroupComponent implements OnInit {
 
 
   // =====================================================
-  // INITIAL LOAD
+  // INIT
   // =====================================================
 
   ngOnInit(): void {
 
-    // Load ALL GROUPS initially
-    this.loadAllGroups();
+    this.loadCurrentCmrc();
 
-    // Load all CMRC
-    this.loadCmrcList();
   }
 
 
   // =====================================================
-  // TOTAL GROUPS
+  // LOAD CURRENT USER CMRC
   // =====================================================
 
-  get totalGroups(): number {
+  loadCurrentCmrc(): void {
 
-    return this.groupList.length;
-  }
+    this.loading = true;
 
+    this.clearMessages();
 
-  // =====================================================
-  // LOAD ALL GROUPS
-  // =====================================================
+    this.cmrcService.getAll().subscribe({
 
-  loadAllGroups(): void {
+      next: (data: Cmrc[]) => {
 
-    this.groupService
-      .getAll()
-      .subscribe({
+        this.cmrcList = data || [];
 
-        next: (data: Group[]) => {
+        if (this.cmrcList.length === 0) {
 
-          this.groupList = data || [];
+          this.selectedCmrcId = null;
 
-        },
+          this.selectedCmrcName = '';
+          this.selectedDistrict = '';
+          this.selectedTaluka = '';
 
-        error: (err) => {
+          this.voAlfList = [];
+          this.groups = [];
+          this.filteredGroupList = [];
+          this.totalGroups = 0;
 
-          console.error(
-            'Error loading all groups:',
-            err
-          );
+          this.errorMessage =
+            'No CMRC is assigned to the logged-in user.';
 
-          this.groupList = [];
+          this.loading = false;
+
+          return;
         }
-      });
-  }
 
+        /*
+         * Backend already returns only the
+         * logged-in user's CMRC.
+         */
 
-  // =====================================================
-  // LOAD CMRC
-  // =====================================================
+        const cmrc = this.cmrcList[0];
 
-  loadCmrcList(): void {
+        if (cmrc.id === undefined) {
 
-    this.cmrcService
-      .getAll()
-      .subscribe({
+          this.errorMessage =
+            'Invalid CMRC data received from server.';
 
-        next: (data: Cmrc[]) => {
+          this.loading = false;
 
-          this.cmrcList = data || [];
-
-        },
-
-        error: (err) => {
-
-          console.error(
-            'Error loading CMRC:',
-            err
-          );
-
-          this.cmrcList = [];
+          return;
         }
-      });
-  }
 
+        this.selectedCmrcId = cmrc.id;
 
-  // =====================================================
-  // CMRC CHANGE
-  // =====================================================
+        this.selectedCmrcName =
+          cmrc.cmrcName || '';
 
-  onCmrcChange(): void {
+        this.selectedDistrict =
+          cmrc.district || '';
 
-    // Reset VO / ALF
-    this.selectedVoAlfId = null;
+        this.selectedTaluka =
+          cmrc.taluka || '';
 
-    this.voAlfList = [];
+        // Load VO / ALF
+        this.loadVoAlfByCmrc();
 
+        // Load Groups
+        this.loadGroupsByCurrentCmrc();
 
-    // Reset Village
-    this.selectedVillageName = '-';
+      },
 
-    this.selectedVoAlfVillageName = '-';
+      error: (error) => {
 
+        console.error(
+          'Error loading CMRC:',
+          error
+        );
 
-    // Close form
-    this.showForm = false;
+        this.errorMessage =
+          'Unable to load CMRC details.';
 
-    this.searchText = '';
+        this.loading = false;
 
+      }
 
-    // =================================================
-    // NO CMRC SELECTED
-    // =================================================
+    });
 
-    if (
-      this.selectedCmrcId === null ||
-      this.selectedCmrcId === undefined
-    ) {
-
-      // Show ALL groups
-      this.loadAllGroups();
-
-      return;
-    }
-
-
-    // =================================================
-    // LOAD VO / ALF
-    // =================================================
-
-    this.loadVoAlfByCmrc();
-
-
-    // =================================================
-    // LOAD GROUPS BY CMRC
-    // =================================================
-
-    this.groupService
-      .getByCmrcId(this.selectedCmrcId)
-      .subscribe({
-
-        next: (data: Group[]) => {
-
-          this.groupList = data || [];
-
-        },
-
-        error: (err) => {
-
-          console.error(
-            'Error loading groups by CMRC:',
-            err
-          );
-
-          this.groupList = [];
-        }
-      });
   }
 
 
@@ -260,16 +217,12 @@ export class GroupComponent implements OnInit {
 
   loadVoAlfByCmrc(): void {
 
-    if (
-      this.selectedCmrcId === null ||
-      this.selectedCmrcId === undefined
-    ) {
+    if (this.selectedCmrcId === null) {
 
       this.voAlfList = [];
 
       return;
     }
-
 
     this.voAlfService
       .getByCmrcId(this.selectedCmrcId)
@@ -281,16 +234,22 @@ export class GroupComponent implements OnInit {
 
         },
 
-        error: (err) => {
+        error: (error) => {
 
           console.error(
             'Error loading VO / ALF:',
-            err
+            error
           );
 
           this.voAlfList = [];
+
+          this.errorMessage =
+            'Unable to load VO / ALF records.';
+
         }
+
       });
+
   }
 
 
@@ -300,124 +259,188 @@ export class GroupComponent implements OnInit {
 
   onVoAlfChange(): void {
 
-    // Reset Village
-    this.selectedVillageName = '-';
+    this.selectedVoAlfName = '';
 
-    this.selectedVoAlfVillageName = '-';
+    this.selectedVoAlfVillageName = '';
 
+    if (this.selectedVoAlfId === null) {
 
-    // Close form
-    this.showForm = false;
-
-    this.searchText = '';
-
-
-    // =================================================
-    // NO VO / ALF SELECTED
-    // =================================================
-
-    if (
-      this.selectedVoAlfId === null ||
-      this.selectedVoAlfId === undefined
-    ) {
-
-      if (
-        this.selectedCmrcId !== null &&
-        this.selectedCmrcId !== undefined
-      ) {
-
-        // Show groups under selected CMRC
-        this.groupService
-          .getByCmrcId(this.selectedCmrcId)
-          .subscribe({
-
-            next: (data: Group[]) => {
-
-              this.groupList = data || [];
-
-            },
-
-            error: (err) => {
-
-              console.error(
-                'Error loading groups:',
-                err
-              );
-
-              this.groupList = [];
-            }
-          });
-
-      } else {
-
-        // Show ALL groups
-        this.loadAllGroups();
-      }
+      this.filteredGroupList =
+        [...this.groups];
 
       return;
     }
 
-
-    // =================================================
-    // FIND SELECTED VO / ALF
-    // =================================================
-
     const selectedVoAlf =
       this.voAlfList.find(
-        (voAlf: VoAlf) =>
-          voAlf.id === this.selectedVoAlfId
+        v => v.id === this.selectedVoAlfId
       );
 
+    if (!selectedVoAlf) {
 
-    // =================================================
-    // GET VILLAGE NAME
-    // =================================================
-
-    if (selectedVoAlf) {
-
-      this.selectedVillageName =
-        selectedVoAlf.villageName || '-';
-
-      this.selectedVoAlfVillageName =
-        selectedVoAlf.villageName || '-';
-
-
-      console.log(
-        'Selected VO / ALF:',
-        selectedVoAlf
-      );
-
-      console.log(
-        'Selected Village Name:',
-        this.selectedVillageName
-      );
+      return;
     }
 
+    this.selectedVoAlfName =
+      selectedVoAlf.voAlfName || '';
 
-    // =================================================
-    // LOAD GROUPS BY VO / ALF
-    // =================================================
+    this.selectedVoAlfVillageName =
+      selectedVoAlf.villageName || '';
+
+    /*
+     * Filter groups by selected VO / ALF
+     */
+
+    this.filteredGroupList =
+      this.groups.filter(
+        group =>
+          group.voAlfId === this.selectedVoAlfId
+      );
+
+    this.totalGroups =
+      this.filteredGroupList.length;
+
+  }
+
+
+  // =====================================================
+  // LOAD GROUPS
+  // =====================================================
+
+  loadGroupsByCurrentCmrc(): void {
+
+    if (this.selectedCmrcId === null) {
+
+      this.groups = [];
+
+      this.filteredGroupList = [];
+
+      this.totalGroups = 0;
+
+      this.loading = false;
+
+      return;
+    }
+
+    this.loading = true;
 
     this.groupService
-      .getByVoAlfId(this.selectedVoAlfId)
+      .getByCmrcId(this.selectedCmrcId)
       .subscribe({
 
         next: (data: Group[]) => {
 
-          this.groupList = data || [];
+          this.groups = data || [];
+
+          /*
+           * Initially show all groups
+           * under current CMRC.
+           */
+
+          this.filteredGroupList =
+            [...this.groups];
+
+          this.totalGroups =
+            this.filteredGroupList.length;
+
+          this.loading = false;
 
         },
 
-        error: (err) => {
+        error: (error) => {
 
           console.error(
-            'Error loading groups by VO / ALF:',
-            err
+            'Error loading groups:',
+            error
           );
 
-          this.groupList = [];
+          this.groups = [];
+
+          this.filteredGroupList = [];
+
+          this.totalGroups = 0;
+
+          this.errorMessage =
+            'Unable to load groups.';
+
+          this.loading = false;
+
         }
+
       });
+
+  }
+
+
+  // =====================================================
+  // LOAD ALL GROUPS
+  // =====================================================
+
+  loadAllGroups(): void {
+
+    this.loadGroupsByCurrentCmrc();
+
+  }
+
+
+  // =====================================================
+  // CMRC CHANGE
+  // =====================================================
+
+  onCmrcChange(): void {
+
+    if (this.selectedCmrcId === null) {
+
+      this.selectedCmrcName = '';
+      this.selectedDistrict = '';
+      this.selectedTaluka = '';
+
+      this.selectedVoAlfId = null;
+
+      this.selectedVoAlfName = '';
+
+      this.selectedVoAlfVillageName = '';
+
+      this.voAlfList = [];
+
+      this.groups = [];
+
+      this.filteredGroupList = [];
+
+      this.totalGroups = 0;
+
+      return;
+    }
+
+    const selectedCmrc =
+      this.cmrcList.find(
+        c => c.id === this.selectedCmrcId
+      );
+
+    if (!selectedCmrc) {
+
+      return;
+    }
+
+    this.selectedCmrcName =
+      selectedCmrc.cmrcName || '';
+
+    this.selectedDistrict =
+      selectedCmrc.district || '';
+
+    this.selectedTaluka =
+      selectedCmrc.taluka || '';
+
+    this.selectedVoAlfId = null;
+
+    this.selectedVoAlfName = '';
+
+    this.selectedVoAlfVillageName = '';
+
+    this.loadVoAlfByCmrc();
+
+    this.loadGroupsByCurrentCmrc();
+
   }
 
 
@@ -427,92 +450,42 @@ export class GroupComponent implements OnInit {
 
   openAddForm(): void {
 
-    // CMRC validation
-    if (
-      this.selectedCmrcId === null ||
-      this.selectedCmrcId === undefined
-    ) {
+    this.clearMessages();
 
-      alert('Please select CMRC');
+    if (this.selectedCmrcId === null) {
 
-      return;
-    }
-
-
-    // VO / ALF validation
-    if (
-      this.selectedVoAlfId === null ||
-      this.selectedVoAlfId === undefined
-    ) {
-
-      alert('Please select VO / ALF');
+      this.errorMessage =
+        'CMRC is not available.';
 
       return;
     }
 
+    if (this.selectedVoAlfId === null) {
 
-    // =================================================
-    // GET SELECTED VO / ALF
-    // =================================================
+      this.errorMessage =
+        'Please select VO / ALF first.';
+
+      return;
+    }
 
     const selectedVoAlf =
       this.voAlfList.find(
-        (voAlf: VoAlf) =>
-          voAlf.id === this.selectedVoAlfId
+        v => v.id === this.selectedVoAlfId
       );
-
 
     if (!selectedVoAlf) {
 
-      alert(
-        'Selected VO / ALF information is not available.'
-      );
+      this.errorMessage =
+        'Selected VO / ALF not found.';
 
       return;
     }
-
-
-    // =================================================
-    // GET VILLAGE NAME
-    // =================================================
-
-    const villageName =
-      selectedVoAlf.villageName
-        ? selectedVoAlf.villageName.trim()
-        : '';
-
-
-    if (!villageName) {
-
-      alert(
-        'Village information is not available for selected VO / ALF'
-      );
-
-      return;
-    }
-
-
-    this.selectedVillageName =
-      villageName;
-
-    this.selectedVoAlfVillageName =
-      villageName;
-
-
-    // =================================================
-    // OPEN FORM
-    // =================================================
-
-    this.isEditMode = false;
 
     this.showForm = true;
 
-    this.isSaving = false;
+    this.isEditMode = false;
 
-
-    // =================================================
-    // CREATE NEW GROUP
-    // =================================================
+    this.editingGroupId = null;
 
     this.newGroup = {
 
@@ -523,11 +496,19 @@ export class GroupComponent implements OnInit {
         this.selectedVoAlfId,
 
       villageName:
-        villageName,
+        selectedVoAlf.villageName || '',
 
       groupName:
-        ''
+        '',
+
+      cmrcName:
+        this.selectedCmrcName,
+
+      voAlfName:
+        selectedVoAlf.voAlfName || ''
+
     };
+
   }
 
 
@@ -537,98 +518,375 @@ export class GroupComponent implements OnInit {
 
   openEditForm(group: Group): void {
 
-    this.isEditMode = true;
+    this.clearMessages();
+
+    if (this.selectedCmrcId === null) {
+
+      this.errorMessage =
+        'CMRC is not available.';
+
+      return;
+    }
+
+    if (group.id === undefined) {
+
+      this.errorMessage =
+        'Invalid group ID.';
+
+      return;
+    }
+
+    if (group.cmrcId !== this.selectedCmrcId) {
+
+      this.errorMessage =
+        'You are not authorized to edit this group.';
+
+      return;
+    }
+
+    if (
+      group.voAlfId === undefined ||
+      group.voAlfId === null
+    ) {
+
+      this.errorMessage =
+        'VO / ALF is not available for this group.';
+
+      return;
+    }
 
     this.showForm = true;
 
-    this.isSaving = false;
+    this.isEditMode = true;
+
+    this.editingGroupId =
+      group.id;
+
+    this.selectedVoAlfId =
+      group.voAlfId;
+
+    /*
+     * Find VO / ALF
+     */
+
+    const selectedVoAlf =
+      this.voAlfList.find(
+        v => v.id === group.voAlfId
+      );
+
+    if (selectedVoAlf) {
+
+      this.selectedVoAlfName =
+        selectedVoAlf.voAlfName || '';
+
+      this.selectedVoAlfVillageName =
+        selectedVoAlf.villageName || '';
+
+    } else {
+
+      this.selectedVoAlfName =
+        group.voAlfName || '';
+
+      this.selectedVoAlfVillageName =
+        group.villageName || '';
+
+    }
+
+    /*
+     * Populate form
+     */
+
+    this.newGroup = {
+
+      id:
+        group.id,
+
+      cmrcId:
+        group.cmrcId,
+
+      voAlfId:
+        group.voAlfId,
+
+      villageName:
+        group.villageName || '',
+
+      groupName:
+        group.groupName || '',
+
+      cmrcName:
+        group.cmrcName || this.selectedCmrcName,
+
+      voAlfName:
+        group.voAlfName || this.selectedVoAlfName
+
+    };
+
+  }
 
 
-    // =================================================
-    // SET SELECTED CMRC
-    // =================================================
+  // =====================================================
+  // SAVE GROUP
+  // =====================================================
 
-    this.selectedCmrcId =
-      group.cmrcId;
+  saveGroup(): void {
 
+    this.clearMessages();
 
-    // =================================================
-    // LOAD VO / ALF FOR SELECTED CMRC
-    // =================================================
+    if (this.selectedCmrcId === null) {
 
-    this.voAlfService
-      .getByCmrcId(group.cmrcId)
-      .subscribe({
+      this.errorMessage =
+        'CMRC is required.';
 
-        next: (data: VoAlf[]) => {
+      return;
+    }
 
-          this.voAlfList =
-            data || [];
+    if (this.selectedVoAlfId === null) {
 
+      this.errorMessage =
+        'Please select VO / ALF.';
 
-          this.selectedVoAlfId =
-            group.voAlfId;
+      return;
+    }
 
+    if (
+      !this.newGroup.groupName ||
+      this.newGroup.groupName.trim() === ''
+    ) {
 
-          // =================================================
-          // VILLAGE
-          // =================================================
+      this.errorMessage =
+        'Group Name is required.';
 
-          const selectedVoAlf =
-            this.voAlfList.find(
-              (voAlf: VoAlf) =>
-                voAlf.id === group.voAlfId
+      return;
+    }
+
+    const selectedVoAlf =
+      this.voAlfList.find(
+        v => v.id === this.selectedVoAlfId
+      );
+
+    if (!selectedVoAlf) {
+
+      this.errorMessage =
+        'Selected VO / ALF not found.';
+
+      return;
+    }
+
+    /*
+     * Always use current logged-in CMRC
+     */
+
+    this.newGroup.cmrcId =
+      this.selectedCmrcId;
+
+    /*
+     * Always use selected VO / ALF
+     */
+
+    this.newGroup.voAlfId =
+      this.selectedVoAlfId;
+
+    /*
+     * Village automatically comes
+     * from selected VO / ALF
+     */
+
+    this.newGroup.villageName =
+      selectedVoAlf.villageName || '';
+
+    this.newGroup.cmrcName =
+      this.selectedCmrcName;
+
+    this.newGroup.voAlfName =
+      selectedVoAlf.voAlfName || '';
+
+    this.isSaving = true;
+
+    // ===================================================
+    // UPDATE
+    // ===================================================
+
+    if (
+      this.isEditMode &&
+      this.editingGroupId !== null
+    ) {
+
+      this.groupService
+        .update(
+          this.editingGroupId,
+          this.newGroup
+        )
+        .subscribe({
+
+          next: () => {
+
+            this.isSaving = false;
+
+            this.successMessage =
+              'Group updated successfully.';
+
+            this.closeForm();
+
+            this.loadGroupsByCurrentCmrc();
+
+          },
+
+          error: (error) => {
+
+            console.error(
+              'Error updating group:',
+              error
             );
 
+            this.isSaving = false;
 
-          this.selectedVillageName =
-            group.villageName ||
-            selectedVoAlf?.villageName ||
-            '-';
+            this.errorMessage =
+              this.getErrorMessage(
+                error,
+                'Unable to update group.'
+              );
 
+          }
 
-          this.selectedVoAlfVillageName =
-            this.selectedVillageName;
+        });
 
+      return;
+    }
 
-          // =================================================
-          // EDIT OBJECT
-          // =================================================
+    // ===================================================
+    // CREATE
+    // ===================================================
 
-          this.newGroup = {
+    this.groupService
+      .create(this.newGroup)
+      .subscribe({
 
-            id:
-              group.id,
+        next: () => {
 
-            cmrcId:
-              group.cmrcId,
+          this.isSaving = false;
 
-            voAlfId:
-              group.voAlfId,
+          this.successMessage =
+            'Group created successfully.';
 
-            villageName:
-              this.selectedVillageName,
+          this.closeForm();
 
-            groupName:
-              group.groupName || ''
-          };
+          this.loadGroupsByCurrentCmrc();
 
         },
 
-        error: (err) => {
+        error: (error) => {
 
           console.error(
-            'Error loading VO / ALF for edit:',
-            err
+            'Error creating group:',
+            error
           );
 
-          this.showForm = false;
+          this.isSaving = false;
 
-          alert(
-            'Unable to load VO / ALF information.'
-          );
+          this.errorMessage =
+            this.getErrorMessage(
+              error,
+              'Unable to create group.'
+            );
+
         }
+
       });
+
+  }
+
+
+  // =====================================================
+  // DELETE GROUP
+  // =====================================================
+
+  deleteGroup(groupId: number): void {
+
+    this.clearMessages();
+
+    if (!groupId) {
+
+      this.errorMessage =
+        'Invalid group ID.';
+
+      return;
+    }
+
+    const group =
+      this.groups.find(
+        g => g.id === groupId
+      );
+
+    if (!group) {
+
+      this.errorMessage =
+        'Group not found.';
+
+      return;
+    }
+
+    if (this.selectedCmrcId === null) {
+
+      this.errorMessage =
+        'CMRC is not available.';
+
+      return;
+    }
+
+    if (group.cmrcId !== this.selectedCmrcId) {
+
+      this.errorMessage =
+        'You are not authorized to delete this group.';
+
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        `Are you sure you want to delete group "${group.groupName}"?`
+      );
+
+    if (!confirmed) {
+
+      return;
+    }
+
+    this.deletingId = groupId;
+
+    this.groupService
+      .delete(groupId)
+      .subscribe({
+
+        next: () => {
+
+          this.deletingId = null;
+
+          this.successMessage =
+            'Group deleted successfully.';
+
+          this.loadGroupsByCurrentCmrc();
+
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Error deleting group:',
+            error
+          );
+
+          this.deletingId = null;
+
+          this.errorMessage =
+            this.getErrorMessage(
+              error,
+              'Unable to delete group.'
+            );
+
+        }
+
+      });
+
   }
 
 
@@ -642,8 +900,7 @@ export class GroupComponent implements OnInit {
 
     this.isEditMode = false;
 
-    this.isSaving = false;
-
+    this.editingGroupId = null;
 
     this.newGroup = {
 
@@ -654,344 +911,19 @@ export class GroupComponent implements OnInit {
         this.selectedVoAlfId || 0,
 
       villageName:
-        this.selectedVillageName || '',
+        this.selectedVoAlfVillageName || '',
 
       groupName:
-        ''
-    };
-  }
+        '',
 
+      cmrcName:
+        this.selectedCmrcName,
 
-  // =====================================================
-  // SAVE GROUP
-  // =====================================================
+      voAlfName:
+        this.selectedVoAlfName
 
-  saveGroup(): void {
-
-    // =================================================
-    // CMRC VALIDATION
-    // =================================================
-
-    if (
-      this.selectedCmrcId === null ||
-      this.selectedCmrcId === undefined
-    ) {
-
-      alert('Please select CMRC');
-
-      return;
-    }
-
-
-    // =================================================
-    // VO / ALF VALIDATION
-    // =================================================
-
-    if (
-      this.selectedVoAlfId === null ||
-      this.selectedVoAlfId === undefined
-    ) {
-
-      alert('Please select VO / ALF');
-
-      return;
-    }
-
-
-    // =================================================
-    // FIND SELECTED VO / ALF
-    // =================================================
-
-    const selectedVoAlf =
-      this.voAlfList.find(
-        (voAlf: VoAlf) =>
-          voAlf.id === this.selectedVoAlfId
-      );
-
-
-    if (!selectedVoAlf) {
-
-      alert(
-        'Selected VO / ALF information is not available.'
-      );
-
-      return;
-    }
-
-
-    // =================================================
-    // VILLAGE NAME
-    // =================================================
-
-    const villageName =
-      selectedVoAlf.villageName
-        ? selectedVoAlf.villageName.trim()
-        : '';
-
-
-    if (!villageName) {
-
-      alert(
-        'Village information is not available for selected VO / ALF'
-      );
-
-      return;
-    }
-
-
-    // =================================================
-    // GROUP NAME
-    // =================================================
-
-    if (
-      !this.newGroup.groupName ||
-      !this.newGroup.groupName.trim()
-    ) {
-
-      alert('Please enter Group Name');
-
-      return;
-    }
-
-
-    // =================================================
-    // FINAL PAYLOAD
-    // =================================================
-
-    const payload: Group = {
-
-      id:
-        this.newGroup.id,
-
-      cmrcId:
-        this.selectedCmrcId,
-
-      voAlfId:
-        this.selectedVoAlfId,
-
-      villageName:
-        villageName,
-
-      groupName:
-        this.newGroup.groupName.trim()
     };
 
-
-    console.log(
-      'Group Save Payload:',
-      payload
-    );
-
-
-    this.isSaving = true;
-
-
-    // =================================================
-    // UPDATE
-    // =================================================
-
-    if (
-      this.isEditMode &&
-      this.newGroup.id
-    ) {
-
-      this.groupService
-        .update(
-          this.newGroup.id,
-          payload
-        )
-        .subscribe({
-
-          next: (response: Group) => {
-
-            console.log(
-              'Group updated:',
-              response
-            );
-
-            this.isSaving = false;
-
-            this.showForm = false;
-
-            this.isEditMode = false;
-
-
-            // Reload ALL groups
-            this.loadAllGroups();
-
-
-            alert(
-              'Group updated successfully'
-            );
-          },
-
-          error: (err) => {
-
-            console.error(
-              'Error updating group:',
-              err
-            );
-
-            this.isSaving = false;
-
-            alert(
-              'Error updating group'
-            );
-          }
-        });
-
-      return;
-    }
-
-
-    // =================================================
-    // CREATE
-    // =================================================
-
-    this.groupService
-      .create(payload)
-      .subscribe({
-
-        next: (response: Group) => {
-
-          console.log(
-            'Group created:',
-            response
-          );
-
-          this.isSaving = false;
-
-          this.showForm = false;
-
-
-          // Reload ALL groups
-          this.loadAllGroups();
-
-
-          alert(
-            'Group created successfully'
-          );
-        },
-
-        error: (err) => {
-
-          console.error(
-            'Error creating group:',
-            err
-          );
-
-          this.isSaving = false;
-
-          alert(
-            'Error creating group'
-          );
-        }
-      });
-  }
-
-
-  // =====================================================
-  // DELETE GROUP
-  // =====================================================
-
-  deleteGroup(id?: number): void {
-
-    if (!id) {
-      return;
-    }
-
-
-    if (
-      !confirm(
-        'Are you sure you want to delete this group?'
-      )
-    ) {
-
-      return;
-    }
-
-
-    this.deletingId = id;
-
-
-    this.groupService
-      .delete(id)
-      .subscribe({
-
-        next: () => {
-
-          this.deletingId = null;
-
-
-          // Reload ALL groups
-          this.loadAllGroups();
-
-
-          alert(
-            'Group deleted successfully'
-          );
-        },
-
-        error: (err) => {
-
-          console.error(
-            'Error deleting group:',
-            err
-          );
-
-          this.deletingId = null;
-
-          alert(
-            'Error deleting group'
-          );
-        }
-      });
-  }
-
-
-  // =====================================================
-  // FILTER
-  // =====================================================
-
-  get filteredGroupList(): Group[] {
-
-    if (!this.searchText) {
-
-      return this.groupList;
-    }
-
-
-    const search =
-      this.searchText
-        .toLowerCase()
-        .trim();
-
-
-    return this.groupList.filter(
-      (group: Group) =>
-
-        (group.groupName || '')
-          .toLowerCase()
-          .includes(search)
-
-        ||
-
-        (group.villageName || '')
-          .toLowerCase()
-          .includes(search)
-
-        ||
-
-        (group.voAlfName || '')
-          .toLowerCase()
-          .includes(search)
-
-        ||
-
-        (group.cmrcName || '')
-          .toLowerCase()
-          .includes(search)
-    );
   }
 
 
@@ -999,47 +931,92 @@ export class GroupComponent implements OnInit {
   // SELECTED CMRC NAME
   // =====================================================
 
-  get selectedCmrcName(): string {
+  getSelectedCmrcName(): string {
 
-    const cmrc =
-      this.cmrcList.find(
-        (item: Cmrc) =>
-          item.id === this.selectedCmrcId
-      );
+    return this.selectedCmrcName;
 
-    return cmrc?.cmrcName || '-';
   }
 
 
   // =====================================================
-  // SELECTED VO / ALF
+  // SELECTED DISTRICT
   // =====================================================
 
-  get selectedVoAlf(): VoAlf | undefined {
+  getSelectedDistrict(): string {
 
-    return this.voAlfList.find(
-      (item: VoAlf) =>
-        item.id === this.selectedVoAlfId
-    );
+    return this.selectedDistrict;
+
   }
 
 
   // =====================================================
-  // SELECTED VO / ALF NAME
+  // SELECTED TALUKA
   // =====================================================
 
-  get selectedVoAlfName(): string {
+  getSelectedTaluka(): string {
 
-    return this.selectedVoAlf?.voAlfName || '-';
+    return this.selectedTaluka;
+
   }
 
 
   // =====================================================
-  // SELECTED VILLAGE NAME
+  // ERROR MESSAGE
   // =====================================================
 
-  get selectedVillageDisplayName(): string {
+  private getErrorMessage(
+    error: any,
+    defaultMessage: string
+  ): string {
 
-    return this.selectedVillageName || '-';
+    if (
+      error &&
+      error.error
+    ) {
+
+      if (
+        typeof error.error === 'string' &&
+        error.error.trim()
+      ) {
+
+        return error.error;
+
+      }
+
+      if (
+        error.error.message
+      ) {
+
+        return error.error.message;
+
+      }
+
+    }
+
+    if (
+      error &&
+      error.message
+    ) {
+
+      return error.message;
+
+    }
+
+    return defaultMessage;
+
   }
+
+
+  // =====================================================
+  // CLEAR MESSAGES
+  // =====================================================
+
+  clearMessages(): void {
+
+    this.errorMessage = '';
+
+    this.successMessage = '';
+
+  }
+
 }

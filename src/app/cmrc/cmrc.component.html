@@ -6,98 +6,30 @@
 
   <div class="page-header">
 
+    <div>
 
-<div>
-  <h2 class="page-title">
-    CMRC Management
-  </h2>
+      <h2 class="page-title">
+        CMRC Management
+      </h2>
 
-  <p class="page-subtitle">
-    Manage CMRC records, funds and location details
-  </p>
-</div>
-
-<button
-  type="button"
-  class="btn btn-primary"
-  (click)="openAddForm()">
-
-  <i class="bi bi-plus-lg"></i>
-  Add CMRC
-
-</button>
-
-
-  </div>
-
-  <!-- =====================================================
-       SUMMARY CARDS
-  ====================================================== -->
-
-  <div class="row g-3 mb-4">
-
-
-<!-- TOTAL CMRC -->
-<div class="col-md-6">
-
-  <div class="summary-card">
-
-    <div class="summary-icon">
-      <i class="bi bi-building"></i>
-    </div>
-
-    <div class="summary-content">
-
-      <span class="summary-label">
-        Total CMRC
-      </span>
-
-      <h3>
-        {{ totalCmrc }}
-      </h3>
+      <p class="page-subtitle">
+        Manage CMRC balance and account details
+      </p>
 
     </div>
 
-  </div>
+    <!-- <button
+      type="button"
+      class="btn btn-primary"
+      (click)="openAddForm()">
 
-</div>
+      <i class="bi bi-plus-lg"></i>
+      Add Balance
 
-
-<!-- TOTAL CMRC AMOUNT -->
-<div class="col-md-6">
-
-  <div class="summary-card">
-
-    <div class="summary-icon">
-      <i class="bi bi-currency-rupee"></i>
-    </div>
-
-    <div class="summary-content">
-
-      <span class="summary-label">
-        Total CMRC Amount
-      </span>
-
-      <h3>
-        ₹{{ totalCmrcAmount | number:'1.2-2' }}
-      </h3>
-
-      <div
-        class="summary-amount-words"
-        *ngIf="totalCmrcAmountInWords">
-
-        {{ totalCmrcAmountInWords }}
-
-      </div>
-
-    </div>
+    </button> -->
 
   </div>
 
-</div>
-
-
-  </div>
 
   <!-- =====================================================
        ADD / EDIT FORM
@@ -107,239 +39,261 @@
     class="form-card"
     *ngIf="showForm">
 
+    <!-- FORM HEADER -->
 
-<!-- FORM HEADER -->
-<div class="form-card-header">
+    <div class="form-card-header">
 
-  <div>
+      <div>
 
-    <h4>
-      {{ isEditMode ? 'Edit CMRC' : 'Add CMRC' }}
-    </h4>
+        <h4>
+          {{ isEditMode ? 'Edit CMRC Balance' : 'Add Balance' }}
+        </h4>
 
-    <p>
-      {{
-        isEditMode
-          ? 'Update CMRC information'
-          : 'Enter CMRC information'
-      }}
-    </p>
+        <p>
+          {{
+            isEditMode
+              ? 'Update CMRC balance information'
+              : 'Enter CMRC balance information'
+          }}
+        </p>
 
-  </div>
+      </div>
 
-  <button
-    type="button"
-    class="btn-close"
-    aria-label="Close"
-    (click)="closeForm()"
-    [disabled]="isSaving">
-  </button>
-
-</div>
-
-
-<!-- FORM BODY -->
-<div class="form-card-body">
-
-  <div class="row g-3">
-
-
-    <!-- =================================================
-         CMRC NAME
-    ================================================== -->
-    <div class="col-md-6">
-
-      <label class="form-label">
-        CMRC Name
-      </label>
-
-      <input
-        type="text"
-        class="form-control"
-        [(ngModel)]="newCmrc.cmrcName"
-        name="cmrcName"
-        placeholder="Enter CMRC name">
+      <button
+        type="button"
+        class="btn-close"
+        aria-label="Close"
+        (click)="closeForm()"
+        [disabled]="isSaving">
+      </button>
 
     </div>
 
 
-    <!-- =================================================
-         ACCOUNT NUMBER
-    ================================================== -->
-    <div class="col-md-6">
+    <!-- FORM BODY -->
 
-      <label class="form-label">
-        Account Number
-      </label>
+    <div class="form-card-body">
 
-      <input
-        type="text"
-        class="form-control"
-        [(ngModel)]="newCmrc.accountNo"
-        name="accountNo"
-        placeholder="Enter account number">
-
-    </div>
+      <div class="row g-3">
 
 
-    <!-- =================================================
-         ACCOUNT OPENING DATE
-    ================================================== -->
-    <div class="col-md-6">
+        <!-- =================================================
+             CMRC NAME
+        ================================================== -->
 
-      <label class="form-label">
-        Account Opening Date
-      </label>
+        <div class="col-md-6">
 
-      <input
-        type="date"
-        class="form-control"
-        [(ngModel)]="newCmrc.accountOpeningDate"
-        name="accountOpeningDate">
+          <label class="form-label">
+            CMRC Name
+          </label>
 
-    </div>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newCmrc.cmrcName"
+            name="cmrcName"
+            readonly>
 
-
-    <!-- =================================================
-         STATUS
-    ================================================== -->
-    <div class="col-md-6">
-
-      <label class="form-label">
-        Status
-      </label>
-
-      <select
-        class="form-select"
-        [(ngModel)]="newCmrc.status"
-        name="status">
-
-        <option value="">
-          Select Status
-        </option>
-
-        <option value="ACTIVE">
-          Active
-        </option>
-
-        <option value="INACTIVE">
-          Inactive
-        </option>
-
-      </select>
-
-    </div>
+        </div>
 
 
-    <!-- =================================================
-         DISTRICT
-    ================================================== -->
-    <div class="col-md-6">
+        <!-- =================================================
+             DISTRICT
+        ================================================== -->
 
-      <label class="form-label">
-        District
-      </label>
+        <div class="col-md-6">
 
-      <select
-        class="form-select"
-        [(ngModel)]="newCmrc.district"
-        name="district"
-        (change)="onDistrictChange()">
+          <label class="form-label">
+            District
+          </label>
 
-        <option value="">
-          Select District
-        </option>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newCmrc.district"
+            name="district"
+            readonly>
 
-        <option
-          *ngFor="let district of districts"
-          [value]="district">
-
-          {{ district }}
-
-        </option>
-
-      </select>
-
-    </div>
+        </div>
 
 
-    <!-- =================================================
-         TALUKA
-    ================================================== -->
-    <div class="col-md-6">
+        <!-- =================================================
+             TALUKA
+        ================================================== -->
 
-      <label class="form-label">
-        Taluka
-      </label>
+        <div class="col-md-6">
 
-      <select
-        class="form-select"
-        [(ngModel)]="newCmrc.taluka"
-        name="taluka"
-        [disabled]="!newCmrc.district">
+          <label class="form-label">
+            Taluka
+          </label>
 
-        <option value="">
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newCmrc.taluka"
+            name="taluka"
+            readonly>
+
+        </div>
+
+
+        <!-- =================================================
+             ACCOUNT NUMBER
+        ================================================== -->
+
+        <div class="col-md-6">
+
+          <label class="form-label">
+            Account Number
+          </label>
+
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newCmrc.accountNo"
+            name="accountNo"
+            placeholder="Enter account number">
+
+        </div>
+
+
+        <!-- =================================================
+             ACCOUNT OPENING DATE
+        ================================================== -->
+
+        <div class="col-md-6">
+
+          <label class="form-label">
+            Account Opening Date
+          </label>
+
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="newCmrc.accountOpeningDate"
+            name="accountOpeningDate">
+
+        </div>
+
+
+        <!-- =================================================
+             STATUS
+        ================================================== -->
+
+        <div class="col-md-6">
+
+          <label class="form-label">
+            Status
+          </label>
+
+          <select
+            class="form-select"
+            [(ngModel)]="newCmrc.status"
+            name="status">
+
+            <option value="">
+              Select Status
+            </option>
+
+            <option value="ACTIVE">
+              Active
+            </option>
+
+            <option value="INACTIVE">
+              Inactive
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- =================================================
+             BALANCE AMOUNT
+        ================================================== -->
+
+        <div class="col-md-12">
+
+          <label class="form-label">
+            Balance Amount
+          </label>
+
+          <div class="input-group">
+
+            <span class="input-group-text">
+              ₹
+            </span>
+
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="newCmrc.totalFund"
+              name="totalFund"
+              min="0"
+              step="0.01"
+              placeholder="Enter balance amount">
+
+          </div>
+
+
+          <!-- AMOUNT IN WORDS -->
+
+          <div
+            class="amount-in-words mt-2"
+            *ngIf="amountInWords">
+
+            <strong>
+              Balance Amount (in words):
+            </strong>
+
+            <span>
+              {{ amountInWords }}
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           FORM ACTIONS
+      ================================================== -->
+
+      <div class="form-actions mt-4">
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeForm()"
+          [disabled]="isSaving">
+
+          Cancel
+
+        </button>
+
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="saveCmrc()"
+          [disabled]="isSaving">
+
+          <span
+            *ngIf="isSaving"
+            class="spinner-border spinner-border-sm me-1">
+          </span>
 
           {{
-            newCmrc.district
-              ? 'Select Taluka'
-              : 'First Select District'
+            isSaving
+              ? 'Saving...'
+              : isEditMode
+                ? 'Update Balance'
+                : 'Save Balance'
           }}
 
-        </option>
-
-        <option
-          *ngFor="let taluka of talukas"
-          [value]="taluka">
-
-          {{ taluka }}
-
-        </option>
-
-      </select>
-
-    </div>
-
-
-    <!-- =================================================
-         TOTAL CMRC AMOUNT
-    ================================================== -->
-    <div class="col-md-12">
-
-      <label class="form-label">
-        Total CMRC Amount
-      </label>
-
-      <div class="input-group">
-
-        <span class="input-group-text">
-          ₹
-        </span>
-
-        <input
-          type="number"
-          class="form-control"
-          [(ngModel)]="newCmrc.totalFund"
-          name="totalFund"
-          min="0"
-          step="0.01"
-          placeholder="Enter total CMRC amount">
-
-      </div>
-
-
-      <!-- AMOUNT IN WORDS -->
-      <div
-        class="amount-in-words mt-2"
-        *ngIf="amountInWords">
-
-        <strong>
-          Total CMRC Amount (in words):
-        </strong>
-
-        <span>
-          {{ amountInWords }}
-        </span>
+        </button>
 
       </div>
 
@@ -347,50 +301,6 @@
 
   </div>
 
-
-  <!-- =================================================
-       FORM ACTIONS
-  ================================================== -->
-  <div class="form-actions mt-4">
-
-    <button
-      type="button"
-      class="btn btn-secondary"
-      (click)="closeForm()"
-      [disabled]="isSaving">
-
-      Cancel
-
-    </button>
-
-
-    <button
-      type="button"
-      class="btn btn-primary"
-      (click)="saveCmrc()"
-      [disabled]="isSaving">
-
-      <span
-        *ngIf="isSaving"
-        class="spinner-border spinner-border-sm me-1">
-      </span>
-
-      {{
-        isSaving
-          ? 'Saving...'
-          : isEditMode
-            ? 'Update CMRC'
-            : 'Save CMRC'
-      }}
-
-    </button>
-
-  </div>
-
-</div>
-
-
-  </div>
 
   <!-- =====================================================
        CMRC TABLE CARD
@@ -398,278 +308,293 @@
 
   <div class="table-card">
 
+    <!-- TABLE HEADER -->
 
-<!-- TABLE HEADER -->
-<div class="table-card-header">
+    <div class="table-card-header">
 
-  <div>
+      <div>
 
-    <h4>
-      CMRC Records
-    </h4>
+        <h4>
+          CMRC Balance Records
+        </h4>
 
-    <p>
-      All registered CMRC records
-    </p>
+        <p>
+          CMRC balance and account details
+        </p>
 
-  </div>
+      </div>
 
 
-  <!-- SEARCH -->
-  <div class="table-tools">
+      <!-- SEARCH -->
 
-    <div class="search-box">
+      <div class="table-tools">
 
-      <i class="bi bi-search"></i>
+        <div class="search-box">
 
-      <input
-        type="text"
-        [(ngModel)]="searchText"
-        placeholder="Search CMRC, account, district, taluka...">
+          <i class="bi bi-search"></i>
+
+          <input
+            type="text"
+            [(ngModel)]="searchText"
+            placeholder="Search CMRC, account, district, taluka...">
+
+        </div>
+
+
+        <span class="record-count">
+
+          {{ filteredCmrcList.length }}
+
+          Record{{ filteredCmrcList.length === 1 ? '' : 's' }}
+
+        </span>
+
+      </div>
 
     </div>
 
 
-    <span class="record-count">
+    <!-- ===================================================
+         TABLE
+    ==================================================== -->
 
-      {{ filteredCmrcList.length }}
-      Record{{ filteredCmrcList.length === 1 ? '' : 's' }}
+    <div class="table-responsive">
 
-    </span>
+      <table class="table cmrc-table">
 
-  </div>
+        <thead>
 
-</div>
+          <tr>
 
+            <th>
+              Sr No
+            </th>
 
-<!-- ===================================================
-     TABLE
-==================================================== -->
-<div class="table-responsive">
+            <th>
+              CMRC Name
+            </th>
 
-  <table class="table cmrc-table">
+            <th>
+              District
+            </th>
 
-    <thead>
+            <th>
+              Taluka
+            </th>
 
-      <tr>
+            <th>
+              Account Number
+            </th>
 
-        <th>
-          Sr No
-        </th>
+            <th>
+              Account Opening Date
+            </th>
 
-        <th>
-          CMRC Name
-        </th>
+            <th>
+              Balance Amount
+            </th>
 
-        <th>
-          District
-        </th>
+            <th>
+              Status
+            </th>
 
-        <th>
-          Taluka
-        </th>
+            <th class="text-center">
+              Actions
+            </th>
 
-        <th>
-          Account Number
-        </th>
+          </tr>
 
-        <th>
-          Account Opening Date
-        </th>
-
-        <th>
-          Total CMRC Amount
-        </th>
-
-        <th>
-          Status
-        </th>
-
-        <th class="text-center">
-          Actions
-        </th>
-
-      </tr>
-
-    </thead>
+        </thead>
 
 
-    <tbody>
+        <tbody>
 
 
-      <!-- =================================================
-           RECORDS
-      ================================================== -->
-      <tr
-        *ngFor="
-          let cmrc of filteredCmrcList;
-          let i = index
-        ">
+          <!-- =================================================
+               RECORDS
+          ================================================== -->
 
-        <!-- SR NO -->
-        <td>
+          <tr
+            *ngFor="
+              let cmrc of filteredCmrcList;
+              let i = index
+            ">
 
-          {{ i + 1 }}
+            <!-- SR NO -->
 
-        </td>
+            <td>
 
+              {{ i + 1 }}
 
-        <!-- CMRC NAME -->
-        <td>
-
-          <strong>
-            {{ cmrc.cmrcName || '-' }}
-          </strong>
-
-        </td>
+            </td>
 
 
-        <!-- DISTRICT -->
-        <td>
+            <!-- CMRC NAME -->
 
-          {{ cmrc.district || '-' }}
+            <td>
 
-        </td>
+              <strong>
+                {{ cmrc.cmrcName || '-' }}
+              </strong>
 
-
-        <!-- TALUKA -->
-        <td>
-
-          {{ cmrc.taluka || '-' }}
-
-        </td>
+            </td>
 
 
-        <!-- ACCOUNT NUMBER -->
-        <td>
+            <!-- DISTRICT -->
 
-          {{ cmrc.accountNo || '-' }}
+            <td>
 
-        </td>
+              {{ cmrc.district || '-' }}
 
-
-        <!-- ACCOUNT OPENING DATE -->
-        <td>
-
-          {{
-            cmrc.accountOpeningDate
-              ? (cmrc.accountOpeningDate | date:'dd-MM-yyyy')
-              : '-'
-          }}
-
-        </td>
+            </td>
 
 
-        <!-- TOTAL AMOUNT -->
-        <td>
+            <!-- TALUKA -->
 
-          <strong>
-            ₹{{ (cmrc.totalFund || 0) | number:'1.2-2' }}
-          </strong>
+            <td>
 
-        </td>
+              {{ cmrc.taluka || '-' }}
+
+            </td>
 
 
-        <!-- STATUS -->
-        <td>
+            <!-- ACCOUNT NUMBER -->
 
-          <span
-            class="status-badge"
-            [ngClass]="{
-              'status-active':
-                cmrc.status === 'ACTIVE',
+            <td>
 
-              'status-inactive':
-                cmrc.status === 'INACTIVE'
-            }">
+              {{ cmrc.accountNo || '-' }}
 
-            {{
-              cmrc.status === 'ACTIVE'
-                ? 'Active'
-                : cmrc.status === 'INACTIVE'
-                  ? 'Inactive'
+            </td>
+
+
+            <!-- ACCOUNT OPENING DATE -->
+
+            <td>
+
+              {{
+                cmrc.accountOpeningDate
+                  ? (cmrc.accountOpeningDate | date:'dd-MM-yyyy')
                   : '-'
-            }}
+              }}
 
-          </span>
-
-        </td>
+            </td>
 
 
-        <!-- ACTIONS -->
-        <td class="text-center">
+            <!-- BALANCE AMOUNT -->
 
-          <div class="action-buttons">
+            <td>
 
-            <!-- EDIT -->
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-primary"
-              title="Edit CMRC"
-              (click)="openEditForm(cmrc)">
+              <strong>
+                ₹{{ (cmrc.totalFund || 0) | number:'1.2-2' }}
+              </strong>
 
-              <i class="bi bi-pencil"></i>
-
-            </button>
+            </td>
 
 
-            <!-- DELETE -->
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-danger"
-              title="Delete CMRC"
-              (click)="deleteCmrc(cmrc.id)"
-              [disabled]="deletingId === cmrc.id">
+            <!-- STATUS -->
+
+            <td>
 
               <span
-                *ngIf="deletingId === cmrc.id"
-                class="spinner-border spinner-border-sm">
+                class="status-badge"
+                [ngClass]="{
+                  'status-active':
+                    cmrc.status === 'ACTIVE',
+
+                  'status-inactive':
+                    cmrc.status === 'INACTIVE'
+                }">
+
+                {{
+                  cmrc.status === 'ACTIVE'
+                    ? 'Active'
+                    : cmrc.status === 'INACTIVE'
+                      ? 'Inactive'
+                      : '-'
+                }}
+
               </span>
 
-              <i
-                *ngIf="deletingId !== cmrc.id"
-                class="bi bi-trash">
-              </i>
-
-            </button>
-
-          </div>
-
-        </td>
-
-      </tr>
+            </td>
 
 
-      <!-- =================================================
-           NO RECORDS
-      ================================================== -->
-      <tr
-        *ngIf="filteredCmrcList.length === 0">
+            <!-- ACTIONS -->
 
-        <td
-          colspan="9"
-          class="no-records">
+            <td class="text-center">
 
-          <div>
+              <div class="action-buttons">
 
-            <i class="bi bi-inbox"></i>
+                <!-- EDIT -->
 
-            <p>
-              No CMRC records found
-            </p>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-primary"
+                  title="Edit CMRC Balance"
+                  (click)="openEditForm(cmrc)">
 
-          </div>
+                  <i class="bi bi-pencil"></i>
 
-        </td>
+                </button>
 
-      </tr>
 
-    </tbody>
+                <!-- DELETE -->
 
-  </table>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger"
+                  title="Delete CMRC Balance"
+                  (click)="deleteCmrc(cmrc.id)"
+                  [disabled]="deletingId === cmrc.id">
 
-</div>
+                  <span
+                    *ngIf="deletingId === cmrc.id"
+                    class="spinner-border spinner-border-sm">
+                  </span>
 
+                  <i
+                    *ngIf="deletingId !== cmrc.id"
+                    class="bi bi-trash">
+                  </i>
+
+                </button>
+
+              </div>
+
+            </td>
+
+          </tr>
+
+
+          <!-- =================================================
+               NO RECORDS
+          ================================================== -->
+
+          <tr
+            *ngIf="filteredCmrcList.length === 0">
+
+            <td
+              colspan="9"
+              class="no-records">
+
+              <div>
+
+                <i class="bi bi-inbox"></i>
+
+                <p>
+                  No CMRC records found
+                </p>
+
+              </div>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
 
   </div>
 

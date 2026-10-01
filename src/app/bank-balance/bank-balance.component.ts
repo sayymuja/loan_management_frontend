@@ -140,22 +140,63 @@ export class BankBalanceComponent implements OnInit {
 
   ngOnInit(): void {
 
-    this.loadCmrc();
+    this.loadCurrentCmrc();
 
   }
 
 
   // =========================================================
-  // LOAD CMRC
+  // LOAD CURRENT LOGGED-IN USER CMRC
   // =========================================================
 
-  loadCmrc(): void {
+  loadCurrentCmrc(): void {
 
     this.cmrcService.getAll().subscribe({
 
       next: (data: Cmrc[]) => {
 
         this.cmrcList = data || [];
+
+        // ===================================================
+        // BACKEND ALREADY RETURNS ONLY LOGGED-IN USER CMRC
+        // ===================================================
+
+        if (
+          this.cmrcList.length === 0
+        ) {
+
+          this.selectedCmrcId = null;
+
+          this.voAlfList = [];
+
+          this.cmrcBalance = 0;
+
+          return;
+
+        }
+
+
+        // ===================================================
+        // AUTOMATICALLY SELECT USER'S CMRC
+        // ===================================================
+
+        const currentCmrc = this.cmrcList[0];
+
+        if (
+          currentCmrc.id !== undefined &&
+          currentCmrc.id !== null
+        ) {
+
+          this.selectedCmrcId =
+            currentCmrc.id;
+
+          // ===============================================
+          // LOAD ALL BANK BALANCE DATA FOR THIS CMRC
+          // ===============================================
+
+          this.loadBankBalance();
+
+        }
 
       },
 
@@ -167,6 +208,12 @@ export class BankBalanceComponent implements OnInit {
         );
 
         this.cmrcList = [];
+
+        this.selectedCmrcId = null;
+
+        this.voAlfList = [];
+
+        this.cmrcBalance = 0;
 
       }
 
@@ -219,7 +266,7 @@ export class BankBalanceComponent implements OnInit {
 
 
     // =======================================================
-    // LOAD VO / ALF
+    // LOAD VO / ALF FOR SELECTED CMRC
     // =======================================================
 
     this.loadingVoAlf = true;
@@ -549,23 +596,6 @@ export class BankBalanceComponent implements OnInit {
   // =========================================================
   // GET LOANS BY VO / ALF
   // =========================================================
-  //
-  // NEW HIERARCHY:
-  //
-  // CMRC
-  //   ↓
-  // VO / ALF
-  //   ↓
-  // Village (inside VO / ALF)
-  //   ↓
-  // Group
-  //   ↓
-  // Women
-  //   ↓
-  // Loan
-  //
-  // No Village API is required here.
-  // =========================================================
 
   private async getLoansByVoAlfId(
     voAlfId: number
@@ -574,7 +604,7 @@ export class BankBalanceComponent implements OnInit {
     try {
 
       // =====================================================
-      // 1. LOAD GROUPS DIRECTLY BY VO / ALF
+      // LOAD GROUPS BY VO / ALF
       // =====================================================
 
       const groups: Group[] =
@@ -596,7 +626,7 @@ export class BankBalanceComponent implements OnInit {
 
 
       // =====================================================
-      // 2. VALID GROUPS
+      // VALID GROUPS
       // =====================================================
 
       const validGroups =
@@ -617,7 +647,7 @@ export class BankBalanceComponent implements OnInit {
 
 
       // =====================================================
-      // 3. LOAD WOMEN
+      // LOAD WOMEN
       // =====================================================
 
       const womenRequests:
@@ -654,7 +684,7 @@ export class BankBalanceComponent implements OnInit {
 
 
       // =====================================================
-      // 4. VALID WOMEN
+      // VALID WOMEN
       // =====================================================
 
       const validWomen =
@@ -675,7 +705,7 @@ export class BankBalanceComponent implements OnInit {
 
 
       // =====================================================
-      // 5. LOAD LOANS
+      // LOAD LOANS
       // =====================================================
 
       const loanRequests:
@@ -697,7 +727,7 @@ export class BankBalanceComponent implements OnInit {
 
 
       // =====================================================
-      // 6. FLATTEN LOANS
+      // FLATTEN LOANS
       // =====================================================
 
       const loans: Loan[] =
@@ -789,9 +819,7 @@ export class BankBalanceComponent implements OnInit {
 
     this.selectedYear = null;
 
-
     this.updateYearMonths();
-
 
     this.loadingLoans = false;
 
@@ -803,10 +831,6 @@ export class BankBalanceComponent implements OnInit {
   // =========================================================
 
   updateYearMonths(): void {
-
-    // -------------------------------------------------------
-    // ALL
-    // -------------------------------------------------------
 
     if (
       this.selectedYear === null
@@ -820,13 +844,8 @@ export class BankBalanceComponent implements OnInit {
     }
 
 
-    // -------------------------------------------------------
-    // SELECTED FINANCIAL YEAR
-    // -------------------------------------------------------
-
     const startYear =
       this.selectedYear;
-
 
     const endYear =
       startYear + 1;
@@ -846,7 +865,6 @@ export class BankBalanceComponent implements OnInit {
 
             const year =
               Number(yearText);
-
 
             const month =
               Number(monthText);
@@ -1395,10 +1413,6 @@ export class BankBalanceComponent implements OnInit {
     }
 
 
-    // -------------------------------------------------------
-    // DATE OBJECT
-    // -------------------------------------------------------
-
     if (
       value instanceof Date
     ) {
@@ -1423,10 +1437,6 @@ export class BankBalanceComponent implements OnInit {
       String(value);
 
 
-    // -------------------------------------------------------
-    // YYYY-MM-DD
-    // -------------------------------------------------------
-
     const match =
       valueString.match(
         /^(\d{4})-(\d{2})-(\d{2})/
@@ -1438,10 +1448,8 @@ export class BankBalanceComponent implements OnInit {
       const year =
         Number(match[1]);
 
-
       const month =
         Number(match[2]);
-
 
       const day =
         Number(match[3]);
@@ -1470,10 +1478,6 @@ export class BankBalanceComponent implements OnInit {
 
     }
 
-
-    // -------------------------------------------------------
-    // FALLBACK
-    // -------------------------------------------------------
 
     const date =
       new Date(valueString);
