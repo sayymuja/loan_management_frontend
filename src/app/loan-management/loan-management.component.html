@@ -1,3 +1,4 @@
+html
 <div class="loan-page">
 
   <!-- =====================================================
@@ -54,7 +55,6 @@
         </p>
       </div>
     </div>
-
 
     <div class="filter-grid">
 
@@ -169,9 +169,7 @@
     </div>
 
 
-    <!-- =====================================================
-         SELECTED HIERARCHY SUMMARY
-    ====================================================== -->
+    <!-- SELECTED HIERARCHY SUMMARY -->
     <div class="loan-context">
 
       <div class="context-item">
@@ -209,7 +207,6 @@
 
   <!-- =====================================================
        FUND SUMMARY
-       ONLY SELECTED VO / ALF
   ====================================================== -->
   <section
     class="summary-grid fund-summary"
@@ -353,7 +350,7 @@
       </div>
 
 
-      <!-- TOTAL / DISBURSED AMOUNT -->
+      <!-- DISBURSED AMOUNT -->
       <div class="form-group">
         <label>
           Disbursed Amount
@@ -517,6 +514,109 @@
       </div>
 
     </div>
+
+
+    <!-- =====================================================
+         LOAN IMAGE UPLOAD
+    ====================================================== -->
+   <div class="loan-image-upload-section">
+
+  <div class="section-heading">
+    <div>
+      <h6 class="mb-1">
+        <i class="bi bi-images me-2"></i>
+        Loan Documents / Images
+      </h6>
+
+      <small class="text-muted">
+        Multiple images select kar sakte hain.
+        JPG, PNG, WEBP — Maximum 5 MB per image.
+      </small>
+    </div>
+  </div>
+
+  <!-- Upload -->
+  <div class="image-upload-box">
+
+    <label
+      for="loanImageInput"
+      class="image-upload-label"
+    >
+      <i class="bi bi-cloud-arrow-up"></i>
+
+      <span>Click to select images</span>
+
+      <small>
+        You can select multiple images
+      </small>
+    </label>
+
+    <input
+      id="loanImageInput"
+      type="file"
+      class="d-none"
+      multiple
+      accept="image/jpeg,image/png,image/webp"
+      (change)="onImageSelected($event)"
+    />
+
+  </div>
+
+
+  <!-- Selected images preview -->
+  <div
+    class="selected-image-preview"
+    *ngIf="imagePreviews.length > 0"
+  >
+
+    <div
+      class="image-preview-card"
+      *ngFor="let preview of imagePreviews; let i = index"
+    >
+
+      <div class="image-preview-wrapper">
+
+        <img
+          [src]="getSafeImageUrl(preview)"
+          [alt]="'Loan image ' + (i + 1)"
+          class="image-preview"
+        />
+
+        <button
+          type="button"
+          class="image-remove-btn"
+          title="Remove image"
+          (click)="removeSelectedImage(i)"
+        >
+          <i class="bi bi-x"></i>
+        </button>
+
+      </div>
+
+      <small class="image-preview-name">
+        {{ selectedImageFiles[i]?.name }}
+      </small>
+
+    </div>
+
+  </div>
+
+
+  <!-- Count -->
+  <div
+    class="image-count-info"
+    *ngIf="selectedImageFiles.length > 0"
+  >
+
+    <i class="bi bi-check-circle me-1"></i>
+
+    {{ selectedImageFiles.length }}
+    image{{ selectedImageFiles.length > 1 ? 's' : '' }}
+    selected
+
+  </div>
+
+</div>
 
 
     <!-- EMI PREVIEW -->
@@ -909,7 +1009,6 @@
               Total
             </td>
 
-            <!-- TOTAL SANCTIONED -->
             <td class="text-end fw-bold">
 
               ₹{{
@@ -920,7 +1019,6 @@
             </td>
 
 
-            <!-- TOTAL LOAN -->
             <td class="text-end fw-bold">
 
               ₹{{
@@ -931,7 +1029,6 @@
             </td>
 
 
-            <!-- TOTAL PROCESSING -->
             <td class="text-end fw-bold">
 
               ₹{{
@@ -942,7 +1039,6 @@
             </td>
 
 
-            <!-- TOTAL EMI -->
             <td class="text-end fw-bold">
 
               ₹{{
@@ -1198,6 +1294,141 @@
     </div>
 
 
+    <!-- =====================================================
+         LOAN IMAGES
+    ====================================================== -->
+    <div class="loan-images-section">
+
+      <div class="loan-images-header">
+
+        <div>
+
+          <h6 class="mb-1">
+            <i class="bi bi-images me-2"></i>
+            Loan Documents / Images
+          </h6>
+
+          <small class="text-muted">
+            {{ loanImages.length }}
+            image{{ loanImages.length !== 1 ? 's' : '' }}
+            uploaded
+          </small>
+
+        </div>
+
+      </div>
+
+
+      <!-- IMAGES AVAILABLE -->
+      <div
+        class="loan-image-gallery"
+        *ngIf="loanImages.length > 0"
+      >
+
+        <div
+          class="loan-image-card"
+          *ngFor="let image of loanImages"
+        >
+
+          <!-- IMAGE -->
+          <div class="loan-image-wrapper">
+
+            <img
+              *ngIf="image.id"
+              [src]="getLoanImageViewUrl(image.id)"
+              [alt]="image.fileName || 'Loan image'"
+              class="loan-gallery-image"
+            />
+
+            <!-- ZOOM ICON -->
+            <div class="image-zoom-indicator">
+              <i class="bi bi-zoom-in"></i>
+            </div>
+
+          </div>
+
+
+          <!-- IMAGE INFO -->
+          <div class="loan-image-info">
+
+            <div
+              class="loan-image-name"
+              [title]="image.fileName || ''"
+            >
+              <i class="bi bi-file-image me-1"></i>
+
+              {{ image.fileName || 'Loan Image' }}
+            </div>
+
+
+            <small
+              class="text-muted"
+              *ngIf="image.fileSize"
+            >
+              {{
+                (image.fileSize / 1024)
+                  | number:'1.0-0'
+              }} KB
+            </small>
+
+
+            <!-- IMAGE ACTIONS -->
+            <div class="loan-image-actions">
+
+              <!-- DOWNLOAD -->
+              <a
+                *ngIf="image.id"
+                class="btn btn-sm btn-outline-primary"
+                [href]="getLoanImageDownloadUrl(image.id)"
+                target="_blank"
+                title="Download Image"
+              >
+                <i class="bi bi-download"></i>
+              </a>
+
+
+              <!-- DELETE -->
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-danger"
+                title="Delete Image"
+                (click)="deleteLoanImage(image)"
+              >
+                <i class="bi bi-trash"></i>
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- NO IMAGES -->
+      <div
+        class="loan-no-images"
+        *ngIf="loanImages.length === 0"
+      >
+
+        <i class="bi bi-image"></i>
+
+        <div>
+          <strong>
+            No loan images uploaded
+          </strong>
+
+          <small class="text-muted d-block">
+            You can upload images while adding a new loan.
+          </small>
+        </div>
+
+      </div>
+
+    </div>
+
+
     <!-- DETAIL FOOTER -->
     <div class="details-footer">
 
@@ -1224,3 +1455,4 @@
   </div>
 
 </div>
+

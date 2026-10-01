@@ -27,10 +27,11 @@ import {
 
 import {
   Loan,
-  LoanService
+  LoanService, LoanImage,
 } from '../services/loan.service';
 import { ClSchedule, ClScheduleService } from '../services/cl-schedule.service';
 import { Repayment, RepaymentService } from '../services/repayment.service';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 
 @Component({
@@ -98,6 +99,17 @@ export class LoanManagementComponent implements OnInit {
   // =====================================================
 
   selectedLoan: Loan | null = null;
+    // =====================================================
+  // LOAN IMAGES
+  // =====================================================
+
+  selectedImageFiles: File[] = [];
+
+  imagePreviews: string[] = [];
+
+  loanImages: LoanImage[] = [];
+
+  imageUploading = false;
 
   // =====================================================
   // LOADING
@@ -114,9 +126,12 @@ export class LoanManagementComponent implements OnInit {
     private loanService: LoanService,
     private cdRef: ChangeDetectorRef,
      private clScheduleService: ClScheduleService,
-  private repaymentService: RepaymentService
+  private repaymentService: RepaymentService,
+  private sanitizer: DomSanitizer
   ) {}
-
+getSafeImageUrl(url: string): SafeUrl {
+  return this.sanitizer.bypassSecurityTrustUrl(url);
+}
 
   // =====================================================
   // INIT
@@ -887,6 +902,7 @@ export class LoanManagementComponent implements OnInit {
     this.editingLoanId = null;
 
     this.newLoan = this.getEmptyLoan();
+    this.clearSelectedImages();
 
 
     this.newLoan.cmrcId =
@@ -920,18 +936,133 @@ export class LoanManagementComponent implements OnInit {
   // CLOSE FORM
   // =====================================================
 
-  closeForm(): void {
+ closeForm(): void {
 
-    this.showForm = false;
+  this.showForm = false;
 
-    this.isEditMode = false;
+  this.isEditMode = false;
 
-    this.editingLoanId = null;
+  this.editingLoanId = null;
 
-    this.newLoan = this.getEmptyLoan();
+  this.newLoan = this.getEmptyLoan();
 
+  this.clearSelectedImages();
+
+}
+  // =====================================================
+  // IMAGE SELECT
+  // =====================================================
+
+ onImageSelected(event: Event): void {
+
+  const input = event.target as HTMLInputElement;
+
+  if (!input.files || input.files.length === 0) {
+    return;
   }
 
+  const files = Array.from(input.files);
+
+  for (const file of files) {
+
+    if (!file.type.startsWith('image/')) {
+      alert(`${file.name} is not a valid image.`);
+      input.value = '';
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert(`${file.name} is larger than 5 MB.`);
+      input.value = '';
+      return;
+    }
+  }
+
+  // Add all selected files
+  this.selectedImageFiles = [
+    ...this.selectedImageFiles,
+    ...files
+  ];
+
+  // Create preview for every image
+  files.forEach(file => {
+    this.imagePreviews.push(
+      URL.createObjectURL(file)
+    );
+  });
+
+  // Allow selecting same file again
+  input.value = '';
+}
+removeSelectedImage(index: number): void {
+
+  if (
+    index < 0 ||
+    index >= this.selectedImageFiles.length
+  ) {
+    return;
+  }
+
+  // Browser memory release
+  if (this.imagePreviews[index]) {
+    URL.revokeObjectURL(this.imagePreviews[index]);
+  }
+
+  // Remove selected file
+  this.selectedImageFiles.splice(index, 1);
+
+  // Remove preview
+  this.imagePreviews.splice(index, 1);
+}
+
+
+  
+
+  // =====================================================
+  // CLEAR SELECTED IMAGES
+  // =====================================================
+clearSelectedImages(): void {
+
+  this.imagePreviews.forEach(url => {
+
+    URL.revokeObjectURL(url);
+
+  });
+
+  this.selectedImageFiles = [];
+
+  this.imagePreviews = [];
+
+}
+    // =====================================================
+  // UPLOAD LOAN IMAGES
+  // =====================================================
+
+  uploadLoanImages(
+    loanId: number
+  ): any {
+
+    // No image selected
+    if (
+      !this.selectedImageFiles ||
+      this.selectedImageFiles.length === 0
+    ) {
+
+      return null;
+
+    }
+
+
+    this.imageUploading = true;
+
+
+    return this.loanService
+      .uploadImages(
+        loanId,
+        this.selectedImageFiles
+      );
+
+  }
 
   // =====================================================
   // CALCULATE DISBURSED AMOUNT
@@ -1084,127 +1215,70 @@ export class LoanManagementComponent implements OnInit {
   // SAVE LOAN
   // =====================================================
 
+  // =====================================================
+  // SAVE LOAN
+  // =====================================================
+
   saveLoan(): void {
 
-  if (
-    !this.newLoan.cmrcId ||
-    !this.newLoan.voAlfId ||
-    !this.newLoan.groupId
-  ) {
-    alert('Please select CMRC, VO / ALF and Group first.');
-    return;
-  }
+    if (
+      !this.newLoan.cmrcId ||
+      !this.newLoan.voAlfId ||
+      !this.newLoan.groupId
+    ) {
 
-  this.loading = true;
+      alert(
+        'Please select CMRC, VO / ALF and Group first.'
+      );
 
-  // Make sure woman is NOT mandatory
-  const payload: any = {
-    ...this.newLoan,
+      return;
+    }
 
-    cmrcId: this.selectedCmrcId,
-    voAlfId: this.selectedVoAlfId,
-    groupId: this.selectedGroupId,
 
-    // Woman is optional
-    womanId: this.newLoan.womanId || null
-  };
+    this.loading = true;
 
-  // =========================
-  // EDIT LOAN
-  // =========================
-  if (this.isEditMode && this.editingLoanId) {
 
-    this.loanService
-      .update(this.editingLoanId, payload)
-      .subscribe({
-        next: (response) => {
+    // =====================================================
+    // LOAN PAYLOAD
+    // =====================================================
 
-          this.loading = false;
+    const payload: any = {
 
-          alert('Loan updated successfully.');
+      ...this.newLoan,
 
-          this.showForm = false;
-          this.isEditMode = false;
-          this.editingLoanId = null;
+      cmrcId:
+        this.selectedCmrcId,
 
-          this.loadLoans();
-        },
+      voAlfId:
+        this.selectedVoAlfId,
 
-        error: (error) => {
+      groupId:
+        this.selectedGroupId,
 
-          this.loading = false;
+      // Woman optional
+      womanId:
+        this.newLoan.womanId || null
 
-          console.error('Loan update error:', error);
+    };
 
-          alert(
-            error?.error?.message ||
-            'Failed to update loan.'
-          );
-        }
-      });
 
-    return;
-  }
+    // =====================================================
+    // EDIT LOAN
+    // =====================================================
 
-  // =========================
-  // CREATE NEW LOAN
-  // =========================
+    // =====================================================
+// EDIT LOAN
+// =====================================================
+
+if (
+  this.isEditMode &&
+  this.editingLoanId
+) {
+
   this.loanService
-    .create(payload)
-    .pipe(
-
-      // Loan create hone ke baad loan ID milega
-      switchMap((createdLoan: any) => {
-
-        console.log('Loan created:', createdLoan);
-
-        const loanId = Number(createdLoan?.id);
-
-        if (!loanId) {
-          throw new Error(
-            'Loan created but loan ID was not returned by backend.'
-          );
-        }
-
-        // Created loan ID ko save kar lein
-
-        // =========================
-        // GENERATE CL SCHEDULE
-        // =========================
-        return this.loanService
-          .generateClSchedule(loanId)
-          .pipe(
-
-            tap((clSchedule) => {
-
-              console.log(
-                'CL Schedule generated:',
-                clSchedule
-              );
-
-            }),
-
-            // =========================
-            // THEN GENERATE REPAYMENT
-            // =========================
-            switchMap(() => {
-
-              return this.loanService
-                .generateRepayment(loanId);
-
-            }),
-
-            tap((repayment) => {
-
-              console.log(
-                'Repayment generated:',
-                repayment
-              );
-
-            })
-          );
-      })
-
+    .update(
+      this.editingLoanId,
+      payload
     )
     .subscribe({
 
@@ -1213,36 +1287,364 @@ export class LoanManagementComponent implements OnInit {
         this.loading = false;
 
         alert(
-          'Loan created successfully.\n' +
-          'CL Schedule generated successfully.\n' +
-          'Repayment schedule generated successfully.'
+          'Loan updated successfully.'
         );
 
+
         this.showForm = false;
+
         this.isEditMode = false;
+
         this.editingLoanId = null;
 
-        // Reload loan list
+        this.clearSelectedImages();
+
         this.loadLoans();
+
       },
+
 
       error: (error) => {
 
         this.loading = false;
 
         console.error(
-          'Loan / CL Schedule / Repayment generation error:',
+          'Loan update error:',
           error
         );
 
+
         alert(
           error?.error?.message ||
-          'Loan created, but CL Schedule or Repayment generation failed.'
+          'Failed to update loan.'
         );
+
       }
 
     });
+
+  return;
 }
+
+
+    // =====================================================
+    // CREATE NEW LOAN
+    // =====================================================
+
+    this.loanService
+      .create(payload)
+      .subscribe({
+
+        next: (createdLoan: Loan) => {
+
+          console.log(
+            'Loan created:',
+            createdLoan
+          );
+
+
+          const loanId =
+            Number(
+              createdLoan?.id
+            );
+
+
+          if (!loanId) {
+
+            this.loading = false;
+
+            alert(
+              'Loan created but loan ID was not returned by backend.'
+            );
+
+            return;
+          }
+
+
+          // =================================================
+          // STEP 1 - UPLOAD IMAGES
+          // =================================================
+
+          this.uploadImagesAfterLoanCreate(
+            loanId
+          );
+
+        },
+
+
+        error: (error) => {
+
+          this.loading = false;
+
+          console.error(
+            'Loan creation error:',
+            error
+          );
+
+
+          alert(
+            error?.error?.message ||
+            'Failed to create loan.'
+          );
+
+        }
+
+      });
+
+  }
+    // =====================================================
+  // AFTER LOAN CREATE
+  // IMAGE -> CL SCHEDULE -> REPAYMENT
+  // =====================================================
+
+  private uploadImagesAfterLoanCreate(
+    loanId: number
+  ): void {
+
+    // =====================================================
+    // NO IMAGES
+    // =====================================================
+
+    if (
+      !this.selectedImageFiles ||
+      this.selectedImageFiles.length === 0
+    ) {
+
+      this.generateSchedulesAfterLoanCreate(
+        loanId,
+        false
+      );
+
+      return;
+    }
+
+
+    // =====================================================
+    // UPLOAD IMAGES
+    // =====================================================
+
+    this.imageUploading = true;
+
+
+    this.loanService
+      .uploadImages(
+        loanId,
+        this.selectedImageFiles
+      )
+      .subscribe({
+
+        next: (images: LoanImage[]) => {
+
+          console.log(
+            'Loan images uploaded:',
+            images
+          );
+
+
+          this.imageUploading = false;
+
+
+          this.generateSchedulesAfterLoanCreate(
+            loanId,
+            true
+          );
+
+        },
+
+
+        error: (error) => {
+
+          console.error(
+            'Loan image upload error:',
+            error
+          );
+
+
+          this.imageUploading = false;
+
+
+          /*
+           * Loan already created.
+           * Do NOT create loan again.
+           *
+           * Continue with schedule generation.
+           */
+
+          alert(
+            'Loan created successfully, but image upload failed.'
+          );
+
+
+          this.generateSchedulesAfterLoanCreate(
+            loanId,
+            false
+          );
+
+        }
+
+      });
+
+  }
+    // =====================================================
+  // GENERATE CL SCHEDULE + REPAYMENT
+  // =====================================================
+
+  private generateSchedulesAfterLoanCreate(
+    loanId: number,
+    imagesUploaded: boolean
+  ): void {
+
+    // =====================================================
+    // GENERATE CL SCHEDULE
+    // =====================================================
+
+    this.loanService
+      .generateClSchedule(
+        loanId
+      )
+      .subscribe({
+
+        next: (clSchedule) => {
+
+          console.log(
+            'CL Schedule generated:',
+            clSchedule
+          );
+
+
+          // =================================================
+          // GENERATE REPAYMENT
+          // =================================================
+
+          this.loanService
+            .generateRepayment(
+              loanId
+            )
+            .subscribe({
+
+              next: (repayment) => {
+
+                console.log(
+                  'Repayment generated:',
+                  repayment
+                );
+
+
+                this.loading = false;
+
+
+                // =================================================
+                // SUCCESS MESSAGE
+                // =================================================
+
+                let message =
+                  'Loan created successfully.\n' +
+                  'CL Schedule generated successfully.\n' +
+                  'Repayment schedule generated successfully.';
+
+
+                if (imagesUploaded) {
+
+                  message +=
+                    '\nLoan images uploaded successfully.';
+
+                }
+
+
+                alert(message);
+
+
+                // =================================================
+                // CLOSE FORM
+                // =================================================
+
+                this.showForm = false;
+
+                this.isEditMode = false;
+
+                this.editingLoanId = null;
+
+
+                // =================================================
+                // CLEAR IMAGE SELECTION
+                // =================================================
+
+                this.clearSelectedImages();
+
+
+                // =================================================
+                // RELOAD LOANS
+                // =================================================
+
+                this.loadLoans();
+
+              },
+
+
+              error: (error) => {
+
+                this.loading = false;
+
+
+                console.error(
+                  'Repayment generation error:',
+                  error
+                );
+
+
+                alert(
+                  'Loan created and CL Schedule generated, but Repayment generation failed.'
+                );
+
+
+                this.showForm = false;
+
+                this.isEditMode = false;
+
+                this.editingLoanId = null;
+
+                this.clearSelectedImages();
+
+                this.loadLoans();
+
+              }
+
+            });
+
+        },
+
+
+        error: (error) => {
+
+          this.loading = false;
+
+
+          console.error(
+            'CL Schedule generation error:',
+            error
+          );
+
+
+          alert(
+            'Loan created successfully, but CL Schedule generation failed.'
+          );
+
+
+          this.showForm = false;
+
+          this.isEditMode = false;
+
+          this.editingLoanId = null;
+
+          this.clearSelectedImages();
+
+          this.loadLoans();
+
+        }
+
+      });
+
+  }
 
   // =====================================================
   // EDIT LOAN
@@ -1250,108 +1652,147 @@ export class LoanManagementComponent implements OnInit {
   // totalAmount -> disbursedAmount
   // =====================================================
 
-  editLoan(loan: Loan): void {
+ editLoan(loan: Loan): void {
 
-    this.isEditMode = true;
+  // =====================================================
+  // EDIT MODE
+  // =====================================================
 
-    this.showForm = true;
+  this.isEditMode = true;
 
-    this.editingLoanId =
-      loan.id || null;
+  this.showForm = true;
 
-
-    const loanAny: any =
-      loan as any;
-
-
-    const totalAmount =
-      Number(
-        loanAny.totalAmount
-      ) ||
-      Number(
-        loanAny.loanAmount
-      ) ||
-      0;
+  this.editingLoanId =
+    loan.id || null;
 
 
-    this.newLoan = {
+  // =====================================================
+  // CLEAR PREVIOUS NEW IMAGE SELECTION
+  // =====================================================
 
-      id:
-        loan.id || null,
-
-      cmrcId:
-        loan.cmrcId || null,
-
-      voAlfId:
-        loan.voAlfId || null,
-
-      groupId:
-        loan.groupId || null,
-
-      womanId:
-        loan.womanId || null,
-
-      groupName:
-        loan.groupName || '',
-
-      womanName:
-        loan.womanName || '',
-
-      sanctionedAmount:
-        Number(
-          loan.sanctionedAmount
-        ) || 0,
-
-      processingFee:
-        Number(
-          loan.processingFee
-        ) || 0,
-
-      // ===============================================
-      // IMPORTANT
-      // ===============================================
-
-      totalAmount:
-        totalAmount,
-
-      disbursedAmount:
-        totalAmount,
-
-      loanAmount:
-        totalAmount,
-
-      loanPurpose:
-        loan.loanPurpose || '',
-
-      loanGivenDate:
-        loan.loanGivenDate || '',
-
-      repaymentPeriodMonths:
-        loan.repaymentPeriodMonths ||
-        12,
-
-      interestRate:
-        loan.interestRate || 0,
-
-      interestType:
-        loan.interestType ||
-        'FLAT',
-
-      monthlyEmi:
-        loan.monthlyEmi || 0,
-
-      loanStatus:
-        loan.loanStatus ||
-        'ACTIVE'
-
-    };
+  this.clearSelectedImages();
 
 
-    this.calculateEmi();
+  // =====================================================
+  // LOAD EXISTING LOAN IMAGES
+  // =====================================================
 
-    this.scrollToLoanForm();
+  this.loanImages = [];
+
+  if (loan.id) {
+
+    this.loadLoanImages(
+      Number(loan.id)
+    );
 
   }
+
+
+  // =====================================================
+  // LOAN DATA
+  // =====================================================
+
+  const loanAny: any =
+    loan as any;
+
+
+  const totalAmount =
+    Number(
+      loanAny.totalAmount
+    ) ||
+    Number(
+      loanAny.loanAmount
+    ) ||
+    0;
+
+
+  this.newLoan = {
+
+    id:
+      loan.id || null,
+
+    cmrcId:
+      loan.cmrcId || null,
+
+    voAlfId:
+      loan.voAlfId || null,
+
+    groupId:
+      loan.groupId || null,
+
+    womanId:
+      loan.womanId || null,
+
+    groupName:
+      loan.groupName || '',
+
+    womanName:
+      loan.womanName || '',
+
+    sanctionedAmount:
+      Number(
+        loan.sanctionedAmount
+      ) || 0,
+
+    processingFee:
+      Number(
+        loan.processingFee
+      ) || 0,
+
+    // ===================================================
+    // IMPORTANT
+    // ===================================================
+
+    totalAmount:
+      totalAmount,
+
+    disbursedAmount:
+      totalAmount,
+
+    loanAmount:
+      totalAmount,
+
+    loanPurpose:
+      loan.loanPurpose || '',
+
+    loanGivenDate:
+      loan.loanGivenDate || '',
+
+    repaymentPeriodMonths:
+      loan.repaymentPeriodMonths ||
+      12,
+
+    interestRate:
+      loan.interestRate || 0,
+
+    interestType:
+      loan.interestType ||
+      'FLAT',
+
+    monthlyEmi:
+      loan.monthlyEmi || 0,
+
+    loanStatus:
+      loan.loanStatus ||
+      'ACTIVE'
+
+  };
+
+
+  // =====================================================
+  // CALCULATE EMI
+  // =====================================================
+
+  this.calculateEmi();
+
+
+  // =====================================================
+  // SCROLL TO FORM
+  // =====================================================
+
+  this.scrollToLoanForm();
+
+}
 
 
   // =====================================================
@@ -1508,7 +1949,9 @@ export class LoanManagementComponent implements OnInit {
 
     };
 
-
+this.loadLoanImages(
+  Number(loan.id)
+);
     setTimeout(() => {
 
       const element =
@@ -1529,7 +1972,159 @@ export class LoanManagementComponent implements OnInit {
     }, 100);
 
   }
+  // =====================================================
+  // LOAD LOAN IMAGES
+  // =====================================================
 
+  loadLoanImages(
+    loanId: number
+  ): void {
+
+    this.loanImages = [];
+
+
+    if (!loanId) {
+      return;
+    }
+
+
+    this.loanService
+      .getImagesByLoan(
+        loanId
+      )
+      .subscribe({
+
+        next: (images: LoanImage[]) => {
+
+          this.loanImages =
+            images || [];
+
+
+          this.cdRef.detectChanges();
+
+        },
+
+
+        error: (error) => {
+
+          console.error(
+            'Loan images loading error:',
+            error
+          );
+
+          this.loanImages = [];
+
+        }
+
+      });
+
+  }
+    // =====================================================
+  // IMAGE VIEW URL
+  // =====================================================
+
+  getLoanImageViewUrl(
+    imageId?: number
+  ): string {
+
+    if (!imageId) {
+      return '';
+    }
+
+    return this.loanService
+      .getImageViewUrl(
+        imageId
+      );
+
+  }
+
+
+  // =====================================================
+  // IMAGE DOWNLOAD URL
+  // =====================================================
+
+  getLoanImageDownloadUrl(
+    imageId?: number
+  ): string {
+
+    if (!imageId) {
+      return '';
+    }
+
+    return this.loanService
+      .getImageDownloadUrl(
+        imageId
+      );
+
+  }
+    // =====================================================
+  // DELETE LOAN IMAGE
+  // =====================================================
+
+  deleteLoanImage(
+    image: LoanImage
+  ): void {
+
+    if (!image.id) {
+      return;
+    }
+
+
+    const confirmed =
+      confirm(
+        `Are you sure you want to delete "${image.fileName || 'this image'}"?`
+      );
+
+
+    if (!confirmed) {
+      return;
+    }
+
+
+    this.loanService
+      .deleteImage(
+        image.id
+      )
+      .subscribe({
+
+        next: () => {
+
+          alert(
+            'Loan image deleted successfully.'
+          );
+
+
+          if (this.selectedLoan?.id) {
+
+            this.loadLoanImages(
+              Number(
+                this.selectedLoan.id
+              )
+            );
+
+          }
+
+        },
+
+
+        error: (error) => {
+
+          console.error(
+            'Loan image delete error:',
+            error
+          );
+
+
+          alert(
+            error?.error?.message ||
+            'Failed to delete loan image.'
+          );
+
+        }
+
+      });
+
+  }
 
   // =====================================================
   // CLOSE DETAILS

@@ -2,6 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+
+// =========================================================
+// LOAN INTERFACE
+// =========================================================
+
 export interface Loan {
   id?: number;
 
@@ -38,6 +43,36 @@ export interface Loan {
 
   totalInterestReceived?: number;
 }
+
+
+// =========================================================
+// LOAN IMAGE INTERFACE
+// =========================================================
+
+export interface LoanImage {
+
+  id?: number;
+
+  loanId?: number;
+
+  fileName?: string;
+
+  contentType?: string;
+
+  fileSize?: number;
+
+  viewUrl?: string;
+
+  downloadUrl?: string;
+
+  uploadedAt?: string;
+}
+
+
+// =========================================================
+// SERVICE
+// =========================================================
+
 @Injectable({
   providedIn: 'root'
 })
@@ -45,6 +80,9 @@ export class LoanService {
 
   private apiUrl =
     'http://localhost:8080/api/loan';
+
+  private imageApiUrl =
+    'http://localhost:8080/api/loan-images';
 
 
   constructor(
@@ -135,30 +173,144 @@ export class LoanService {
       `${this.apiUrl}/${id}`
     );
   }
-  generateClSchedule(loanId: number): Observable<any[]> {
-  return this.http.post<any[]>(
-    `http://localhost:8080/api/cl-schedule/generate/${loanId}`,
-    {}
-  );
-}
-
-generateRepayment(loanId: number): Observable<any[]> {
-  return this.http.post<any[]>(
-    `http://localhost:8080/api/repayment/generate/${loanId}`,
-    {}
-  );
-}
-getByVoAlfId(voAlfId: number): Observable<Loan[]> {
-  return this.http.get<Loan[]>(
-    `${this.apiUrl}/vo-alf/${voAlfId}`
-  );
-}
-
-getByGroupId(groupId: number): Observable<Loan[]> {
-  return this.http.get<Loan[]>(
-    `${this.apiUrl}/group/${groupId}`
-  );
-}
-}
 
 
+  // =========================================================
+  // GENERATE CL SCHEDULE
+  // =========================================================
+
+  generateClSchedule(
+    loanId: number
+  ): Observable<any[]> {
+
+    return this.http.post<any[]>(
+      `http://localhost:8080/api/cl-schedule/generate/${loanId}`,
+      {}
+    );
+  }
+
+
+  // =========================================================
+  // GENERATE REPAYMENT
+  // =========================================================
+
+  generateRepayment(
+    loanId: number
+  ): Observable<any[]> {
+
+    return this.http.post<any[]>(
+      `http://localhost:8080/api/repayment/generate/${loanId}`,
+      {}
+    );
+  }
+
+
+  // =========================================================
+  // GET LOANS BY VO / ALF
+  // =========================================================
+
+  getByVoAlfId(
+    voAlfId: number
+  ): Observable<Loan[]> {
+
+    return this.http.get<Loan[]>(
+      `${this.apiUrl}/vo-alf/${voAlfId}`
+    );
+  }
+
+
+  // =========================================================
+  // GET LOANS BY GROUP
+  // =========================================================
+
+  getByGroupId(
+    groupId: number
+  ): Observable<Loan[]> {
+
+    return this.http.get<Loan[]>(
+      `${this.apiUrl}/group/${groupId}`
+    );
+  }
+
+
+  // =========================================================
+  // LOAN IMAGE - UPLOAD
+  // =========================================================
+
+  uploadImages(
+    loanId: number,
+    files: File[]
+  ): Observable<LoanImage[]> {
+
+    const formData =
+      new FormData();
+
+    files.forEach(
+      (file: File) => {
+
+        formData.append(
+          'files',
+          file
+        );
+
+      }
+    );
+
+    return this.http.post<LoanImage[]>(
+      `${this.imageApiUrl}/upload/${loanId}`,
+      formData
+    );
+  }
+
+
+  // =========================================================
+  // LOAN IMAGE - GET BY LOAN
+  // =========================================================
+
+  getImagesByLoan(
+    loanId: number
+  ): Observable<LoanImage[]> {
+
+    return this.http.get<LoanImage[]>(
+      `${this.imageApiUrl}/loan/${loanId}`
+    );
+  }
+
+
+  // =========================================================
+  // LOAN IMAGE - VIEW URL
+  // =========================================================
+
+  getImageViewUrl(
+    imageId: number
+  ): string {
+
+    return `${this.imageApiUrl}/view/${imageId}`;
+  }
+
+
+  // =========================================================
+  // LOAN IMAGE - DOWNLOAD URL
+  // =========================================================
+
+  getImageDownloadUrl(
+    imageId: number
+  ): string {
+
+    return `${this.imageApiUrl}/download/${imageId}`;
+  }
+
+
+  // =========================================================
+  // LOAN IMAGE - DELETE
+  // =========================================================
+
+  deleteImage(
+    imageId: number
+  ): Observable<any> {
+
+    return this.http.delete<any>(
+      `${this.imageApiUrl}/${imageId}`
+    );
+  }
+}
