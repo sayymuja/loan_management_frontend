@@ -182,31 +182,49 @@ export class RepaymentManagementComponent
   // LOAD CMRC
   // =====================================================
 
-  loadCmrc(): void {
+loadCmrc(): void {
 
-    this.cmrcService
-      .getAll()
-      .subscribe({
+  this.cmrcService
+    .getAll()
+    .subscribe({
 
-        next: (data: Cmrc[]) => {
+      next: (data: Cmrc[]) => {
 
-          this.cmrcList = data || [];
+        this.cmrcList = data || [];
 
-        },
+        // =====================================================
+        // DEFAULT CMRC SELECTION
+        // =====================================================
 
-        error: (error: any) => {
+        if (
+          this.cmrcList.length > 0 &&
+          this.selectedCmrcId === null
+        ) {
 
-          console.error(
-            'CMRC API Error:',
-            error
-          );
+          this.selectedCmrcId =
+            Number(this.cmrcList[0].id);
 
-          this.cmrcList = [];
+          // Automatically load VO / ALF
+          this.loadVoAlfByCmrc();
 
         }
 
-      });
-  }
+      },
+
+      error: (error: any) => {
+
+        console.error(
+          'CMRC API Error:',
+          error
+        );
+
+        this.cmrcList = [];
+
+      }
+
+    });
+}
+
 
 
   // =====================================================

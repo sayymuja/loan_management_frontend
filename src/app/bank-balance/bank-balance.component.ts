@@ -11,8 +11,7 @@ import {
 } from '../services/vo-alf.service';
 
 import {
-  CmrcBalanceService,
-  CmrcBalance
+  CmrcBalanceService
 } from '../services/cmrc-balance.service';
 
 import {
@@ -45,6 +44,7 @@ import * as XLSX from 'xlsx';
   styleUrls: ['./bank-balance.component.css']
 })
 export class BankBalanceComponent implements OnInit {
+
 
   // =========================================================
   // LOAN TOTALS
@@ -121,6 +121,29 @@ export class BankBalanceComponent implements OnInit {
 
 
   // =========================================================
+  // VO / ALF DETAILS POPUP
+  // =========================================================
+
+  showVoAlfDetailsPopup = false;
+
+  selectedVoAlf: VoAlf | null = null;
+
+  voAlfGroups: Group[] = [];
+
+  voAlfWomen: Women[] = [];
+
+  filteredVoAlfDetails: any[] = [];
+
+  voAlfDetailsSearchText = '';
+
+  voAlfDetailsPageSize = 10;
+
+  voAlfDetailsCurrentPage = 1;
+
+  voAlfDetailsLoading = false;
+
+
+  // =========================================================
   // CONSTRUCTOR
   // =========================================================
 
@@ -146,7 +169,7 @@ export class BankBalanceComponent implements OnInit {
 
 
   // =========================================================
-  // LOAD CURRENT LOGGED-IN USER CMRC
+  // LOAD CURRENT CMRC
   // =========================================================
 
   loadCurrentCmrc(): void {
@@ -157,13 +180,7 @@ export class BankBalanceComponent implements OnInit {
 
         this.cmrcList = data || [];
 
-        // ===================================================
-        // BACKEND ALREADY RETURNS ONLY LOGGED-IN USER CMRC
-        // ===================================================
-
-        if (
-          this.cmrcList.length === 0
-        ) {
+        if (this.cmrcList.length === 0) {
 
           this.selectedCmrcId = null;
 
@@ -176,10 +193,6 @@ export class BankBalanceComponent implements OnInit {
         }
 
 
-        // ===================================================
-        // AUTOMATICALLY SELECT USER'S CMRC
-        // ===================================================
-
         const currentCmrc = this.cmrcList[0];
 
         if (
@@ -188,11 +201,7 @@ export class BankBalanceComponent implements OnInit {
         ) {
 
           this.selectedCmrcId =
-            currentCmrc.id;
-
-          // ===============================================
-          // LOAD ALL BANK BALANCE DATA FOR THIS CMRC
-          // ===============================================
+            Number(currentCmrc.id);
 
           this.loadBankBalance();
 
@@ -227,6 +236,10 @@ export class BankBalanceComponent implements OnInit {
   // =========================================================
 
   loadBankBalance(): void {
+
+    // Close popup when CMRC changes
+    this.closeVoAlfDetails();
+
 
     // -------------------------------------------------------
     // RESET
@@ -265,9 +278,27 @@ export class BankBalanceComponent implements OnInit {
     }
 
 
-    // =======================================================
-    // LOAD VO / ALF FOR SELECTED CMRC
-    // =======================================================
+    // -------------------------------------------------------
+    // SELECTED CMRC
+    // CMRC BALANCE = TOTAL FUND
+    // -------------------------------------------------------
+
+    const selectedCmrc = this.cmrcList.find(
+      (cmrc: Cmrc) =>
+        Number(cmrc.id) ===
+        Number(this.selectedCmrcId)
+    );
+
+
+    this.cmrcBalance =
+      Number(
+        selectedCmrc?.totalFund || 0
+      );
+
+
+    // -------------------------------------------------------
+    // LOAD VO / ALF
+    // -------------------------------------------------------
 
     this.loadingVoAlf = true;
 
@@ -277,7 +308,8 @@ export class BankBalanceComponent implements OnInit {
 
         next: (data: VoAlf[]) => {
 
-          this.voAlfList = data || [];
+          this.voAlfList =
+            data || [];
 
           this.loadingVoAlf = false;
 
@@ -301,55 +333,29 @@ export class BankBalanceComponent implements OnInit {
       });
 
 
-    // =======================================================
-    // LOAD CMRC BALANCE
-    // =======================================================
+    this.loadingBalance = false;
 
-    this.loadingBalance = true;
+  }
 
-    this.cmrcBalanceService
-      .getByCmrcId(this.selectedCmrcId)
-      .subscribe({
 
-        next: (data: CmrcBalance[]) => {
+  // =========================================================
+  // LEFT CMRC BALANCE
+  // =========================================================
 
-          if (
-            data &&
-            data.length > 0
-          ) {
+  getLeftCmrcBalance(): number {
 
-            const latestBalance =
-              data[data.length - 1];
+    const balance =
+      Number(
+        this.cmrcBalance || 0
+      );
 
-            this.cmrcBalance =
-              Number(
-                latestBalance.balanceAmount || 0
-              );
+    const totalVoAlfReceived =
+      this.getTotalReceivedFund();
 
-          } else {
-
-            this.cmrcBalance = 0;
-
-          }
-
-          this.loadingBalance = false;
-
-        },
-
-        error: (error: any) => {
-
-          console.error(
-            'CMRC Balance API Error:',
-            error
-          );
-
-          this.cmrcBalance = 0;
-
-          this.loadingBalance = false;
-
-        }
-
-      });
+    return (
+      balance -
+      totalVoAlfReceived
+    );
 
   }
 
@@ -373,10 +379,6 @@ export class BankBalanceComponent implements OnInit {
     this.loadingLoans = true;
 
 
-    // -------------------------------------------------------
-    // NO VO / ALF
-    // -------------------------------------------------------
-
     if (
       this.voAlfList.length === 0
     ) {
@@ -387,10 +389,6 @@ export class BankBalanceComponent implements OnInit {
 
     }
 
-
-    // -------------------------------------------------------
-    // VALID VO / ALF
-    // -------------------------------------------------------
 
     const validVoAlfList =
       this.voAlfList.filter(
@@ -411,10 +409,6 @@ export class BankBalanceComponent implements OnInit {
     }
 
 
-    // =======================================================
-    // LOAD LOANS FOR ALL VO / ALF
-    // =======================================================
-
     try {
 
       const loanLists: Loan[][] =
@@ -430,10 +424,6 @@ export class BankBalanceComponent implements OnInit {
         );
 
 
-      // =====================================================
-      // PROCESS EACH VO / ALF
-      // =====================================================
-
       validVoAlfList.forEach(
         (
           voAlf: VoAlf,
@@ -443,14 +433,9 @@ export class BankBalanceComponent implements OnInit {
           const voAlfId =
             voAlf.id!;
 
-
           const loans: Loan[] =
             loanLists[index] || [];
 
-
-          // -------------------------------------------------
-          // INITIALIZE
-          // -------------------------------------------------
 
           this.monthlyLoanTotals[
             voAlfId
@@ -459,10 +444,6 @@ export class BankBalanceComponent implements OnInit {
 
           let totalLoanAmount = 0;
 
-
-          // -------------------------------------------------
-          // PROCESS LOANS
-          // -------------------------------------------------
 
           loans.forEach(
             (loan: Loan) => {
@@ -476,10 +457,6 @@ export class BankBalanceComponent implements OnInit {
               totalLoanAmount +=
                 disbursedAmount;
 
-
-              // -------------------------------------------
-              // LOAN DATE
-              // -------------------------------------------
 
               if (
                 !loan.loanGivenDate
@@ -517,10 +494,6 @@ export class BankBalanceComponent implements OnInit {
                 `${year}-${month}`;
 
 
-              // -------------------------------------------
-              // MONTHLY LOAN EXPENSE
-              // -------------------------------------------
-
               if (
                 this.monthlyLoanTotals[
                   voAlfId
@@ -540,10 +513,6 @@ export class BankBalanceComponent implements OnInit {
                 disbursedAmount;
 
 
-              // -------------------------------------------
-              // ADD MONTH
-              // -------------------------------------------
-
               if (
                 !this.allLoanMonths.includes(
                   monthKey
@@ -560,10 +529,6 @@ export class BankBalanceComponent implements OnInit {
           );
 
 
-          // -------------------------------------------------
-          // TOTAL LOAN FOR VO / ALF
-          // -------------------------------------------------
-
           this.loanTotals[
             voAlfId
           ] = totalLoanAmount;
@@ -571,10 +536,6 @@ export class BankBalanceComponent implements OnInit {
         }
       );
 
-
-      // =====================================================
-      // FINISH
-      // =====================================================
 
       this.finishLoanLoading();
 
@@ -603,10 +564,6 @@ export class BankBalanceComponent implements OnInit {
 
     try {
 
-      // =====================================================
-      // LOAD GROUPS BY VO / ALF
-      // =====================================================
-
       const groups: Group[] =
         await firstValueFrom(
           this.groupService.getByVoAlfId(
@@ -625,10 +582,6 @@ export class BankBalanceComponent implements OnInit {
       }
 
 
-      // =====================================================
-      // VALID GROUPS
-      // =====================================================
-
       const validGroups =
         groups.filter(
           (group: Group) =>
@@ -645,10 +598,6 @@ export class BankBalanceComponent implements OnInit {
 
       }
 
-
-      // =====================================================
-      // LOAD WOMEN
-      // =====================================================
 
       const womenRequests:
         Observable<Women[]>[] =
@@ -683,10 +632,6 @@ export class BankBalanceComponent implements OnInit {
       }
 
 
-      // =====================================================
-      // VALID WOMEN
-      // =====================================================
-
       const validWomen =
         women.filter(
           (woman: Women) =>
@@ -703,10 +648,6 @@ export class BankBalanceComponent implements OnInit {
 
       }
 
-
-      // =====================================================
-      // LOAD LOANS
-      // =====================================================
 
       const loanRequests:
         Observable<Loan[]>[] =
@@ -726,17 +667,9 @@ export class BankBalanceComponent implements OnInit {
         );
 
 
-      // =====================================================
-      // FLATTEN LOANS
-      // =====================================================
-
-      const loans: Loan[] =
-        ([] as Loan[]).concat(
-          ...loanLists
-        );
-
-
-      return loans;
+      return ([] as Loan[]).concat(
+        ...loanLists
+      );
 
     }
     catch (error: any) {
@@ -763,10 +696,6 @@ export class BankBalanceComponent implements OnInit {
     this.allLoanMonths.sort();
 
 
-    // -------------------------------------------------------
-    // CREATE FINANCIAL YEARS
-    // -------------------------------------------------------
-
     const yearSet =
       new Set<number>();
 
@@ -783,7 +712,6 @@ export class BankBalanceComponent implements OnInit {
 
         const year =
           Number(yearText);
-
 
         const month =
           Number(monthText);
@@ -812,10 +740,6 @@ export class BankBalanceComponent implements OnInit {
           ) => a - b
         );
 
-
-    // -------------------------------------------------------
-    // DEFAULT = ALL
-    // -------------------------------------------------------
 
     this.selectedYear = null;
 
@@ -870,8 +794,6 @@ export class BankBalanceComponent implements OnInit {
               Number(monthText);
 
 
-            // APR - DEC
-
             if (
               year === startYear &&
               month >= 4
@@ -881,8 +803,6 @@ export class BankBalanceComponent implements OnInit {
 
             }
 
-
-            // JAN - MAR
 
             if (
               year === endYear &&
@@ -1500,6 +1420,685 @@ export class BankBalanceComponent implements OnInit {
 
 
   // =========================================================
+  // OPEN VO / ALF DETAILS POPUP
+  // =========================================================
+
+  openVoAlfDetails(
+    voAlf: VoAlf
+  ): void {
+
+    if (
+      !voAlf ||
+      voAlf.id === undefined ||
+      voAlf.id === null
+    ) {
+
+      return;
+
+    }
+
+
+    this.selectedVoAlf = voAlf;
+
+    this.showVoAlfDetailsPopup = true;
+
+    this.voAlfGroups = [];
+
+    this.voAlfWomen = [];
+
+    this.filteredVoAlfDetails = [];
+
+    this.voAlfDetailsSearchText = '';
+
+    this.voAlfDetailsCurrentPage = 1;
+
+    this.voAlfDetailsLoading = true;
+
+
+    // =======================================================
+    // LOAD GROUPS
+    // =======================================================
+
+    this.groupService
+      .getByVoAlfId(
+        voAlf.id
+      )
+      .subscribe({
+
+        next: (groups: Group[]) => {
+
+          this.voAlfGroups =
+            groups || [];
+
+          this.loadVoAlfWomenForDetails();
+
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'VO / ALF Group Details Error:',
+            error
+          );
+
+          this.voAlfGroups = [];
+
+          this.voAlfWomen = [];
+
+          this.buildVoAlfDetailsList();
+
+          this.voAlfDetailsLoading = false;
+
+        }
+
+      });
+
+  }
+
+
+  // =========================================================
+  // LOAD WOMEN FOR SELECTED VO / ALF
+  // =========================================================
+
+  private loadVoAlfWomenForDetails(): void {
+
+    const validGroups =
+      this.voAlfGroups.filter(
+        (group: Group) =>
+          group.id !== undefined &&
+          group.id !== null
+      );
+
+
+    if (
+      validGroups.length === 0
+    ) {
+
+      this.voAlfWomen = [];
+
+      this.buildVoAlfDetailsList();
+
+      this.voAlfDetailsLoading = false;
+
+      return;
+
+    }
+
+
+    const womenRequests:
+      Observable<Women[]>[] =
+      validGroups.map(
+        (group: Group) =>
+          this.womenService
+            .getByGroupId(
+              group.id!
+            )
+      );
+
+
+    firstValueFrom(
+      forkJoin(womenRequests)
+    )
+      .then(
+        (womenLists: Women[][]) => {
+
+          this.voAlfWomen =
+            ([] as Women[]).concat(
+              ...womenLists
+            );
+
+
+          this.buildVoAlfDetailsList();
+
+          this.voAlfDetailsLoading = false;
+
+        }
+      )
+      .catch(
+        (error: any) => {
+
+          console.error(
+            'VO / ALF Women Details Error:',
+            error
+          );
+
+          this.voAlfWomen = [];
+
+          this.buildVoAlfDetailsList();
+
+          this.voAlfDetailsLoading = false;
+
+        }
+      );
+
+  }
+
+
+  // =========================================================
+  // BUILD GROUP + WOMEN DETAILS
+  // =========================================================
+
+  private buildVoAlfDetailsList(): void {
+
+    const details: any[] = [];
+
+
+    this.voAlfGroups.forEach(
+      (group: Group) => {
+
+        const groupId =
+          Number(
+            group.id
+          );
+
+
+        const groupWomen =
+          this.voAlfWomen.filter(
+            (woman: Women) =>
+              Number(
+                (woman as any).groupId
+              ) === groupId
+          );
+
+
+        if (
+          groupWomen.length === 0
+        ) {
+
+          details.push({
+
+            group: group,
+
+            woman: null
+
+          });
+
+          return;
+
+        }
+
+
+        groupWomen.forEach(
+          (woman: Women) => {
+
+            details.push({
+
+              group: group,
+
+              woman: woman
+
+            });
+
+          }
+        );
+
+      }
+    );
+
+
+    this.filteredVoAlfDetails =
+      details;
+
+    this.applyVoAlfDetailsFilter();
+
+  }
+
+
+  // =========================================================
+  // COMMON FILTER
+  // =========================================================
+
+  applyVoAlfDetailsFilter(): void {
+
+    const search =
+      (this.voAlfDetailsSearchText || '')
+        .trim()
+        .toLowerCase();
+
+
+    const allRows =
+      this.getAllVoAlfDetailsRows();
+
+
+    if (!search) {
+
+      this.filteredVoAlfDetails =
+        allRows;
+
+    } else {
+
+      this.filteredVoAlfDetails =
+        allRows.filter(
+          (row: any) => {
+
+            const group =
+              row.group || {};
+
+            const woman =
+              row.woman || {};
+
+
+            const groupName =
+              String(
+                (group as any).groupName ||
+                (group as any).name ||
+                ''
+              ).toLowerCase();
+
+
+            const womanName =
+              String(
+                (woman as any).womanName ||
+                ''
+              ).toLowerCase();
+
+
+            const husbandName =
+              String(
+                (woman as any).husbandName ||
+                ''
+              ).toLowerCase();
+
+
+            const mobileNo =
+              String(
+                (woman as any).mobileNo ||
+                ''
+              ).toLowerCase();
+
+
+            const address =
+              String(
+                (woman as any).address ||
+                ''
+              ).toLowerCase();
+
+
+            const status =
+              String(
+                (woman as any).status ||
+                ''
+              ).toLowerCase();
+
+
+            return (
+              groupName.includes(search) ||
+              womanName.includes(search) ||
+              husbandName.includes(search) ||
+              mobileNo.includes(search) ||
+              address.includes(search) ||
+              status.includes(search)
+            );
+
+          }
+        );
+
+    }
+
+
+    this.voAlfDetailsCurrentPage = 1;
+
+  }
+
+
+  // =========================================================
+  // GET ALL DETAILS ROWS
+  // =========================================================
+
+  private getAllVoAlfDetailsRows(): any[] {
+
+    const details: any[] = [];
+
+
+    this.voAlfGroups.forEach(
+      (group: Group) => {
+
+        const groupId =
+          Number(
+            group.id
+          );
+
+
+        const groupWomen =
+          this.voAlfWomen.filter(
+            (woman: Women) =>
+              Number(
+                (woman as any).groupId
+              ) === groupId
+          );
+
+
+        if (
+          groupWomen.length === 0
+        ) {
+
+          details.push({
+
+            group: group,
+
+            woman: null
+
+          });
+
+        } else {
+
+          groupWomen.forEach(
+            (woman: Women) => {
+
+              details.push({
+
+                group: group,
+
+                woman: woman
+
+              });
+
+            }
+          );
+
+        }
+
+      }
+    );
+
+
+    return details;
+
+  }
+
+
+  // =========================================================
+  // DETAILS TOTAL PAGES
+  // =========================================================
+
+  getVoAlfDetailsTotalPages(): number {
+
+    if (
+      this.filteredVoAlfDetails.length === 0
+    ) {
+
+      return 1;
+
+    }
+
+
+    return Math.ceil(
+      this.filteredVoAlfDetails.length /
+      this.voAlfDetailsPageSize
+    );
+
+  }
+
+
+  // =========================================================
+  // PAGINATED DETAILS
+  // =========================================================
+
+  getPaginatedVoAlfDetails(): any[] {
+
+    const start =
+      (
+        this.voAlfDetailsCurrentPage - 1
+      ) *
+      this.voAlfDetailsPageSize;
+
+
+    const end =
+      start +
+      this.voAlfDetailsPageSize;
+
+
+    return this.filteredVoAlfDetails.slice(
+      start,
+      end
+    );
+
+  }
+
+
+  // =========================================================
+  // DETAILS PAGE NUMBERS
+  // =========================================================
+
+  getVoAlfDetailsPages(): number[] {
+
+    const totalPages =
+      this.getVoAlfDetailsTotalPages();
+
+
+    return Array.from(
+      {
+        length: totalPages
+      },
+      (
+        _: unknown,
+        index: number
+      ) => index + 1
+    );
+
+  }
+
+
+  // =========================================================
+  // GO TO DETAILS PAGE
+  // =========================================================
+
+  goToVoAlfDetailsPage(
+    page: number
+  ): void {
+
+    const totalPages =
+      this.getVoAlfDetailsTotalPages();
+
+
+    if (
+      page < 1 ||
+      page > totalPages
+    ) {
+
+      return;
+
+    }
+
+
+    this.voAlfDetailsCurrentPage =
+      page;
+
+  }
+
+
+  // =========================================================
+  // PREVIOUS DETAILS PAGE
+  // =========================================================
+
+  previousVoAlfDetailsPage(): void {
+
+    if (
+      this.voAlfDetailsCurrentPage > 1
+    ) {
+
+      this.voAlfDetailsCurrentPage--;
+
+    }
+
+  }
+
+
+  // =========================================================
+  // NEXT DETAILS PAGE
+  // =========================================================
+
+  nextVoAlfDetailsPage(): void {
+
+    const totalPages =
+      this.getVoAlfDetailsTotalPages();
+
+
+    if (
+      this.voAlfDetailsCurrentPage <
+      totalPages
+    ) {
+
+      this.voAlfDetailsCurrentPage++;
+
+    }
+
+  }
+
+
+  // =========================================================
+  // PAGE SIZE CHANGE
+  // =========================================================
+
+  onVoAlfDetailsPageSizeChange(): void {
+
+    this.voAlfDetailsCurrentPage = 1;
+
+  }
+
+
+  // =========================================================
+  // CLOSE DETAILS POPUP
+  // =========================================================
+
+  closeVoAlfDetails(): void {
+
+    this.showVoAlfDetailsPopup = false;
+
+    this.selectedVoAlf = null;
+
+    this.voAlfGroups = [];
+
+    this.voAlfWomen = [];
+
+    this.filteredVoAlfDetails = [];
+
+    this.voAlfDetailsSearchText = '';
+
+    this.voAlfDetailsCurrentPage = 1;
+
+    this.voAlfDetailsLoading = false;
+
+  }
+
+
+  // =========================================================
+  // GROUP NAME
+  // =========================================================
+
+  getGroupName(
+    group: Group | null
+  ): string {
+
+    if (!group) {
+
+      return '-';
+
+    }
+
+
+    return String(
+      (group as any).groupName ||
+      (group as any).name ||
+      '-'
+    );
+
+  }
+
+
+  // =========================================================
+  // WOMAN NAME
+  // =========================================================
+
+  getWomanName(
+    woman: Women | null
+  ): string {
+
+    if (!woman) {
+
+      return '-';
+
+    }
+
+
+    return String(
+      (woman as any).womanName ||
+      '-'
+    );
+
+  }
+
+
+  // =========================================================
+  // HUSBAND NAME
+  // =========================================================
+
+  getHusbandName(
+    woman: Women | null
+  ): string {
+
+    if (!woman) {
+
+      return '-';
+
+    }
+
+
+    return String(
+      (woman as any).husbandName ||
+      '-'
+    );
+
+  }
+
+
+  // =========================================================
+  // WOMAN MOBILE
+  // =========================================================
+
+  getWomanMobile(
+    woman: Women | null
+  ): string {
+
+    if (!woman) {
+
+      return '-';
+
+    }
+
+
+    return String(
+      (woman as any).mobileNo ||
+      '-'
+    );
+
+  }
+
+
+  // =========================================================
+  // WOMAN STATUS
+  // =========================================================
+
+  getWomanStatus(
+    woman: Women | null
+  ): string {
+
+    if (!woman) {
+
+      return '-';
+
+    }
+
+
+    return String(
+      (woman as any).status ||
+      '-'
+    );
+
+  }
+
+
+  // =========================================================
   // EXPORT TO EXCEL
   // =========================================================
 
@@ -1521,10 +2120,6 @@ export class BankBalanceComponent implements OnInit {
 
     const excelData: any[] = [];
 
-
-    // =======================================================
-    // VO / ALF ROWS
-    // =======================================================
 
     this.voAlfList.forEach(
       (
@@ -1554,10 +2149,6 @@ export class BankBalanceComponent implements OnInit {
         };
 
 
-        // ---------------------------------------------------
-        // MONTHLY REMAINING
-        // ---------------------------------------------------
-
         this.loanMonths.forEach(
           (
             month: string
@@ -1576,10 +2167,6 @@ export class BankBalanceComponent implements OnInit {
         );
 
 
-        // ---------------------------------------------------
-        // TOTAL LOAN DISBURSED
-        // ---------------------------------------------------
-
         row[
           'Total Loan Disbursed'
         ] =
@@ -1587,10 +2174,6 @@ export class BankBalanceComponent implements OnInit {
             voAlf.id!
           );
 
-
-        // ---------------------------------------------------
-        // CURRENT BALANCE
-        // ---------------------------------------------------
 
         row[
           'Current Balance'
@@ -1606,20 +2189,12 @@ export class BankBalanceComponent implements OnInit {
     );
 
 
-    // =======================================================
-    // WORKSHEET
-    // =======================================================
-
     const worksheet:
       XLSX.WorkSheet =
       XLSX.utils.json_to_sheet(
         excelData
       );
 
-
-    // =======================================================
-    // COLUMN WIDTH
-    // =======================================================
 
     const columnWidths: {
       wch: number;
@@ -1659,10 +2234,6 @@ export class BankBalanceComponent implements OnInit {
       columnWidths;
 
 
-    // =======================================================
-    // WORKBOOK
-    // =======================================================
-
     const workbook:
       XLSX.WorkBook =
       XLSX.utils.book_new();
@@ -1674,10 +2245,6 @@ export class BankBalanceComponent implements OnInit {
       'Bank Balance'
     );
 
-
-    // =======================================================
-    // FILE NAME
-    // =======================================================
 
     const cmrcName =
       this.getSelectedCmrcName()
@@ -1705,5 +2272,18 @@ export class BankBalanceComponent implements OnInit {
     );
 
   }
+getVoAlfDetailsShowingTo(): number {
+
+if (this.filteredVoAlfDetails.length === 0) {
+return 0;
+}
+
+return Math.min(
+this.voAlfDetailsCurrentPage *
+this.voAlfDetailsPageSize,
+this.filteredVoAlfDetails.length
+);
+
+}
 
 }

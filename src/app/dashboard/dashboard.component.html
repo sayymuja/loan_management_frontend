@@ -1,1478 +1,1143 @@
 <div class="dashboard-page">
 
-  <!-- ========================================================= -->
-  <!-- HEADER -->
-  <!-- ========================================================= -->
+  <!-- =====================================================
+       PAGE HEADER
+  ====================================================== -->
 
-  <div class="dashboard-header">
+  <div class="page-header">
 
-    <div class="header-left">
 
-      <div class="header-icon">
-        <i class="bi bi-speedometer2"></i>
-      </div>
+<div>
+  <h2 class="page-title">
+    <i class="bi bi-speedometer2"></i>
+    Dashboard
+  </h2>
 
-      <div>
-        <h1>Dashboard</h1>
-        <p>Overview of CMRC, VO / ALF, Loans & Repayments</p>
-      </div>
+  <p class="page-subtitle">
+    Tejshree Loan Management System overview
+  </p>
+</div>
 
-    </div>
+<button
+  type="button"
+  class="btn-refresh"
+  (click)="loadDashboard()">
 
-    <button
-      class="reset-btn"
-      type="button"
-      (click)="clearFilters()">
+  <i class="bi bi-arrow-clockwise"></i>
+  Refresh
+</button>
 
-      <i class="bi bi-arrow-clockwise"></i>
 
-      Reset
+  </div>
 
-    </button>
+  <!-- =====================================================
+       FILTER SECTION
+  ====================================================== -->
+
+  <div class="filter-card">
+
+
+
+
+<div class="filter-grid">
+
+  <!-- CMRC -->
+
+  <div class="filter-group">
+
+    <label>
+      CMRC
+    </label>
+
+   <select
+  class="form-select"
+  [(ngModel)]="selectedCmrcId"
+  (change)="onCmrcChange()">
+
+  <option [ngValue]="null">
+    Select CMRC
+  </option>
+
+  <option
+    *ngFor="let cmrc of cmrcList"
+    [ngValue]="cmrc.id">
+
+    {{ cmrc.cmrcName || ('CMRC #' + cmrc.id) }}
+
+  </option>
+
+</select>
 
   </div>
 
 
-  <!-- ========================================================= -->
-  <!-- FILTER CARD -->
-  <!-- ========================================================= -->
-
-  <div class="dashboard-card filter-card">
-
-    <div class="filter-item">
-
-      <label>
-        <i class="bi bi-building"></i>
-        CMRC
-      </label>
-
-      <select
-        class="form-select"
-        [(ngModel)]="selectedCmrcId"
-        (change)="onCmrcChange()">
-
-        <option [ngValue]="null">
-          All CMRC
-        </option>
-
-        <option
-          *ngFor="let cmrc of cmrcList"
-          [ngValue]="cmrc.id">
-
-          {{ cmrc.cmrcName }}
-
-        </option>
-
-      </select>
-
-    </div>
 
 
-    <div class="filter-item">
 
-      <label>
-        <i class="bi bi-diagram-3"></i>
-        VO / ALF
-      </label>
+  
 
-      <select
-        class="form-select"
-        [(ngModel)]="selectedVoAlfId"
-        (change)="onVoAlfChange()">
 
-        <option [ngValue]="null">
-          All VO / ALF
-        </option>
+  <!-- VO / ALF -->
 
-        <option
-          *ngFor="let vo of voAlfList"
-          [ngValue]="vo.id">
+  <div class="filter-group">
 
-          {{ vo.voAlfName }}
+    <label>
+      VO / ALF
+    </label>
+<select
+  class="form-select"
+  [(ngModel)]="selectedVoAlfId"
+  (change)="onVoAlfChange()">
 
-        </option>
+  <option [ngValue]="null">
+    All VO / ALF
+  </option>
 
-      </select>
+  <option
+    *ngFor="let vo of voAlfList"
+    [ngValue]="vo.id">
+
+    {{ vo.voAlfName || ('VO / ALF #' + vo.id) }}
+
+  </option>
+
+</select>
+</div>
+</div>
+<br>
+
+  <!-- =====================================================
+       SELECTED VO / ALF INFO
+  ====================================================== -->
+
+  <div
+    class="selection-info"
+    *ngIf="selectedVoAlf">
+
+
+<div>
+
+  <i class="bi bi-check-circle-fill"></i>
+
+  <strong>
+    {{ selectedVoAlf.voAlfName }}
+  </strong>
+
+  <span>
+    is selected
+  </span>
+
+</div>
+
+<div class="selection-fund">
+
+  Fund:
+  <strong>
+    ₹{{ totalAlfBalance | number:'1.0-0' }}
+  </strong>
+
+</div>
+
+
+  </div>
+
+  <!-- =====================================================
+       CHARTS
+  ====================================================== -->
+
+  <div class="chart-grid">
+
+
+<!-- MONTHLY LOAN CHART -->
+
+<div class="dashboard-card chart-card">
+
+  <div class="card-header">
+
+    <div>
+
+      <h5>
+        <i class="bi bi-graph-up"></i>
+        Monthly Loan Disbursement
+      </h5>
+
+      <p>
+        Loan disbursement trend based on current filter
+      </p>
 
     </div>
 
   </div>
 
+  <div class="chart-container">
 
-  <!-- ========================================================= -->
-  <!-- TOP CHARTS -->
-  <!-- ========================================================= -->
+    <canvas
+      baseChart
+      [data]="monthlyLoanChartData"
+      [options]="monthlyLoanChartOptions"
+      [type]="'line'">
+    </canvas>
 
-  <div class="top-charts-grid">
+  </div>
+
+</div>
 
 
-    <!-- MONTHLY LOAN CHART -->
+<!-- REPAYMENT PURPOSE -->
 
-    <div class="dashboard-card chart-card monthly-loan-card">
+<div class="dashboard-card chart-card">
 
-      <div class="card-header">
+  <div class="card-header">
 
-        <div>
+    <div>
 
-          <h3>
-            Monthly Loan Disbursement
-          </h3>
+      <h5>
+        <i class="bi bi-pie-chart"></i>
+        Repayment by Purpose
+      </h5>
 
-          <p>
-            Month-wise loan amount distributed
-          </p>
+      <p>
+        Repayment distribution based on current filter
+      </p>
 
-        </div>
+    </div>
 
-        <div class="chart-badge">
-          Loan Amount
-        </div>
+  </div>
+
+  <div class="chart-container doughnut-container">
+
+    <canvas
+      baseChart
+      [data]="repaymentChartData"
+      [options]="repaymentChartOptions"
+      [type]="'doughnut'">
+    </canvas>
+
+  </div>
+
+
+  <!-- PURPOSE DETAILS -->
+
+  <div
+    class="purpose-list"
+    *ngIf="repaymentPurposeChartData.length > 0">
+
+    <div
+      class="purpose-item"
+      *ngFor="
+        let item of repaymentPurposeChartData;
+        let i = index
+      ">
+
+      <div class="purpose-left">
+
+        <span
+          class="purpose-dot"
+          [style.backgroundColor]="getPurposeColor(i)">
+        </span>
+
+        <span>
+          {{ item.purpose }}
+        </span>
 
       </div>
 
+      <strong>
+        ₹{{ item.amount | number:'1.0-0' }}
+      </strong>
 
-      <div class="monthly-chart-wrapper">
+    </div>
 
-        <canvas
-          baseChart
-          [data]="monthlyLoanChartData"
-          [options]="monthlyLoanChartOptions"
-          [type]="'line'">
-        </canvas>
+  </div>
 
-      </div>
+</div>
+
+
+  </div>
+
+  <!-- =====================================================
+       OVERALL SUMMARY
+  ====================================================== -->
+
+  <div class="section-title">
+
+
+<div>
+
+  <h4>
+    <i class="bi bi-grid-1x2"></i>
+    Summary
+  </h4>
+
+  <p>
+    Summary based on selected CMRC / VO / ALF filter
+  </p>
+
+</div>
+
+
+  </div>
+
+  <div class="summary-grid">
+
+
+<!-- CMRC -->
+
+<div class="summary-card">
+
+  <div class="summary-icon">
+    <i class="bi bi-building"></i>
+  </div>
+
+  <div>
+
+    <span>
+      CMRC
+    </span>
+
+    <strong>
+      {{ totalCmrc }}
+    </strong>
+
+  </div>
+
+</div>
+
+
+<!-- VO / ALF -->
+
+<div class="summary-card">
+
+  <div class="summary-icon">
+    <i class="bi bi-diagram-3"></i>
+  </div>
+
+  <div>
+
+    <span>
+      VO / ALF
+    </span>
+
+    <strong>
+      {{ totalVoAlf }}
+    </strong>
+
+  </div>
+
+</div>
+
+
+<!-- TOTAL LOANS -->
+
+<div class="summary-card">
+
+  <div class="summary-icon">
+    <i class="bi bi-cash-coin"></i>
+  </div>
+
+  <div>
+
+    <span>
+      Total Loans
+    </span>
+
+    <strong>
+      {{ totalLoans }}
+    </strong>
+
+  </div>
+
+</div>
+
+
+<!-- ACTIVE LOANS -->
+
+<div class="summary-card">
+
+  <div class="summary-icon active">
+    <i class="bi bi-check-circle"></i>
+  </div>
+
+  <div>
+
+    <span>
+      Active Loans
+    </span>
+
+    <strong>
+      {{ activeLoans }}
+    </strong>
+
+  </div>
+
+</div>
+
+
+<!-- CLOSED LOANS -->
+
+<div class="summary-card">
+
+  <div class="summary-icon closed">
+    <i class="bi bi-lock"></i>
+  </div>
+
+  <div>
+
+    <span>
+      Closed Loans
+    </span>
+
+    <strong>
+      {{ closedLoans }}
+    </strong>
+
+  </div>
+
+</div>
+
+
+<!-- TOTAL WOMEN -->
+
+<div class="summary-card">
+
+  <div class="summary-icon">
+    <i class="bi bi-people"></i>
+  </div>
+
+  <div>
+
+    <span>
+      Total Women
+    </span>
+
+    <strong>
+      {{ totalWomen }}
+    </strong>
+
+  </div>
+
+</div>
+
+
+<!-- TOTAL LOAN AMOUNT -->
+
+<div class="summary-card summary-card-wide">
+
+  <div class="summary-icon amount">
+    <i class="bi bi-currency-rupee"></i>
+  </div>
+
+  <div>
+
+    <span>
+      Total Loan Amount
+    </span>
+
+    <strong>
+      ₹{{ totalLoanAmount | number:'1.0-0' }}
+    </strong>
+
+  </div>
+
+</div>
+
+
+  </div>
+
+  <!-- =====================================================
+       VO / ALF DETAILS
+  ====================================================== -->
+
+  <div class="dashboard-card details-card">
+
+
+<div class="card-header">
+
+  <div>
+
+    <h5>
+      <i class="bi bi-bar-chart-line"></i>
+      VO / ALF Details
+    </h5>
+
+    <p>
+      Detailed information based on the selected filter
+    </p>
+
+  </div>
+
+</div>
+
+
+<!-- TABS -->
+
+<div class="detail-tabs">
+
+  <button
+    type="button"
+    [class.active]="activeTab === 'fund'"
+    (click)="setActiveTab('fund')">
+
+    <i class="bi bi-cash-stack"></i>
+    Fund Details
+
+  </button>
+
+
+  <button
+    type="button"
+    [class.active]="activeTab === 'bank'"
+    (click)="setActiveTab('bank')">
+
+    <i class="bi bi-bank"></i>
+    Bank Balance
+
+  </button>
+
+
+  <button
+    type="button"
+    [class.active]="activeTab === 'loan'"
+    (click)="setActiveTab('loan')">
+
+    <i class="bi bi-credit-card"></i>
+    Loan List
+
+  </button>
+
+
+  <button
+    type="button"
+    [class.active]="activeTab === 'repayment'"
+    (click)="setActiveTab('repayment')">
+
+    <i class="bi bi-arrow-repeat"></i>
+    Repayment
+
+  </button>
+
+</div>
+
+
+<!-- ===================================================
+     FUND DETAILS
+==================================================== -->
+
+<div
+  class="tab-content"
+  *ngIf="activeTab === 'fund'">
+
+  <div class="detail-grid">
+
+
+    <div class="detail-box">
+
+      <span>
+        Received Fund
+      </span>
+
+      <strong>
+        ₹{{ totalAlfBalance | number:'1.0-0' }}
+      </strong>
 
     </div>
 
 
-    <!-- REPAYMENT PURPOSE CHART -->
+    <div class="detail-box">
 
-    <div class="dashboard-card chart-card repayment-purpose-card">
+      <span>
+        Total Loan Amount
+      </span>
 
-      <div class="card-header">
+      <strong>
+        ₹{{ totalLoanAmount | number:'1.0-0' }}
+      </strong>
 
-        <div>
-
-          <h3>
-            Paid Amount by Loan Purpose
-          </h3>
-
-          <p>
-            Repayment distribution by loan purpose
-          </p>
-
-        </div>
-
-        <div class="chart-badge">
-          Paid Amount
-        </div>
-
-      </div>
+    </div>
 
 
-      <div class="repayment-chart-container">
+    <div class="detail-box">
 
-        <!-- CHART -->
+      <span>
+        Left Fund
+      </span>
 
-        <ng-container
-          *ngIf="
-            repaymentPurposeChartData &&
-            repaymentPurposeChartData.length > 0
+      <strong>
+        ₹{{ leftAlfBalance | number:'1.0-0' }}
+      </strong>
+
+    </div>
+
+
+    <div class="detail-box">
+
+      <span>
+        Total Groups
+      </span>
+
+      <strong>
+        {{ totalGroups }}
+      </strong>
+
+    </div>
+
+
+    <div class="detail-box">
+
+      <span>
+        Total Women
+      </span>
+
+      <strong>
+        {{ totalWomen }}
+      </strong>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ===================================================
+     BANK BALANCE
+==================================================== -->
+
+<div
+  class="tab-content"
+  *ngIf="activeTab === 'bank'">
+
+  <div class="detail-grid">
+
+    <div class="detail-box">
+
+      <span>
+        CMRC Bank Balance
+      </span>
+
+      <strong>
+        ₹{{ totalCmrcBalance | number:'1.0-0' }}
+      </strong>
+
+    </div>
+
+
+    <div class="detail-box">
+
+      <span>
+        VO / ALF Bank Balance
+      </span>
+
+      <strong>
+        ₹{{ totalAlfBalance | number:'1.0-0' }}
+      </strong>
+
+    </div>
+
+
+    <div class="detail-box">
+
+      <span>
+        Utilized Loan Amount
+      </span>
+
+      <strong>
+        ₹{{ totalLoanAmount | number:'1.0-0' }}
+      </strong>
+
+    </div>
+
+
+    <div class="detail-box">
+
+      <span>
+        Remaining Balance
+      </span>
+
+      <strong>
+        ₹{{ leftAlfBalance | number:'1.0-0' }}
+      </strong>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ===================================================
+     LOAN LIST
+==================================================== -->
+
+<div
+  class="tab-content"
+  *ngIf="activeTab === 'loan'">
+
+  <div
+    class="table-responsive"
+    *ngIf="loanList.length > 0">
+
+    <table class="table dashboard-table">
+
+      <thead>
+
+        <tr>
+
+          <th>#</th>
+
+          <th>Woman</th>
+
+          <th>Group</th>
+
+          <th>Purpose</th>
+
+          <th>Sanctioned</th>
+
+          <th>Loan Amount</th>
+
+          <th>EMI</th>
+
+          <th>Status</th>
+
+          <th>Date</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        <tr
+          *ngFor="
+            let loan of loanList;
+            let i = index
           ">
 
-          <div class="doughnut-wrapper">
+          <td>
+            {{ i + 1 }}
+          </td>
 
-            <canvas
-              baseChart
-              [data]="repaymentChartData"
-              [options]="repaymentChartOptions"
-              [type]="'doughnut'">
-            </canvas>
+          <td>
+            {{ loan.womanName || '-' }}
+          </td>
 
-          </div>
+          <td>
+            {{ loan.groupName || '-' }}
+          </td>
 
+          <td>
+            {{ loan.loanPurpose || '-' }}
+          </td>
 
-          <!-- PURPOSE LIST -->
+          <td>
+            ₹{{ (loan.sanctionedAmount || 0) | number:'1.0-0' }}
+          </td>
 
-          <div class="purpose-list">
+          <td>
+            ₹{{ (loan.loanAmount || 0) | number:'1.0-0' }}
+          </td>
 
-            <div
-              class="purpose-row"
-              *ngFor="
-                let item of repaymentPurposeChartData;
-                let i = index
-              ">
+          <td>
+            ₹{{ (loan.monthlyEmi || 0) | number:'1.0-0' }}
+          </td>
 
-              <div class="purpose-left">
+          <td>
 
-                <span
-                  class="purpose-dot"
-                  [style.background]="getPurposeColor(i)">
-                </span>
+            <span
+              class="status-badge"
+              [ngClass]="{
+                'active': normalizeLoanStatus(loan.loanStatus) === 'ACTIVE',
+                'closed': normalizeLoanStatus(loan.loanStatus) === 'CLOSED'
+              }">
 
-                <div>
+              {{ loan.loanStatus || '-' }}
 
-                  <strong>
-                    {{ item.purpose }}
-                  </strong>
+            </span>
 
-                  <small>
+          </td>
 
-                    {{ item.womenCount }}
+          <td>
+            {{ loan.loanGivenDate | date:'dd-MM-yyyy' }}
+          </td>
 
-                    {{
-                      item.womenCount === 1
-                        ? 'Woman'
-                        : 'Women'
-                    }}
+        </tr>
 
-                  </small>
+      </tbody>
 
-                </div>
+      <tfoot>
 
-              </div>
+        <tr>
 
+          <td colspan="5">
+            <strong>
+              Total
+            </strong>
+          </td>
 
-              <strong>
+          <td>
+            <strong>
+              ₹{{ getLoanListTotalAmount() | number:'1.0-0' }}
+            </strong>
+          </td>
 
-                ₹{{ item.amount | number:'1.0-0' }}
+          <td colspan="3"></td>
 
-              </strong>
+        </tr>
 
-            </div>
+      </tfoot>
 
+    </table>
 
-            <!-- TOTAL PAID -->
-
-            <div class="total-paid-row">
-
-              <span>
-                Total Paid
-              </span>
-
-              <strong>
-                ₹{{ totalPaidAmount | number:'1.0-0' }}
-              </strong>
-
-            </div>
-
-          </div>
-
-        </ng-container>
+  </div>
 
 
-        <!-- EMPTY CHART -->
+  <div
+    class="empty-state"
+    *ngIf="loanList.length === 0">
 
-        <div
-          class="chart-empty-state"
-          *ngIf="
-            !repaymentPurposeChartData ||
-            repaymentPurposeChartData.length === 0
-          ">
+    <i class="bi bi-inbox"></i>
 
-          <i class="bi bi-pie-chart"></i>
+    <h6>
+      No Loans Found
+    </h6>
 
-          <span>
-            No repayment data available
+    <p>
+      No loan records are available for the selected filter.
+    </p>
+
+  </div>
+
+</div>
+
+
+<!-- ===================================================
+     REPAYMENT
+==================================================== -->
+
+<div
+  class="tab-content"
+  *ngIf="activeTab === 'repayment'">
+
+  <div class="detail-grid">
+
+    <div class="detail-box">
+
+      <span>
+        Scheduled EMI
+      </span>
+
+      <strong>
+        ₹{{ totalScheduledEmi | number:'1.0-0' }}
+      </strong>
+
+    </div>
+
+
+    <div class="detail-box">
+
+      <span>
+        Paid Amount
+      </span>
+
+      <strong>
+        ₹{{ totalPaidAmount | number:'1.0-0' }}
+      </strong>
+
+    </div>
+
+
+    <div class="detail-box">
+
+      <span>
+        Outstanding
+      </span>
+
+      <strong>
+        ₹{{ totalOutstandingAmount | number:'1.0-0' }}
+      </strong>
+
+    </div>
+
+
+    <div class="detail-box">
+
+      <span>
+        Penalty
+      </span>
+
+      <strong>
+        ₹{{ totalPenalty | number:'1.0-0' }}
+      </strong>
+
+    </div>
+
+
+    <div class="detail-box">
+
+      <span>
+        Total Installments
+      </span>
+
+      <strong>
+        {{ totalInstallments }}
+      </strong>
+
+    </div>
+
+
+    <div class="detail-box">
+
+      <span>
+        Paid Installments
+      </span>
+
+      <strong>
+        {{ paidInstallments }}
+      </strong>
+
+    </div>
+
+
+    <div class="detail-box">
+
+      <span>
+        Partial Installments
+      </span>
+
+      <strong>
+        {{ partialInstallments }}
+      </strong>
+
+    </div>
+
+
+    <div class="detail-box">
+
+      <span>
+        Pending Installments
+      </span>
+
+      <strong>
+        {{ pendingInstallments }}
+      </strong>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+  </div>
+
+  <!-- =====================================================
+       RECENT LOANS
+  ====================================================== -->
+
+  <div class="dashboard-card">
+
+
+<div class="card-header">
+
+  <div>
+
+    <h5>
+      <i class="bi bi-clock-history"></i>
+      Recent Loans
+    </h5>
+
+    <p>
+      Latest loan records based on current filter
+    </p>
+
+  </div>
+
+</div>
+
+
+<div
+  class="table-responsive"
+  *ngIf="recentLoans.length > 0">
+
+  <table class="table dashboard-table">
+
+    <thead>
+
+      <tr>
+
+        <th>#</th>
+        <th>Woman</th>
+        <th>Group</th>
+        <th>Purpose</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Date</th>
+
+      </tr>
+
+    </thead>
+
+    <tbody>
+
+      <tr
+        *ngFor="
+          let loan of recentLoans;
+          let i = index
+        ">
+
+        <td>
+          {{ i + 1 }}
+        </td>
+
+        <td>
+          {{ loan.womanName || '-' }}
+        </td>
+
+        <td>
+          {{ loan.groupName || '-' }}
+        </td>
+
+        <td>
+          {{ loan.loanPurpose || '-' }}
+        </td>
+
+        <td>
+          ₹{{ (loan.loanAmount || 0) | number:'1.0-0' }}
+        </td>
+
+        <td>
+
+          <span
+            class="status-badge"
+            [ngClass]="{
+              'active': normalizeLoanStatus(loan.loanStatus) === 'ACTIVE',
+              'closed': normalizeLoanStatus(loan.loanStatus) === 'CLOSED'
+            }">
+
+            {{ loan.loanStatus || '-' }}
+
           </span>
 
-        </div>
+        </td>
 
-      </div>
+        <td>
+          {{ loan.loanGivenDate | date:'dd-MM-yyyy' }}
+        </td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+
+</div>
+
+
+<div
+  class="empty-state"
+  *ngIf="recentLoans.length === 0">
+
+  <i class="bi bi-inbox"></i>
+
+  <h6>
+    No Recent Loans
+  </h6>
+
+  <p>
+    No loan records available.
+  </p>
+
+</div>
+
+
+  </div>
+
+  <!-- =====================================================
+       RECENT ACTIVITY
+  ====================================================== -->
+
+  <div class="dashboard-card">
+
+
+<div class="card-header">
+
+  <div>
+
+    <h5>
+      <i class="bi bi-activity"></i>
+      Recent Activity
+    </h5>
+
+    <p>
+      Latest repayment and loan activity
+    </p>
+
+  </div>
+
+</div>
+
+
+<div
+  class="activity-list"
+  *ngIf="recentActivities.length > 0">
+
+  <div
+    class="activity-item"
+    *ngFor="let activity of recentActivities">
+
+    <div class="activity-icon">
+
+      <i
+        class="bi"
+        [ngClass]="{
+          'bi-arrow-down-circle': activity.type === 'repayment',
+          'bi-cash-coin': activity.type === 'loan'
+        }">
+      </i>
+
+    </div>
+
+
+    <div class="activity-content">
+
+      <strong>
+        {{ activity.title }}
+      </strong>
+
+      <span>
+        {{ activity.womanName }}
+      </span>
+
+    </div>
+
+
+    <div class="activity-amount">
+
+      ₹{{ (activity.amount || 0) | number:'1.0-0' }}
 
     </div>
 
   </div>
 
+</div>
 
-  <!-- ========================================================= -->
-  <!-- BALANCE SUMMARY -->
-  <!-- ========================================================= -->
 
-  <div class="section-title">
+<div
+  class="empty-state"
+  *ngIf="recentActivities.length === 0">
 
-    <h2>
-      Balance Summary
-    </h2>
+  <i class="bi bi-activity"></i>
 
-  </div>
+  <h6>
+    No Recent Activity
+  </h6>
 
+  <p>
+    No recent activity is available.
+  </p>
 
-  <div class="summary-grid balance-grid">
+</div>
 
-
-    <div class="summary-card balance-card">
-
-      <div class="summary-icon">
-
-        <i class="bi bi-bank"></i>
-
-      </div>
-
-      <div class="summary-content">
-
-        <span>
-          Total CMRC Balance
-        </span>
-
-        <strong>
-          ₹{{ totalCmrcBalance | number:'1.0-0' }}
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <div class="summary-card balance-card">
-
-      <div class="summary-icon">
-
-        <i class="bi bi-wallet2"></i>
-
-      </div>
-
-      <div class="summary-content">
-
-        <span>
-          Total ALF Balance
-        </span>
-
-        <strong>
-          ₹{{ totalAlfBalance | number:'1.0-0' }}
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <div class="summary-card balance-card">
-
-      <div class="summary-icon">
-
-        <i class="bi bi-cash-stack"></i>
-
-      </div>
-
-      <div class="summary-content">
-
-        <span>
-          Left ALF Balance
-        </span>
-
-        <strong>
-          ₹{{ leftAlfBalance | number:'1.0-0' }}
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <div class="summary-card balance-card">
-
-      <div class="summary-icon">
-
-        <i class="bi bi-safe2"></i>
-
-      </div>
-
-      <div class="summary-content">
-
-        <span>
-          Left CMRC Balance
-        </span>
-
-        <strong>
-          ₹{{ leftCmrcBalance | number:'1.0-0' }}
-        </strong>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- ========================================================= -->
-  <!-- OVERALL SUMMARY -->
-  <!-- ========================================================= -->
-
-  <div class="section-title">
-
-    <h2>
-      Overall Summary
-    </h2>
-
-  </div>
-
-
-  <div class="summary-grid main-summary-grid">
-
-
-    <!-- CMRC -->
-
-    <div class="summary-card">
-
-      <div class="summary-icon blue">
-
-        <i class="bi bi-building"></i>
-
-      </div>
-
-      <div class="summary-content">
-
-        <span>
-          Total CMRC
-        </span>
-
-        <strong>
-          {{ totalCmrc }}
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <!-- VO ALF -->
-
-    <div class="summary-card">
-
-      <div class="summary-icon purple">
-
-        <i class="bi bi-diagram-3"></i>
-
-      </div>
-
-      <div class="summary-content">
-
-        <span>
-          Total VO / ALF
-        </span>
-
-        <strong>
-          {{ totalVoAlf }}
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <!-- TOTAL LOANS -->
-
-    <div class="summary-card">
-
-      <div class="summary-icon green">
-
-        <i class="bi bi-cash-coin"></i>
-
-      </div>
-
-      <div class="summary-content">
-
-        <span>
-          Total Loans
-        </span>
-
-        <strong>
-          {{ totalLoans }}
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <!-- ACTIVE LOANS -->
-
-    <div class="summary-card">
-
-      <div class="summary-icon active-icon">
-
-        <i class="bi bi-check-circle"></i>
-
-      </div>
-
-      <div class="summary-content">
-
-        <span>
-          Active Loans
-        </span>
-
-        <strong>
-          {{ activeLoans }}
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <!-- CLOSED LOANS -->
-
-    <div class="summary-card">
-
-      <div class="summary-icon closed-icon">
-
-        <i class="bi bi-lock"></i>
-
-      </div>
-
-      <div class="summary-content">
-
-        <span>
-          Closed Loans
-        </span>
-
-        <strong>
-          {{ closedLoans }}
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <!-- WOMEN -->
-
-    <div class="summary-card">
-
-      <div class="summary-icon orange">
-
-        <i class="bi bi-people"></i>
-
-      </div>
-
-      <div class="summary-content">
-
-        <span>
-          Total Women
-        </span>
-
-        <strong>
-          {{ totalWomen }}
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <!-- LOAN AMOUNT -->
-
-    <div class="summary-card loan-amount-card">
-
-      <div class="summary-icon gold">
-
-        <i class="bi bi-currency-rupee"></i>
-
-      </div>
-
-      <div class="summary-content">
-
-        <span>
-          Total Loan Amount
-        </span>
-
-        <strong>
-          ₹{{ totalLoanAmount | number:'1.0-0' }}
-        </strong>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- ========================================================= -->
-  <!-- MAIN CONTENT -->
-  <!-- ========================================================= -->
-
-  <div class="main-content-grid">
-
-
-    <!-- ======================================================= -->
-    <!-- LEFT COLUMN -->
-    <!-- ======================================================= -->
-
-    <div class="left-column">
-
-
-      <!-- ===================================================== -->
-      <!-- VO / ALF DETAILS -->
-      <!-- ===================================================== -->
-
-      <div class="dashboard-card details-card">
-
-
-        <div class="card-header">
-
-          <div>
-
-            <h3>
-              VO / ALF Details
-            </h3>
-
-            <p>
-              Fund, bank balance, loans and repayment information
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <!-- TABS -->
-
-        <div class="tabs">
-
-          <button
-            type="button"
-            [class.active]="activeTab === 'fund'"
-            (click)="setActiveTab('fund')">
-
-            Fund Details
-
-          </button>
-
-
-          <button
-            type="button"
-            [class.active]="activeTab === 'bank'"
-            (click)="setActiveTab('bank')">
-
-            Bank Balance
-
-          </button>
-
-
-          <button
-            type="button"
-            [class.active]="activeTab === 'loans'"
-            (click)="setActiveTab('loans')">
-
-            Loans
-
-          </button>
-
-
-          <button
-            type="button"
-            [class.active]="activeTab === 'repayment'"
-            (click)="setActiveTab('repayment')">
-
-            Repayment Summary
-
-          </button>
-
-        </div>
-
-
-        <!-- =================================================== -->
-        <!-- FUND TAB -->
-        <!-- =================================================== -->
-
-        <div
-          class="tab-content"
-          *ngIf="activeTab === 'fund'">
-
-          <div class="detail-grid">
-
-
-            <div class="detail-item">
-
-              <span>
-                Total Received Fund
-              </span>
-
-              <strong>
-                ₹{{ totalReceivedFund | number:'1.0-0' }}
-              </strong>
-
-            </div>
-
-
-            <div class="detail-item">
-
-              <span>
-                Ultra Poor Fund
-              </span>
-
-              <strong>
-                ₹{{ ultraPoorReceivedFund | number:'1.0-0' }}
-              </strong>
-
-            </div>
-
-
-            <div class="detail-item">
-
-              <span>
-                Debt Trapped Fund
-              </span>
-
-              <strong>
-                ₹{{ debtTrappedReceivedFund | number:'1.0-0' }}
-              </strong>
-
-            </div>
-
-
-            <div class="detail-item">
-
-              <span>
-                Total Groups
-              </span>
-
-              <strong>
-                {{ totalGroups }}
-              </strong>
-
-            </div>
-
-
-            <div class="detail-item">
-
-              <span>
-                Ultra Poor Groups
-              </span>
-
-              <strong>
-                {{ ultraPoorGroupCount }}
-              </strong>
-
-            </div>
-
-
-            <div class="detail-item">
-
-              <span>
-                Debt Trapped Groups
-              </span>
-
-              <strong>
-                {{ debtTrappedGroupCount }}
-              </strong>
-
-            </div>
-
-
-            <div class="detail-item">
-
-              <span>
-                Total Women
-              </span>
-
-              <strong>
-                {{ totalWomen }}
-              </strong>
-
-            </div>
-
-
-            <div class="detail-item">
-
-              <span>
-                Total Group Amount
-              </span>
-
-              <strong>
-                ₹{{ totalGroupAmount | number:'1.0-0' }}
-              </strong>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- =================================================== -->
-        <!-- BANK TAB -->
-        <!-- =================================================== -->
-
-        <div
-          class="tab-content"
-          *ngIf="activeTab === 'bank'">
-
-          <div class="empty-tab">
-
-            <i class="bi bi-bank"></i>
-
-            <p>
-              Bank balance information
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <!-- =================================================== -->
-        <!-- LOANS TAB -->
-        <!-- =================================================== -->
-
-        <div
-          class="tab-content loans-tab"
-          *ngIf="activeTab === 'loans'">
-
-
-          <!-- LOAN HEADER -->
-
-          <div class="loans-tab-header">
-
-            <div>
-
-              <h4>
-                Loan Records
-              </h4>
-
-              <p>
-                All loans under the selected VO / ALF
-              </p>
-
-            </div>
-
-
-            <div class="loan-count-badge">
-
-              {{ loanList.length }}
-
-              {{ loanList.length === 1 ? 'Loan' : 'Loans' }}
-
-            </div>
-
-          </div>
-
-
-          <!-- LOAN SUMMARY -->
-
-          <div class="loan-summary-grid">
-
-
-            <div class="loan-summary-item">
-
-              <span>
-                Total Loans
-              </span>
-
-              <strong>
-                {{ loanList.length }}
-              </strong>
-
-            </div>
-
-
-            <div class="loan-summary-item">
-
-              <span>
-                Active Loans
-              </span>
-
-              <strong>
-                {{ getActiveLoanCount() }}
-              </strong>
-
-            </div>
-
-
-            <div class="loan-summary-item">
-
-              <span>
-                Closed Loans
-              </span>
-
-              <strong>
-                {{ getClosedLoanCount() }}
-              </strong>
-
-            </div>
-
-
-            <div class="loan-summary-item">
-
-              <span>
-                Total Loan Amount
-              </span>
-
-              <strong>
-                ₹{{ getLoanListTotalAmount() | number:'1.0-0' }}
-              </strong>
-
-            </div>
-
-          </div>
-
-
-          <!-- LOAN TABLE -->
-
-          <div
-            class="loan-table-wrapper"
-            *ngIf="
-              loanList &&
-              loanList.length > 0
-            ">
-
-            <table class="loan-table">
-
-              <thead>
-
-                <tr>
-
-                  <th>
-                    Loan ID
-                  </th>
-
-                  <th>
-                    Group
-                  </th>
-
-                  <th>
-                    Woman
-                  </th>
-
-                  <th>
-                    Purpose
-                  </th>
-
-                  <th>
-                    Loan Amount
-                  </th>
-
-                  <th>
-                    Monthly EMI
-                  </th>
-
-                  <th>
-                    Interest
-                  </th>
-
-                  <th>
-                    Loan Date
-                  </th>
-
-                  <th>
-                    Status
-                  </th>
-
-                </tr>
-
-              </thead>
-
-
-              <tbody>
-
-                <tr
-                  *ngFor="let loan of loanList">
-
-
-                  <td>
-
-                    <strong>
-                      #{{ loan.id }}
-                    </strong>
-
-                  </td>
-
-
-                  <td>
-
-                    {{ loan.groupName || '-' }}
-
-                  </td>
-
-
-                  <td>
-
-                    <strong>
-                      {{ loan.womanName || '-' }}
-                    </strong>
-
-                  </td>
-
-
-                  <td>
-
-                    {{ loan.loanPurpose || '-' }}
-
-                  </td>
-
-
-                  <td>
-
-                    <strong>
-                      ₹{{ (loan.loanAmount || 0) | number:'1.0-0' }}
-                    </strong>
-
-                  </td>
-
-
-                  <td>
-
-                    ₹{{ (loan.monthlyEmi || 0) | number:'1.0-0' }}
-
-                  </td>
-
-
-                  <td>
-
-                    {{ loan.interestRate || 0 }}%
-
-                  </td>
-
-
-                  <td>
-
-                    {{ loan.loanGivenDate | date:'dd-MM-yyyy' }}
-
-                  </td>
-
-
-                  <td>
-
-                    <span
-                      class="loan-status"
-                      [class.active]="
-                        normalizeLoanStatus(loan.loanStatus) === 'ACTIVE'
-                      "
-                      [class.closed]="
-                        normalizeLoanStatus(loan.loanStatus) === 'CLOSED'
-                      "
-                      [class.pending]="
-                        normalizeLoanStatus(loan.loanStatus) === 'PENDING'
-                      ">
-
-                      {{ normalizeLoanStatus(loan.loanStatus) }}
-
-                    </span>
-
-                  </td>
-
-                </tr>
-
-              </tbody>
-
-            </table>
-
-          </div>
-
-
-          <!-- EMPTY LOANS -->
-
-          <div
-            class="empty-state"
-            *ngIf="
-              !loanList ||
-              loanList.length === 0
-            ">
-
-            <i class="bi bi-file-earmark-x"></i>
-
-            <h4>
-              No Loans Found
-            </h4>
-
-            <p>
-              No loans are available for the selected VO / ALF.
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <!-- =================================================== -->
-        <!-- REPAYMENT TAB -->
-        <!-- =================================================== -->
-
-        <div
-          class="tab-content"
-          *ngIf="activeTab === 'repayment'">
-
-          <div class="detail-grid">
-
-
-            <div class="detail-item">
-
-              <span>
-                Paid Amount
-              </span>
-
-              <strong>
-                ₹{{ totalPaidAmount | number:'1.0-0' }}
-              </strong>
-
-            </div>
-
-
-            <div class="detail-item">
-
-              <span>
-                Outstanding
-              </span>
-
-              <strong>
-                ₹{{ totalOutstandingAmount | number:'1.0-0' }}
-              </strong>
-
-            </div>
-
-
-            <div class="detail-item">
-
-              <span>
-                Penalty
-              </span>
-
-              <strong>
-                ₹{{ totalPenalty | number:'1.0-0' }}
-              </strong>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <!-- ===================================================== -->
-      <!-- RECENT LOANS -->
-      <!-- ===================================================== -->
-
-      <div class="dashboard-card recent-loans-card">
-
-
-        <div class="card-header">
-
-          <div>
-
-            <h3>
-              Recent Loans
-            </h3>
-
-            <p>
-              Latest loan records
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <div
-          class="loan-list"
-          *ngIf="
-            recentLoans &&
-            recentLoans.length > 0
-          ">
-
-
-          <div
-            class="loan-row"
-            *ngFor="let loan of recentLoans">
-
-
-            <div class="loan-user">
-
-              <div class="user-avatar">
-
-                {{
-                  (loan.womanName || 'U')
-                    .charAt(0)
-                    .toUpperCase()
-                }}
-
-              </div>
-
-
-              <div>
-
-                <strong>
-                  {{ loan.womanName }}
-                </strong>
-
-                <span>
-                  {{ loan.loanPurpose || 'Other' }}
-                </span>
-
-              </div>
-
-            </div>
-
-
-            <div class="loan-right">
-
-              <strong>
-                ₹{{ loan.loanAmount | number:'1.0-0' }}
-              </strong>
-
-              <span>
-                {{ loan.loanGivenDate | date:'dd-MM-yyyy' }}
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div
-          class="empty-state"
-          *ngIf="
-            !recentLoans ||
-            recentLoans.length === 0
-          ">
-
-          No loan records found.
-
-        </div>
-
-      </div>
-
-
-    </div>
-
-
-    <!-- ======================================================= -->
-    <!-- RIGHT COLUMN -->
-    <!-- ======================================================= -->
-
-    <div class="right-column">
-
-
-      <!-- ===================================================== -->
-      <!-- SELECTED VO / ALF -->
-      <!-- ===================================================== -->
-
-      <div
-        class="dashboard-card selected-vo-card"
-        *ngIf="selectedVoAlf">
-
-
-        <div class="selected-vo-header">
-
-
-          <div class="selected-vo-icon">
-
-            <i class="bi bi-diagram-3"></i>
-
-          </div>
-
-
-          <div>
-
-            <span>
-              Selected VO / ALF
-            </span>
-
-            <h3>
-              {{ selectedVoAlf.voAlfName }}
-            </h3>
-
-          </div>
-
-        </div>
-
-
-        <div class="selected-info-grid">
-
-
-          <div>
-
-            <span>
-              Village
-            </span>
-
-            <strong>
-              {{ selectedVoAlf.villageName || '-' }}
-            </strong>
-
-          </div>
-
-
-          <div>
-
-            <span>
-              CMRC
-            </span>
-
-            <strong>
-              {{ selectedVoAlf.cmrcName || '-' }}
-            </strong>
-
-          </div>
-
-
-          <div>
-
-            <span>
-              Account No.
-            </span>
-
-            <strong>
-              {{ selectedVoAlf.accountNo || '-' }}
-            </strong>
-
-          </div>
-
-
-          <div>
-
-            <span>
-              Received Fund
-            </span>
-
-            <strong>
-              ₹{{ selectedVoAlf.receivedFund | number:'1.0-0' }}
-            </strong>
-
-          </div>
-
-
-          <div>
-
-            <span>
-              Total Loans
-            </span>
-
-            <strong>
-              {{ totalLoans }}
-            </strong>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <!-- ===================================================== -->
-      <!-- NO SELECTION -->
-      <!-- ===================================================== -->
-
-      <div
-        class="dashboard-card no-selection-card"
-        *ngIf="!selectedVoAlf">
-
-
-        <div class="no-selection-icon">
-
-          <i class="bi bi-hand-index"></i>
-
-        </div>
-
-
-        <h3>
-          No VO / ALF Selected
-        </h3>
-
-
-        <p>
-          Select a VO / ALF from the filter
-          to view detailed information.
-        </p>
-
-      </div>
-
-
-      <!-- ===================================================== -->
-      <!-- RECENT ACTIVITY -->
-      <!-- ===================================================== -->
-
-      <div class="dashboard-card activity-card">
-
-
-        <div class="card-header">
-
-          <div>
-
-            <h3>
-              Recent Activity
-            </h3>
-
-            <p>
-              Latest repayment activity
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <div
-          class="activity-list"
-          *ngIf="
-            recentActivities &&
-            recentActivities.length > 0
-          ">
-
-
-          <div
-            class="activity-row"
-            *ngFor="let activity of recentActivities">
-
-
-            <div class="activity-icon">
-
-              <i
-                class="bi"
-                [class.bi-arrow-down-circle]="
-                  activity.type === 'repayment'
-                "
-                [class.bi-cash-coin]="
-                  activity.type !== 'repayment'
-                ">
-              </i>
-
-            </div>
-
-
-            <div class="activity-content">
-
-              <strong>
-                {{ activity.title }}
-              </strong>
-
-              <span>
-                {{ activity.womanName }}
-              </span>
-
-            </div>
-
-
-            <strong class="activity-amount">
-
-              ₹{{ activity.amount | number:'1.0-0' }}
-
-            </strong>
-
-          </div>
-
-        </div>
-
-
-        <div
-          class="empty-state"
-          *ngIf="
-            !recentActivities ||
-            recentActivities.length === 0
-          ">
-
-          No recent activity.
-
-        </div>
-
-      </div>
-
-
-    </div>
 
   </div>
 

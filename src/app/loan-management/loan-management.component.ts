@@ -3,7 +3,11 @@ import {
   OnInit,
   ChangeDetectorRef
 } from '@angular/core';
-
+import {
+  Input,
+  Output,
+  EventEmitter
+} from '@angular/core';
 import {
   Cmrc,
   CmrcService
@@ -26,8 +30,8 @@ import {
 
 import {
   Loan,
-  LoanService,
-  LoanImage
+  LoanImage,
+  LoanService
 } from '../services/loan.service';
 
 import {
@@ -38,11 +42,6 @@ import {
   RepaymentService
 } from '../services/repayment.service';
 
-import {
-  DomSanitizer,
-  SafeUrl
-} from '@angular/platform-browser';
-
 
 @Component({
   selector: 'app-loan-management',
@@ -51,102 +50,87 @@ import {
 })
 export class LoanManagementComponent implements OnInit {
 
-  // =====================================================
-  // MASTER LISTS
-  // =====================================================
+  // =========================================================
+  // MASTER DATA
+  // =========================================================
 
   cmrcList: Cmrc[] = [];
-
   voAlfList: VoAlf[] = [];
-
   groupList: Group[] = [];
-
   womenList: Women[] = [];
 
-
-  // =====================================================
-  // LOAN LIST
-  // =====================================================
-
   loanList: Loan[] = [];
-
   filteredLoanList: Loan[] = [];
 
 
-  // =====================================================
-  // SELECTED HIERARCHY
-  // =====================================================
+  // =========================================================
+  // SELECTED FILTERS
+  // =========================================================
 
   selectedCmrcId: number | null = null;
-
   selectedVoAlfId: number | null = null;
-
   selectedGroupId: number | null = null;
-
   selectedWomanId: number | null = null;
 
 
-  // =====================================================
+  // =========================================================
   // FUND SUMMARY
-  // =====================================================
+  // =========================================================
 
   totalAlfBalance = 0;
-
   totalSanctionedAmount = 0;
-
   leftAlfBalance = 0;
 
 
-  // =====================================================
+  // =========================================================
   // FORM
-  // =====================================================
+  // =========================================================
 
   showForm = false;
-
   isEditMode = false;
-
   editingLoanId: number | null = null;
 
   newLoan: any = this.getEmptyLoan();
 
 
-  // =====================================================
-  // SEARCH
-  // =====================================================
-
-  globalSearch = '';
-
-
-  // =====================================================
-  // DETAILS
-  // =====================================================
+  // =========================================================
+  // SELECTED LOAN
+  // =========================================================
 
   selectedLoan: Loan | null = null;
 
 
-  // =====================================================
+  // =========================================================
+  // SEARCH
+  // =========================================================
+
+  globalSearch = '';
+
+
+  // =========================================================
   // LOAN IMAGES
-  // =====================================================
+  // =========================================================
 
   selectedImageFiles: File[] = [];
-
   imagePreviews: string[] = [];
-
   loanImages: LoanImage[] = [];
-
   imageUploading = false;
 
 
-  // =====================================================
+  // =========================================================
   // LOADING
-  // =====================================================
+  // =========================================================
 
   loading = false;
 
 
-  // =====================================================
-  // CONSTRUCTOR
-  // =====================================================
+  // =========================================================
+  // CL SCHEDULE POPUP
+  // =========================================================
+
+  showClSchedulePopup = false;
+  selectedClScheduleLoanId: number | null = null;
+
 
   constructor(
     private cmrcService: CmrcService,
@@ -154,813 +138,439 @@ export class LoanManagementComponent implements OnInit {
     private groupService: GroupService,
     private womenService: WomenService,
     private loanService: LoanService,
-    private cdRef: ChangeDetectorRef,
     private clScheduleService: ClScheduleService,
     private repaymentService: RepaymentService,
-    private sanitizer: DomSanitizer
+    private cdr: ChangeDetectorRef
   ) {}
 
 
-  // =====================================================
-  // SAFE IMAGE URL
-  // =====================================================
-
-  getSafeImageUrl(url: string): SafeUrl {
-
-    return this.sanitizer.bypassSecurityTrustUrl(url);
-
-  }
-
-
-  // =====================================================
+  // =========================================================
   // INIT
-  // =====================================================
+  // =========================================================
 
   ngOnInit(): void {
-
-    this.loadInitialData();
-
-  }
-
-
-  // =====================================================
-  // INITIAL DATA
-  //
-  // LOGGED-IN USER
-  //       ↓
-  //      CMRC
-  //       ↓
-  //    VO / ALF
-  //       ↓
-  //     GROUP
-  //       ↓
-  //     WOMEN
-  //       ↓
-  //      LOAN
-  // =====================================================
-
-  loadInitialData(): void {
-
-    this.loading = true;
-
-
-    // Load logged-in user's CMRC first.
     this.loadCmrcList();
-
-
-    // Loans are already secured by backend
-    // for the logged-in user's CMRC.
-    this.loadLoans();
-
+    this.loadAllLoans();
   }
 
 
-  // =====================================================
-  // LOAD CURRENT USER CMRC
-  // =====================================================
+  // =========================================================
+  // CMRC
+  // =========================================================
 
-  loadCmrcList(): void {
+loadCmrcList(): void {
 
-    this.cmrcService.getAll().subscribe({
+  this.cmrcService.getAll().subscribe({
+    next: (data: Cmrc[]) => {
 
-      next: (data: Cmrc[]) => {
+      this.cmrcList = data || [];
 
-        this.cmrcList = data || [];
+      // =====================================================
+      // DEFAULT CMRC SELECTION
+      // Select first CMRC automatically
+      // =====================================================
 
-
-        // Backend returns only the CMRC
-        // assigned to logged-in user.
-
-        if (this.cmrcList.length === 0) {
-
-          this.selectedCmrcId = null;
-
-          this.voAlfList = [];
-
-          this.groupList = [];
-
-          this.womenList = [];
-
-          return;
-
-        }
-
-
-        const currentCmrc =
-          this.cmrcList[0];
-
+      if (
+        this.cmrcList.length > 0 &&
+        !this.selectedCmrcId
+      ) {
 
         this.selectedCmrcId =
-          currentCmrc.id != null
-            ? Number(currentCmrc.id)
-            : null;
+          Number(this.cmrcList[0].id);
 
+        // Load VO / ALF for selected CMRC
+        if (this.selectedCmrcId) {
 
-        console.log(
-          'CURRENT USER CMRC:',
-          currentCmrc
-        );
-
-
-        if (this.selectedCmrcId !== null) {
-
-          this.loadVoAlfByCmrc();
+          this.loadVoAlfByCmrc(
+            this.selectedCmrcId
+          );
 
         }
 
-      },
-
-      error: (error) => {
-
-        console.error(
-          'CMRC loading error:',
-          error
-        );
-
-        this.cmrcList = [];
-
-        this.selectedCmrcId = null;
-
-        this.voAlfList = [];
-
-        this.groupList = [];
-
-        this.womenList = [];
+        // Apply CMRC filter immediately
+        this.applyLoanFilters();
 
       }
 
+    },
+
+    error: (error: any) => {
+
+      console.error(
+        'Error loading CMRC list:',
+        error
+      );
+
+      this.cmrcList = [];
+
+    }
+  });
+
+}
+
+
+  // =========================================================
+  // VO / ALF
+  // =========================================================
+
+  loadVoAlfByCmrc(cmrcId: number): void {
+
+    this.voAlfService.getByCmrcId(cmrcId).subscribe({
+      next: (data: VoAlf[]) => {
+        this.voAlfList = data || [];
+      },
+      error: (error: any) => {
+        console.error('Error loading VO / ALF:', error);
+        this.voAlfList = [];
+      }
     });
 
   }
 
 
-  // =====================================================
+  // =========================================================
+  // GROUP
+  // =========================================================
+
+  loadGroupsByVoAlf(voAlfId: number): void {
+
+    this.groupService.getByVoAlfId(voAlfId).subscribe({
+      next: (data: Group[]) => {
+        this.groupList = data || [];
+      },
+      error: (error: any) => {
+        console.error('Error loading groups:', error);
+        this.groupList = [];
+      }
+    });
+
+  }
+
+
+  // =========================================================
+  // WOMEN
+  // =========================================================
+
+  loadWomenByGroup(groupId: number): void {
+
+    this.womenService.getByGroupId(groupId).subscribe({
+      next: (data: Women[]) => {
+        this.womenList = data || [];
+      },
+      error: (error: any) => {
+        console.error('Error loading women:', error);
+        this.womenList = [];
+      }
+    });
+
+  }
+
+
+  // =========================================================
+  // LOANS
+  // =========================================================
+
+  loadAllLoans(): void {
+
+    this.loading = true;
+
+    this.loanService.getAll().subscribe({
+      next: (data: Loan[]) => {
+
+        this.loanList = data || [];
+
+        this.applyLoanFilters();
+
+        this.loading = false;
+
+        this.cdr.detectChanges();
+      },
+
+      error: (error: any) => {
+
+        console.error('Error loading loans:', error);
+
+        this.loanList = [];
+        this.filteredLoanList = [];
+
+        this.loading = false;
+
+        this.cdr.detectChanges();
+      }
+    });
+
+  }
+
+
+  // =========================================================
+  // FILTER RESET
+  // =========================================================
+
+  clearFilters(): void {
+
+    this.selectedCmrcId = null;
+    this.selectedVoAlfId = null;
+    this.selectedGroupId = null;
+    this.selectedWomanId = null;
+
+    this.voAlfList = [];
+    this.groupList = [];
+    this.womenList = [];
+
+    this.totalAlfBalance = 0;
+    this.totalSanctionedAmount = 0;
+    this.leftAlfBalance = 0;
+
+    this.applyLoanFilters();
+
+  }
+
+
+  // =========================================================
   // CMRC CHANGE
-  //
-  // Kept for template compatibility.
-  // CMRC is normally automatic.
-  // =====================================================
+  // =========================================================
 
   onCmrcChange(): void {
 
     this.selectedVoAlfId = null;
-
     this.selectedGroupId = null;
-
     this.selectedWomanId = null;
 
     this.voAlfList = [];
-
     this.groupList = [];
-
     this.womenList = [];
 
+    this.totalAlfBalance = 0;
+    this.totalSanctionedAmount = 0;
+    this.leftAlfBalance = 0;
 
-    this.closeForm();
-
-
-    if (this.selectedCmrcId === null) {
-
-      this.resetFundValues();
-
-      this.applyLoanFilters();
-
-      return;
-
+    if (this.selectedCmrcId) {
+      this.loadVoAlfByCmrc(this.selectedCmrcId);
     }
 
-
-    this.loadVoAlfByCmrc();
+    this.applyLoanFilters();
 
   }
 
 
-  // =====================================================
-  // LOAD VO / ALF BY CURRENT CMRC
-  // =====================================================
-
-  loadVoAlfByCmrc(): void {
-
-    this.selectedVoAlfId = null;
-
-    this.selectedGroupId = null;
-
-    this.selectedWomanId = null;
-
-    this.groupList = [];
-
-    this.womenList = [];
-
-
-    if (this.selectedCmrcId === null) {
-
-      this.voAlfList = [];
-
-      this.resetFundValues();
-
-      this.applyLoanFilters();
-
-      return;
-
-    }
-
-
-    this.voAlfService
-      .getByCmrcId(
-        Number(this.selectedCmrcId)
-      )
-      .subscribe({
-
-        next: (data: VoAlf[]) => {
-
-          this.voAlfList = data || [];
-
-
-          console.log(
-            'VO / ALF FOR CURRENT CMRC:',
-            this.voAlfList
-          );
-
-
-          this.resetFundValues();
-
-          this.applyLoanFilters();
-
-          this.cdRef.detectChanges();
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'VO / ALF by CMRC error:',
-            error
-          );
-
-          this.voAlfList = [];
-
-          this.resetFundValues();
-
-          this.applyLoanFilters();
-
-        }
-
-      });
-
-  }
-
-
-  // =====================================================
+  // =========================================================
   // VO / ALF CHANGE
-  // =====================================================
+  // =========================================================
 
   onVoAlfChange(): void {
 
     this.selectedGroupId = null;
-
     this.selectedWomanId = null;
 
     this.groupList = [];
-
     this.womenList = [];
 
+    this.updateAlfBalance();
 
-    if (this.selectedVoAlfId === null) {
-
-      this.resetFundValues();
-
-      this.applyLoanFilters();
-
-      return;
-
+    if (this.selectedVoAlfId) {
+      this.loadGroupsByVoAlf(this.selectedVoAlfId);
     }
-
-
-    this.loadGroupsByVoAlf();
-
-    this.loadWomenByVoAlf();
-
-    this.calculateFundSummary();
 
     this.applyLoanFilters();
 
   }
 
 
-  // =====================================================
-  // LOAD GROUPS BY VO / ALF
-  // =====================================================
-
-  loadGroupsByVoAlf(): void {
-
-    if (this.selectedVoAlfId === null) {
-
-      this.groupList = [];
-
-      return;
-
-    }
-
-
-    this.groupService
-      .getByVoAlfId(
-        Number(this.selectedVoAlfId)
-      )
-      .subscribe({
-
-        next: (data: Group[]) => {
-
-          this.groupList = data || [];
-
-
-          console.log(
-            'GROUPS FOR VO / ALF:',
-            this.selectedVoAlfId,
-            this.groupList
-          );
-
-
-          this.applyLoanFilters();
-
-          this.cdRef.detectChanges();
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Group loading error:',
-            error
-          );
-
-          this.groupList = [];
-
-        }
-
-      });
-
-  }
-
-
-  // =====================================================
-  // LOAD ALL GROUPS
-  //
-  // Kept for template compatibility.
-  // =====================================================
-
-  loadAllGroups(): void {
-
-    this.groupList = [];
-
-    if (this.selectedVoAlfId !== null) {
-
-      this.loadGroupsByVoAlf();
-
-    }
-
-  }
-
-
-  // =====================================================
+  // =========================================================
   // GROUP CHANGE
-  // =====================================================
+  // =========================================================
 
-  loadWomenByGroup(): void {
+  onGroupChange(): void {
 
     this.selectedWomanId = null;
-
     this.womenList = [];
 
-
-    if (this.selectedGroupId === null) {
-
-      if (this.selectedVoAlfId !== null) {
-
-        this.loadWomenByVoAlf();
-
-      } else {
-
-        this.loadAllWomen();
-
-      }
-
-      this.applyLoanFilters();
-
-      return;
-
+    if (this.selectedGroupId) {
+      this.loadWomenByGroup(this.selectedGroupId);
     }
 
-
-    this.womenService
-      .getByGroupId(
-        Number(this.selectedGroupId)
-      )
-      .subscribe({
-
-        next: (data: Women[]) => {
-
-          this.womenList = data || [];
-
-
-          console.log(
-            'WOMEN FOR GROUP:',
-            this.selectedGroupId,
-            this.womenList
-          );
-
-
-          this.applyLoanFilters();
-
-          this.cdRef.detectChanges();
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Women loading error:',
-            error
-          );
-
-          this.womenList = [];
-
-        }
-
-      });
+    this.applyLoanFilters();
 
   }
 
 
-  // =====================================================
-  // LOAD WOMEN BY VO / ALF
-  // =====================================================
+  // =========================================================
+  // WOMAN CHANGE
+  // =========================================================
 
-  loadWomenByVoAlf(): void {
-
-    if (this.selectedVoAlfId === null) {
-
-      this.womenList = [];
-
-      return;
-
-    }
-
-
-    this.womenService
-      .getAll()
-      .subscribe({
-
-        next: (data: Women[]) => {
-
-          const allWomen =
-            data || [];
-
-
-          this.womenList =
-            allWomen.filter(
-              (woman: any) =>
-                Number(woman.voAlfId) ===
-                Number(this.selectedVoAlfId)
-            );
-
-
-          console.log(
-            'WOMEN FOR VO / ALF:',
-            this.selectedVoAlfId,
-            this.womenList
-          );
-
-
-          this.applyLoanFilters();
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Women by VO / ALF loading error:',
-            error
-          );
-
-          this.womenList = [];
-
-        }
-
-      });
-
+  onWomanChange(): void {
+    this.applyLoanFilters();
   }
 
 
-  // =====================================================
-  // LOAD ALL WOMEN
-  // =====================================================
-
-  loadAllWomen(): void {
-
-    this.womenService
-      .getAll()
-      .subscribe({
-
-        next: (data: Women[]) => {
-
-          this.womenList =
-            data || [];
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'All women loading error:',
-            error
-          );
-
-          this.womenList = [];
-
-        }
-
-      });
-
-  }
-
-
-  // =====================================================
-  // LOAD LOANS
-  // =====================================================
-
-  loadLoans(): void {
-
-    this.loanService
-      .getAll()
-      .subscribe({
-
-        next: (data: Loan[]) => {
-
-          this.loanList =
-            data || [];
-
-
-          this.applyLoanFilters();
-
-          this.calculateFundSummary();
-
-          this.loading = false;
-
-          this.cdRef.detectChanges();
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Loan loading error:',
-            error
-          );
-
-          this.loanList = [];
-
-          this.filteredLoanList = [];
-
-          this.loading = false;
-
-        }
-
-      });
-
-  }
-
-
-  // =====================================================
-  // APPLY HIERARCHY + SEARCH FILTER
-  // =====================================================
+  // =========================================================
+  // LOAN FILTER
+  // =========================================================
 
   applyLoanFilters(): void {
 
-    let result =
-      [...this.loanList];
+    let result = [...this.loanList];
 
 
-    // ===================================================
-    // CMRC
-    // ===================================================
+    if (this.selectedCmrcId) {
+      result = result.filter(
+        loan =>
+          Number(loan.cmrcId) === Number(this.selectedCmrcId)
+      );
+    }
 
-    if (this.selectedCmrcId !== null) {
 
-      result =
-        result.filter(
-          (loan: any) =>
-            Number(loan.cmrcId) ===
-            Number(this.selectedCmrcId)
+    if (this.selectedVoAlfId) {
+      result = result.filter(
+        loan =>
+          Number(loan.voAlfId) === Number(this.selectedVoAlfId)
+      );
+    }
+
+
+    if (this.selectedGroupId) {
+      result = result.filter(
+        loan =>
+          Number(loan.groupId) === Number(this.selectedGroupId)
+      );
+    }
+
+
+    if (this.selectedWomanId) {
+      result = result.filter(
+        loan =>
+          Number(loan.womanId) === Number(this.selectedWomanId)
+      );
+    }
+
+
+    if (this.globalSearch.trim()) {
+
+      const search =
+        this.globalSearch.trim().toLowerCase();
+
+      result = result.filter((loan: Loan) => {
+
+        return (
+          String(loan.id || '')
+            .toLowerCase()
+            .includes(search) ||
+
+          String(loan.cmrcName || '')
+            .toLowerCase()
+            .includes(search) ||
+
+          String(loan.voAlfName || '')
+            .toLowerCase()
+            .includes(search) ||
+
+          String(loan.groupName || '')
+            .toLowerCase()
+            .includes(search) ||
+
+          String(loan.womanName || '')
+            .toLowerCase()
+            .includes(search) ||
+
+          String(loan.loanPurpose || '')
+            .toLowerCase()
+            .includes(search)
         );
+
+      });
 
     }
 
 
-    // ===================================================
-    // VO / ALF
-    // ===================================================
+    this.filteredLoanList = result;
 
-    if (this.selectedVoAlfId !== null) {
-
-      result =
-        result.filter(
-          (loan: any) =>
-            Number(loan.voAlfId) ===
-            Number(this.selectedVoAlfId)
-        );
-
-    }
-
-
-    // ===================================================
-    // GROUP
-    // ===================================================
-
-    if (this.selectedGroupId !== null) {
-
-      result =
-        result.filter(
-          (loan: any) =>
-            Number(loan.groupId) ===
-            Number(this.selectedGroupId)
-        );
-
-    }
-
-
-    // ===================================================
-    // WOMAN
-    // ===================================================
-
-    if (this.selectedWomanId !== null) {
-
-      result =
-        result.filter(
-          (loan: any) =>
-            Number(loan.womanId) ===
-            Number(this.selectedWomanId)
-        );
-
-    }
-
-
-    // ===================================================
-    // SEARCH
-    // ===================================================
-
-    const search =
-      String(
-        this.globalSearch || ''
-      )
-        .trim()
-        .toLowerCase();
-
-
-    if (search) {
-
-      result =
-        result.filter(
-          (loan: any) => {
-
-            const searchableValues = [
-
-              loan.id,
-
-              loan.cmrcId,
-              loan.cmrcName,
-
-              loan.voAlfId,
-              loan.voAlfName,
-
-              loan.groupId,
-              loan.groupName,
-
-              loan.villageName,
-
-              loan.womanId,
-              loan.womanName,
-
-              loan.sanctionedAmount,
-
-              loan.processingFee,
-
-              loan.loanAmount,
-
-              loan.totalAmount,
-
-              loan.loanPurpose,
-
-              loan.loanGivenDate,
-
-              loan.repaymentPeriodMonths,
-
-              loan.interestRate,
-
-              loan.interestType,
-
-              loan.monthlyEmi,
-
-              loan.loanStatus
-
-            ];
-
-
-            return searchableValues.some(
-              (value: any) =>
-                String(value ?? '')
-                  .toLowerCase()
-                  .includes(search)
-            );
-
-          }
-        );
-
-    }
-
-
-    this.filteredLoanList =
-      result;
+    this.calculateLoanSummary();
 
   }
 
 
-  // =====================================================
-  // SEARCH CHANGE
-  // =====================================================
+  // =========================================================
+  // SEARCH
+  // =========================================================
 
-  onSearchChange(): void {
-
+  onGlobalSearch(): void {
     this.applyLoanFilters();
-
   }
 
 
-  // =====================================================
+  applyGlobalSearch(): void {
+    this.applyLoanFilters();
+  }
+
+
+  // =========================================================
   // FUND SUMMARY
-  // =====================================================
+  // =========================================================
 
-  calculateFundSummary(): void {
+  updateAlfBalance(): void {
 
-    if (this.selectedVoAlfId === null) {
+    this.totalAlfBalance = 0;
 
-      this.resetFundValues();
+    if (!this.selectedVoAlfId) {
+
+      this.totalSanctionedAmount = 0;
+      this.leftAlfBalance = 0;
 
       return;
-
     }
 
 
-    const selectedVoAlf: any =
+    const selectedVoAlf =
       this.voAlfList.find(
-        (vo: any) =>
+        vo =>
           Number(vo.id) ===
           Number(this.selectedVoAlfId)
       );
 
 
-    if (!selectedVoAlf) {
+    if (selectedVoAlf) {
 
-      this.resetFundValues();
-
-      return;
+      this.totalAlfBalance =
+        Number(
+          selectedVoAlf.receivedFund ||
+          (selectedVoAlf as any).recievedFund ||
+          (selectedVoAlf as any).alfBalance ||
+          (selectedVoAlf as any).balanceAmount ||
+          (selectedVoAlf as any).totalAmount ||
+          0
+        );
 
     }
 
 
-    this.totalAlfBalance =
-      Number(
-        selectedVoAlf.receivedFund ??
-        selectedVoAlf.recievedFund ??
-        selectedVoAlf.alfBalance ??
-        selectedVoAlf.balanceAmount ??
-        selectedVoAlf.totalAmount ??
-        0
-      );
+    this.calculateLoanSummary();
+
+  }
 
 
-    const voAlfLoans =
+  calculateLoanSummary(): void {
+
+    if (!this.selectedVoAlfId) {
+
+      this.totalSanctionedAmount = 0;
+      this.leftAlfBalance = 0;
+
+      return;
+    }
+
+
+    const loans =
       this.loanList.filter(
-        (loan: any) =>
+        loan =>
           Number(loan.voAlfId) ===
           Number(this.selectedVoAlfId)
       );
 
 
     this.totalSanctionedAmount =
-      voAlfLoans.reduce(
-        (
-          total: number,
-          loan: any
-        ) => {
-
-          return total +
-            (
-              Number(
-                loan.sanctionedAmount
-              ) || 0
-            );
-
-        },
+      loans.reduce(
+        (total: number, loan: Loan) =>
+          total + this.getSanctionedAmount(loan),
         0
       );
 
@@ -969,75 +579,221 @@ export class LoanManagementComponent implements OnInit {
       this.totalAlfBalance -
       this.totalSanctionedAmount;
 
+  }
 
-    if (
-      Math.abs(
-        this.leftAlfBalance
-      ) < 0.000001
-    ) {
 
-      this.leftAlfBalance = 0;
+  // =========================================================
+  // AMOUNT HELPERS
+  // =========================================================
 
+  getSanctionedAmount(
+    loan: Loan | null | undefined
+  ): number {
+
+    return Number(
+      loan?.sanctionedAmount ||
+      loan?.totalAmount ||
+      loan?.loanAmount ||
+      0
+    );
+
+  }
+
+
+  getDisbursedAmount(
+    loan: Loan | null | undefined
+  ): number {
+
+    return Number(
+      loan?.loanAmount ||
+      loan?.totalAmount ||
+      0
+    );
+
+  }
+
+
+  getTotalSanctionedAmount(): number {
+
+    return this.filteredLoanList.reduce(
+      (total: number, loan: Loan) =>
+        total + Number(loan.sanctionedAmount || 0),
+      0
+    );
+
+  }
+
+
+  getTotalProcessingFee(): number {
+
+    return this.filteredLoanList.reduce(
+      (total: number, loan: Loan) =>
+        total + Number(loan.processingFee || 0),
+      0
+    );
+
+  }
+
+
+  getTotalMonthlyEmi(): number {
+
+    return this.filteredLoanList.reduce(
+      (total: number, loan: Loan) =>
+        total + Number(loan.monthlyEmi || 0),
+      0
+    );
+
+  }
+
+
+  getTotalLoanAmount(): number {
+
+    return this.filteredLoanList.reduce(
+      (total: number, loan: Loan) => {
+
+        return total +
+          Number(
+            loan.loanAmount ||
+            loan.totalAmount ||
+            0
+          );
+
+      },
+      0
+    );
+
+  }
+
+
+  // =========================================================
+  // CMRC / VO / VILLAGE HELPERS
+  // =========================================================
+
+  getSelectedCmrcName(): string {
+
+    if (!this.selectedCmrcId) {
+      return '';
     }
 
-  }
+    const cmrc =
+      this.cmrcList.find(
+        item =>
+          Number(item.id) ===
+          Number(this.selectedCmrcId)
+      );
 
-
-  // =====================================================
-  // RESET FUND VALUES
-  // =====================================================
-
-  resetFundValues(): void {
-
-    this.totalAlfBalance = 0;
-
-    this.totalSanctionedAmount = 0;
-
-    this.leftAlfBalance = 0;
+    return cmrc?.cmrcName || '';
 
   }
 
 
-  // =====================================================
+  getCmrcNameById(
+    cmrcId: number | undefined
+  ): string {
+
+    if (cmrcId == null) {
+      return '-';
+    }
+
+    const cmrc =
+      this.cmrcList.find(
+        item =>
+          Number(item.id) ===
+          Number(cmrcId)
+      );
+
+    return cmrc?.cmrcName || '-';
+
+  }
+
+
+  getSelectedVoAlfName(): string {
+
+    if (!this.selectedVoAlfId) {
+      return '';
+    }
+
+    const voAlf =
+      this.voAlfList.find(
+        item =>
+          Number(item.id) ===
+          Number(this.selectedVoAlfId)
+      );
+
+    return voAlf?.voAlfName || '';
+
+  }
+
+
+  getSelectedVillageName(): string {
+
+    if (!this.selectedVoAlfId) {
+      return '';
+    }
+
+    const voAlf =
+      this.voAlfList.find(
+        item =>
+          Number(item.id) ===
+          Number(this.selectedVoAlfId)
+      );
+
+    return voAlf?.villageName || '';
+
+  }
+
+
+  getFormVillageName(): string {
+
+    const voAlfId =
+      this.newLoan?.voAlfId;
+
+    if (!voAlfId) {
+      return '';
+    }
+
+    const voAlf =
+      this.voAlfList.find(
+        item =>
+          Number(item.id) ===
+          Number(voAlfId)
+      );
+
+    return voAlf?.villageName || '';
+
+  }
+
+
+  // =========================================================
   // EMPTY LOAN
-  // =====================================================
+  // =========================================================
 
-  private getEmptyLoan(): any {
+  getEmptyLoan(): any {
 
     return {
 
-      id: null,
-
       cmrcId: null,
-
       voAlfId: null,
-
       groupId: null,
-
       womanId: null,
 
+      cmrcName: '',
+      voAlfName: '',
       groupName: '',
-
       womanName: '',
+      villageName: '',
 
       sanctionedAmount: 0,
-
       processingFee: 0,
-
       totalAmount: 0,
-
-      disbursedAmount: 0,
-
       loanAmount: 0,
 
       loanPurpose: '',
-
-      loanGivenDate: '',
+      loanGivenDate: this.getTodayDate(),
 
       repaymentPeriodMonths: 12,
 
       interestRate: 0,
-
       interestType: 'FLAT',
 
       monthlyEmi: 0,
@@ -1049,37 +805,148 @@ export class LoanManagementComponent implements OnInit {
   }
 
 
-  // =====================================================
-  // OPEN ADD FORM
-  // =====================================================
+  getTodayDate(): string {
 
-  openAddForm(): void {
+    const date = new Date();
 
-    if (
-      this.selectedCmrcId === null ||
-      this.selectedVoAlfId === null ||
-      this.selectedGroupId === null
-    ) {
+    const year = date.getFullYear();
 
-      alert(
-        'Please select CMRC, VO / ALF and Group first.'
+    const month =
+      String(date.getMonth() + 1)
+        .padStart(2, '0');
+
+    const day =
+      String(date.getDate())
+        .padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+
+  }
+
+
+  // =========================================================
+  // FORM CMRC CHANGE
+  // =========================================================
+
+  onFormCmrcChange(): void {
+
+    this.newLoan.voAlfId = null;
+    this.newLoan.groupId = null;
+    this.newLoan.womanId = null;
+
+    this.newLoan.cmrcName = '';
+    this.newLoan.voAlfName = '';
+    this.newLoan.groupName = '';
+    this.newLoan.womanName = '';
+    this.newLoan.villageName = '';
+
+    this.voAlfList = [];
+    this.groupList = [];
+    this.womenList = [];
+
+    if (this.newLoan.cmrcId) {
+
+      const cmrc =
+        this.cmrcList.find(
+          item =>
+            Number(item.id) ===
+            Number(this.newLoan.cmrcId)
+        );
+
+      this.newLoan.cmrcName =
+        cmrc?.cmrcName || '';
+
+      this.loadVoAlfByCmrc(
+        Number(this.newLoan.cmrcId)
       );
-
-      return;
 
     }
 
+  }
+
+
+  // =========================================================
+  // FORM VO / ALF CHANGE
+  // =========================================================
+
+  onFormVoAlfChange(): void {
+
+    this.newLoan.groupId = null;
+    this.newLoan.womanId = null;
+
+    this.newLoan.groupName = '';
+    this.newLoan.womanName = '';
+
+    this.groupList = [];
+    this.womenList = [];
+
+    const voAlf =
+      this.voAlfList.find(
+        item =>
+          Number(item.id) ===
+          Number(this.newLoan.voAlfId)
+      );
+
+    this.newLoan.voAlfName =
+      voAlf?.voAlfName || '';
+
+    this.newLoan.villageName =
+      voAlf?.villageName || '';
+
+    if (this.newLoan.voAlfId) {
+
+      this.loadGroupsByVoAlf(
+        Number(this.newLoan.voAlfId)
+      );
+
+    }
+
+  }
+
+
+  // =========================================================
+  // FORM GROUP CHANGE
+  // =========================================================
+
+  onFormGroupChange(): void {
+
+    this.newLoan.womanId = null;
+    this.newLoan.womanName = '';
+
+    this.womenList = [];
+
+    const group =
+      this.groupList.find(
+        item =>
+          Number(item.id) ===
+          Number(this.newLoan.groupId)
+      );
+
+    this.newLoan.groupName =
+      group?.groupName || '';
+
+    if (this.newLoan.groupId) {
+
+      this.loadWomenByGroup(
+        Number(this.newLoan.groupId)
+      );
+
+    }
+
+  }
+
+
+  // =========================================================
+  // ADD FORM
+  // =========================================================
+
+  openAddForm(): void {
 
     this.isEditMode = false;
-
     this.editingLoanId = null;
 
     this.newLoan =
       this.getEmptyLoan();
-
-
-    this.clearSelectedImages();
-
 
     this.newLoan.cmrcId =
       this.selectedCmrcId;
@@ -1090,30 +957,107 @@ export class LoanManagementComponent implements OnInit {
     this.newLoan.groupId =
       this.selectedGroupId;
 
-
-    // Woman is optional
     this.newLoan.womanId =
       this.selectedWomanId;
 
 
-    this.newLoan.groupName =
-      this.getSelectedGroupName();
+    this.newLoan.cmrcName =
+      this.getSelectedCmrcName();
 
+    this.newLoan.voAlfName =
+      this.getSelectedVoAlfName();
+
+    this.newLoan.villageName =
+      this.getSelectedVillageName();
+
+
+    const group =
+      this.groupList.find(
+        item =>
+          Number(item.id) ===
+          Number(this.selectedGroupId)
+      );
+
+    this.newLoan.groupName =
+      group?.groupName || '';
+
+
+    const woman =
+      this.womenList.find(
+        item =>
+          Number(item.id) ===
+          Number(this.selectedWomanId)
+      );
 
     this.newLoan.womanName =
-      this.getSelectedWomanName();
+      woman?.womanName || '';
 
 
     this.showForm = true;
 
-    this.scrollToLoanForm();
+  }
+
+
+  // =========================================================
+  // EDIT FORM
+  // =========================================================
+
+  openEditForm(loan: Loan): void {
+
+    if (!loan?.id) {
+      return;
+    }
+
+    this.isEditMode = true;
+
+    this.editingLoanId =
+      Number(loan.id);
+
+    this.newLoan = {
+      ...loan
+    };
+
+    this.calculateDisbursedAmount();
+
+    this.showForm = true;
+
+
+    if (loan.cmrcId) {
+
+      this.loadVoAlfByCmrc(
+        Number(loan.cmrcId)
+      );
+
+    }
+
+    if (loan.voAlfId) {
+
+      this.loadGroupsByVoAlf(
+        Number(loan.voAlfId)
+      );
+
+    }
+
+    if (loan.groupId) {
+
+      this.loadWomenByGroup(
+        Number(loan.groupId)
+      );
+
+    }
 
   }
 
 
-  // =====================================================
+  // HTML compatibility
+  editLoan(loan: Loan): void {
+    this.openEditForm(loan);
+  }
+
+
+  // =========================================================
   // CLOSE FORM
-  // =====================================================
+  // =========================================================
 
   closeForm(): void {
 
@@ -1126,255 +1070,63 @@ export class LoanManagementComponent implements OnInit {
     this.newLoan =
       this.getEmptyLoan();
 
-    this.clearSelectedImages();
+    this.clearImageSelection();
 
   }
 
 
-  // =====================================================
-  // IMAGE SELECT
-  // =====================================================
-
-  onImageSelected(
-    event: Event
-  ): void {
-
-    const input =
-      event.target as HTMLInputElement;
-
-
-    if (
-      !input.files ||
-      input.files.length === 0
-    ) {
-
-      return;
-
-    }
-
-
-    const files =
-      Array.from(input.files);
-
-
-    for (const file of files) {
-
-      if (
-        !file.type.startsWith('image/')
-      ) {
-
-        alert(
-          `${file.name} is not a valid image.`
-        );
-
-        input.value = '';
-
-        return;
-
-      }
-
-
-      if (
-        file.size >
-        5 * 1024 * 1024
-      ) {
-
-        alert(
-          `${file.name} is larger than 5 MB.`
-        );
-
-        input.value = '';
-
-        return;
-
-      }
-
-    }
-
-
-    this.selectedImageFiles = [
-      ...this.selectedImageFiles,
-      ...files
-    ];
-
-
-    files.forEach(
-      file => {
-
-        this.imagePreviews.push(
-          URL.createObjectURL(file)
-        );
-
-      }
-    );
-
-
-    input.value = '';
-
-  }
-
-
-  // =====================================================
-  // REMOVE SELECTED IMAGE
-  // =====================================================
-
-  removeSelectedImage(
-    index: number
-  ): void {
-
-    if (
-      index < 0 ||
-      index >=
-      this.selectedImageFiles.length
-    ) {
-
-      return;
-
-    }
-
-
-    if (
-      this.imagePreviews[index]
-    ) {
-
-      URL.revokeObjectURL(
-        this.imagePreviews[index]
-      );
-
-    }
-
-
-    this.selectedImageFiles.splice(
-      index,
-      1
-    );
-
-
-    this.imagePreviews.splice(
-      index,
-      1
-    );
-
-  }
-
-
-  // =====================================================
-  // CLEAR SELECTED IMAGES
-  // =====================================================
-
-  clearSelectedImages(): void {
-
-    this.imagePreviews.forEach(
-      url => {
-
-        URL.revokeObjectURL(url);
-
-      }
-    );
-
-
-    this.selectedImageFiles = [];
-
-    this.imagePreviews = [];
-
-  }
-
-
-  // =====================================================
-  // UPLOAD LOAN IMAGES
-  // =====================================================
-
-  uploadLoanImages(
-    loanId: number
-  ): any {
-
-    if (
-      !this.selectedImageFiles ||
-      this.selectedImageFiles.length === 0
-    ) {
-
-      return null;
-
-    }
-
-
-    this.imageUploading = true;
-
-
-    return this.loanService
-      .uploadImages(
-        loanId,
-        this.selectedImageFiles
-      );
-
-  }
-
-
-  // =====================================================
+  // =========================================================
   // CALCULATE DISBURSED AMOUNT
-  // =====================================================
+  // =========================================================
 
   calculateDisbursedAmount(): void {
 
     const sanctioned =
       Number(
-        this.newLoan.sanctionedAmount
-      ) || 0;
-
+        this.newLoan?.sanctionedAmount || 0
+      );
 
     const processingFee =
       Number(
-        this.newLoan.processingFee
-      ) || 0;
-
-
-    const totalAmount =
-      Math.max(
-        sanctioned -
-        processingFee,
-        0
+        this.newLoan?.processingFee || 0
       );
+
+    const amount =
+      sanctioned - processingFee;
 
 
     this.newLoan.totalAmount =
-      totalAmount;
-
-
-    this.newLoan.disbursedAmount =
-      totalAmount;
-
+      amount;
 
     this.newLoan.loanAmount =
-      totalAmount;
+      amount;
 
-
-    this.calculateEmi();
+    this.newLoan.disbursedAmount =
+      amount;
 
   }
 
 
-  // =====================================================
+  // =========================================================
   // CALCULATE EMI
-  // =====================================================
+  // =========================================================
 
   calculateEmi(): void {
 
     const principal =
       Number(
-        this.newLoan.loanAmount
-      ) || 0;
-
+        this.newLoan?.loanAmount || 0
+      );
 
     const months =
       Number(
-        this.newLoan.repaymentPeriodMonths
-      ) || 0;
-
+        this.newLoan?.repaymentPeriodMonths || 0
+      );
 
     const rate =
       Number(
-        this.newLoan.interestRate
-      ) || 0;
+        this.newLoan?.interestRate || 0
+      );
 
 
     if (
@@ -1385,41 +1137,33 @@ export class LoanManagementComponent implements OnInit {
       this.newLoan.monthlyEmi = 0;
 
       return;
-
     }
 
 
-    // FLAT
     if (
-      this.newLoan.interestType ===
-      'FLAT'
+      !this.newLoan.interestType ||
+      this.newLoan.interestType === 'FLAT'
     ) {
 
       const totalInterest =
         principal *
-        (rate / 100) *
-        (months / 12);
-
+        rate *
+        months /
+        100;
 
       const totalPayable =
         principal +
         totalInterest;
 
-
       this.newLoan.monthlyEmi =
-        totalPayable /
-        months;
-
+        totalPayable / months;
 
       return;
-
     }
 
 
-    // REDUCING
     if (
-      this.newLoan.interestType ===
-      'REDUCING'
+      this.newLoan.interestType === 'REDUCING'
     ) {
 
       const monthlyRate =
@@ -1429,11 +1173,9 @@ export class LoanManagementComponent implements OnInit {
       if (monthlyRate === 0) {
 
         this.newLoan.monthlyEmi =
-          principal /
-          months;
+          principal / months;
 
         return;
-
       }
 
 
@@ -1460,533 +1202,261 @@ export class LoanManagementComponent implements OnInit {
   }
 
 
-  // =====================================================
+  // =========================================================
   // SAVE LOAN
-  // =====================================================
+  // =========================================================
 
   saveLoan(): void {
 
-    if (
-      this.selectedCmrcId === null ||
-      this.selectedVoAlfId === null ||
-      this.selectedGroupId === null
-    ) {
+    this.calculateDisbursedAmount();
+    this.calculateEmi();
 
-      alert(
-        'Please select CMRC, VO / ALF and Group first.'
+
+    // Keep display values synchronized
+    this.newLoan.cmrcName =
+      this.getCmrcNameById(
+        this.newLoan.cmrcId
       );
 
-      return;
+    this.newLoan.voAlfName =
+      this.getVoAlfNameById(
+        this.newLoan.voAlfId
+      );
 
-    }
-
-
-    this.loading = true;
-
-
-    const payload: any = {
-
-      ...this.newLoan,
-
-      cmrcId:
-        this.selectedCmrcId,
-
-      voAlfId:
-        this.selectedVoAlfId,
-
-      groupId:
-        this.selectedGroupId,
-
-      // Woman optional
-      womanId:
-        this.newLoan.womanId || null
-
-    };
+    this.newLoan.villageName =
+      this.getVillageNameByVoAlfId(
+        this.newLoan.voAlfId
+      );
 
 
-    // ===================================================
+    const group =
+      this.groupList.find(
+        item =>
+          Number(item.id) ===
+          Number(this.newLoan.groupId)
+      );
+
+    this.newLoan.groupName =
+      group?.groupName || '';
+
+
+    const woman =
+      this.womenList.find(
+        item =>
+          Number(item.id) ===
+          Number(this.newLoan.womanId)
+      );
+
+    this.newLoan.womanName =
+      woman?.womanName || '';
+
+
+    // =======================================================
     // UPDATE
-    // ===================================================
+    // =======================================================
 
     if (
       this.isEditMode &&
       this.editingLoanId
     ) {
 
-      this.loanService
-        .update(
-          this.editingLoanId,
-          payload
-        )
-        .subscribe({
+      this.loanService.update(
+        this.editingLoanId,
+        this.newLoan
+      ).subscribe({
+
+        next: () => {
+
+          this.closeForm();
+
+          this.loadAllLoans();
+
+        },
+
+        error: (error: any) => {
+
+          console.error(
+            'Error updating loan:',
+            error
+          );
+
+          alert(
+            'Failed to update loan.'
+          );
+
+        }
+
+      });
+
+      return;
+    }
+
+
+    // =======================================================
+    // CREATE
+    // =======================================================
+
+    this.loanService.create(
+      this.newLoan
+    ).subscribe({
+
+      next: (createdLoan: Loan) => {
+
+        const loanId =
+          Number(createdLoan?.id);
+
+
+        if (!loanId) {
+
+          alert(
+            'Loan created but Loan ID was not returned.'
+          );
+
+          this.closeForm();
+          this.loadAllLoans();
+
+          return;
+        }
+
+
+        if (
+          this.selectedImageFiles.length > 0
+        ) {
+
+          this.uploadLoanImages(
+            loanId,
+            () =>
+              this.generateLoanSchedules(
+                loanId
+              )
+          );
+
+        } else {
+
+          this.generateLoanSchedules(
+            loanId
+          );
+
+        }
+
+
+        this.closeForm();
+
+        this.loadAllLoans();
+
+      },
+
+      error: (error: any) => {
+
+        console.error(
+          'Error creating loan:',
+          error
+        );
+
+        alert(
+          'Failed to create loan.'
+        );
+
+      }
+
+    });
+
+  }
+
+
+  // =========================================================
+  // GENERATE CL + REPAYMENT
+  // =========================================================
+
+  generateLoanSchedules(
+    loanId: number
+  ): void {
+
+    if (!loanId) {
+      return;
+    }
+
+
+    this.loanService.generateClSchedule(
+      loanId
+    ).subscribe({
+
+      next: () => {
+
+        this.loanService.generateRepayment(
+          loanId
+        ).subscribe({
 
           next: () => {
 
-            this.loading = false;
-
-            alert(
-              'Loan updated successfully.'
+            console.log(
+              'CL schedule and repayment generated.'
             );
-
-
-            this.closeForm();
-
-            this.loadLoans();
 
           },
 
-          error: (error) => {
-
-            this.loading = false;
+          error: (error: any) => {
 
             console.error(
-              'Loan update error:',
+              'Repayment generation failed:',
               error
-            );
-
-
-            alert(
-              error?.error?.message ||
-              'Failed to update loan.'
             );
 
           }
 
         });
 
+      },
 
-      return;
+      error: (error: any) => {
 
-    }
-
-
-    // ===================================================
-    // CREATE
-    // ===================================================
-
-    this.loanService
-      .create(payload)
-      .subscribe({
-
-        next: (
-          createdLoan: Loan
-        ) => {
-
-          console.log(
-            'Loan created:',
-            createdLoan
-          );
+        console.error(
+          'CL schedule generation failed:',
+          error
+        );
 
 
-          const loanId =
-            Number(
-              createdLoan?.id
+        // Keep repayment generation even if CL fails
+        this.loanService.generateRepayment(
+          loanId
+        ).subscribe({
+
+          next: () => {},
+
+          error: (repaymentError: any) => {
+
+            console.error(
+              'Repayment generation failed:',
+              repaymentError
             );
-
-
-          if (!loanId) {
-
-            this.loading = false;
-
-            alert(
-              'Loan created but loan ID was not returned by backend.'
-            );
-
-            return;
 
           }
 
+        });
 
-          this.uploadImagesAfterLoanCreate(
-            loanId
-          );
+      }
 
-        },
-
-        error: (error) => {
-
-          this.loading = false;
-
-          console.error(
-            'Loan creation error:',
-            error
-          );
-
-
-          alert(
-            error?.error?.message ||
-            'Failed to create loan.'
-          );
-
-        }
-
-      });
+    });
 
   }
 
 
-  // =====================================================
-  // AFTER LOAN CREATE
-  // =====================================================
-
-  private uploadImagesAfterLoanCreate(
-    loanId: number
-  ): void {
-
-    if (
-      !this.selectedImageFiles ||
-      this.selectedImageFiles.length === 0
-    ) {
-
-      this.generateSchedulesAfterLoanCreate(
-        loanId,
-        false
-      );
-
-      return;
-
-    }
-
-
-    this.imageUploading = true;
-
-
-    this.loanService
-      .uploadImages(
-        loanId,
-        this.selectedImageFiles
-      )
-      .subscribe({
-
-        next: (
-          images: LoanImage[]
-        ) => {
-
-          console.log(
-            'Loan images uploaded:',
-            images
-          );
-
-
-          this.imageUploading = false;
-
-
-          this.generateSchedulesAfterLoanCreate(
-            loanId,
-            true
-          );
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Loan image upload error:',
-            error
-          );
-
-
-          this.imageUploading = false;
-
-
-          alert(
-            'Loan created successfully, but image upload failed.'
-          );
-
-
-          this.generateSchedulesAfterLoanCreate(
-            loanId,
-            false
-          );
-
-        }
-
-      });
-
-  }
-
-
-  // =====================================================
-  // GENERATE CL SCHEDULE + REPAYMENT
-  // =====================================================
-
-  private generateSchedulesAfterLoanCreate(
-    loanId: number,
-    imagesUploaded: boolean
-  ): void {
-
-    this.loanService
-      .generateClSchedule(
-        loanId
-      )
-      .subscribe({
-
-        next: (
-          clSchedule
-        ) => {
-
-          console.log(
-            'CL Schedule generated:',
-            clSchedule
-          );
-
-
-          this.loanService
-            .generateRepayment(
-              loanId
-            )
-            .subscribe({
-
-              next: (
-                repayment
-              ) => {
-
-                console.log(
-                  'Repayment generated:',
-                  repayment
-                );
-
-
-                this.loading = false;
-
-
-                let message =
-                  'Loan created successfully.\n' +
-                  'CL Schedule generated successfully.\n' +
-                  'Repayment schedule generated successfully.';
-
-
-                if (imagesUploaded) {
-
-                  message +=
-                    '\nLoan images uploaded successfully.';
-
-                }
-
-
-                alert(message);
-
-
-                this.closeForm();
-
-                this.loadLoans();
-
-              },
-
-              error: (error) => {
-
-                this.loading = false;
-
-
-                console.error(
-                  'Repayment generation error:',
-                  error
-                );
-
-
-                alert(
-                  'Loan created and CL Schedule generated, but Repayment generation failed.'
-                );
-
-
-                this.closeForm();
-
-                this.loadLoans();
-
-              }
-
-            });
-
-        },
-
-        error: (error) => {
-
-          this.loading = false;
-
-
-          console.error(
-            'CL Schedule generation error:',
-            error
-          );
-
-
-          alert(
-            'Loan created successfully, but CL Schedule generation failed.'
-          );
-
-
-          this.closeForm();
-
-          this.loadLoans();
-
-        }
-
-      });
-
-  }
-
-
-  // =====================================================
-  // EDIT LOAN
-  // =====================================================
-
-  editLoan(
-    loan: Loan
-  ): void {
-
-    this.isEditMode = true;
-
-    this.showForm = true;
-
-    this.editingLoanId =
-      loan.id || null;
-
-
-    this.clearSelectedImages();
-
-
-    this.loanImages = [];
-
-
-    if (loan.id) {
-
-      this.loadLoanImages(
-        Number(loan.id)
-      );
-
-    }
-
-
-    const loanAny: any =
-      loan as any;
-
-
-    const totalAmount =
-      Number(
-        loanAny.totalAmount
-      ) ||
-      Number(
-        loanAny.loanAmount
-      ) ||
-      0;
-
-
-    this.newLoan = {
-
-      id:
-        loan.id || null,
-
-      cmrcId:
-        loan.cmrcId || null,
-
-      voAlfId:
-        loan.voAlfId || null,
-
-      groupId:
-        loan.groupId || null,
-
-      womanId:
-        loan.womanId || null,
-
-      groupName:
-        loan.groupName || '',
-
-      womanName:
-        loan.womanName || '',
-
-      sanctionedAmount:
-        Number(
-          loan.sanctionedAmount
-        ) || 0,
-
-      processingFee:
-        Number(
-          loan.processingFee
-        ) || 0,
-
-      totalAmount:
-        totalAmount,
-
-      disbursedAmount:
-        totalAmount,
-
-      loanAmount:
-        totalAmount,
-
-      loanPurpose:
-        loan.loanPurpose || '',
-
-      loanGivenDate:
-        loan.loanGivenDate || '',
-
-      repaymentPeriodMonths:
-        loan.repaymentPeriodMonths ||
-        12,
-
-      interestRate:
-        loan.interestRate || 0,
-
-      interestType:
-        loan.interestType ||
-        'FLAT',
-
-      monthlyEmi:
-        loan.monthlyEmi || 0,
-
-      loanStatus:
-        loan.loanStatus ||
-        'ACTIVE'
-
-    };
-
-
-    // Important:
-    // When editing, synchronize hierarchy
-    // from the existing loan.
-
-    this.selectedCmrcId =
-      loan.cmrcId != null
-        ? Number(loan.cmrcId)
-        : this.selectedCmrcId;
-
-
-    this.selectedVoAlfId =
-      loan.voAlfId != null
-        ? Number(loan.voAlfId)
-        : this.selectedVoAlfId;
-
-
-    this.selectedGroupId =
-      loan.groupId != null
-        ? Number(loan.groupId)
-        : this.selectedGroupId;
-
-
-    this.selectedWomanId =
-      loan.womanId != null
-        ? Number(loan.womanId)
-        : null;
-
-
-    this.calculateEmi();
-
-    this.scrollToLoanForm();
-
-  }
-
-
-  // =====================================================
+  // =========================================================
   // DELETE LOAN
-  // =====================================================
+  // =========================================================
 
   deleteLoan(
-    id: number
+    loanOrId: Loan | number
   ): void {
 
+    const id =
+      typeof loanOrId === 'number'
+        ? loanOrId
+        : Number(loanOrId?.id);
+
+
     if (!id) {
-
       return;
-
     }
 
 
@@ -1997,715 +1467,445 @@ export class LoanManagementComponent implements OnInit {
 
 
     if (!confirmed) {
-
       return;
-
     }
 
 
-    this.loading = true;
+    this.loanService.delete(id).subscribe({
 
+      next: () => {
 
-    this.loanService
-      .delete(id)
-      .subscribe({
+        this.loadAllLoans();
 
-        next: () => {
+      },
 
-          alert(
-            'Loan deleted successfully.'
-          );
+      error: (error: any) => {
 
-
-          if (
-            this.selectedLoan &&
-            this.selectedLoan.id === id
-          ) {
-
-            this.selectedLoan = null;
-
-          }
-
-
-          this.reloadLoans();
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Loan delete error:',
-            error
-          );
-
-
-          this.loading = false;
-
-
-          alert(
-            'Loan delete failed.'
-          );
-
-        }
-
-      });
-
-  }
-
-
-  // =====================================================
-  // RELOAD LOANS
-  // =====================================================
-
-  reloadLoans(): void {
-
-    this.loanService
-      .getAll()
-      .subscribe({
-
-        next: (
-          data: Loan[]
-        ) => {
-
-          this.loanList =
-            data || [];
-
-
-          this.applyLoanFilters();
-
-          this.calculateFundSummary();
-
-          this.loading = false;
-
-          this.cdRef.detectChanges();
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Loan reload error:',
-            error
-          );
-
-          this.loading = false;
-
-        }
-
-      });
-
-  }
-
-
-  // =====================================================
-  // OPEN LOAN DETAILS
-  // =====================================================
-
-  openLoanDetails(
-    loan: Loan
-  ): void {
-
-    const loanAny: any =
-      loan as any;
-
-
-    this.selectedLoan = {
-
-      ...loan,
-
-      cmrcName:
-        loan.cmrcName ||
-        this.getCmrcNameById(
-          loan.cmrcId
-        ),
-
-      voAlfName:
-        loan.voAlfName ||
-        this.getVoAlfNameById(
-          loan.voAlfId
-        ),
-
-      groupName:
-        loan.groupName ||
-        this.getGroupNameById(
-          loan.groupId
-        ),
-
-      villageName:
-        loan.villageName ||
-        loanAny.villageName ||
-        ''
-
-    };
-
-
-    this.loadLoanImages(
-      Number(loan.id)
-    );
-
-
-    setTimeout(() => {
-
-      const element =
-        document.getElementById(
-          'loanDetailsSection'
+        console.error(
+          'Error deleting loan:',
+          error
         );
 
-
-      if (element) {
-
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
+        alert(
+          'Failed to delete loan.'
+        );
 
       }
 
-    }, 100);
+    });
 
   }
 
 
-  // =====================================================
-  // LOAD LOAN IMAGES
-  // =====================================================
+  // =========================================================
+  // LOAN DETAILS
+  // =========================================================
 
-  loadLoanImages(
-    loanId: number
+  viewLoanDetails(
+    loan: Loan
   ): void {
+
+    if (!loan) {
+      return;
+    }
+
+    this.selectedLoan =
+      loan;
+
+    this.clearImageSelection();
 
     this.loanImages = [];
 
+    if (loan.id) {
 
-    if (!loanId) {
-
-      return;
-
-    }
-
-
-    this.loanService
-      .getImagesByLoan(
-        loanId
-      )
-      .subscribe({
-
-        next: (
-          images: LoanImage[]
-        ) => {
-
-          this.loanImages =
-            images || [];
-
-
-          this.cdRef.detectChanges();
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Loan images loading error:',
-            error
-          );
-
-          this.loanImages = [];
-
-        }
-
-      });
-
-  }
-
-
-  // =====================================================
-  // IMAGE VIEW URL
-  // =====================================================
-
-  getLoanImageViewUrl(
-    imageId?: number
-  ): string {
-
-    if (!imageId) {
-
-      return '';
-
-    }
-
-
-    return this.loanService
-      .getImageViewUrl(
-        imageId
+      this.loadLoanImages(
+        Number(loan.id)
       );
 
-  }
-
-
-  // =====================================================
-  // IMAGE DOWNLOAD URL
-  // =====================================================
-
-  getLoanImageDownloadUrl(
-    imageId?: number
-  ): string {
-
-    if (!imageId) {
-
-      return '';
-
     }
-
-
-    return this.loanService
-      .getImageDownloadUrl(
-        imageId
-      );
 
   }
 
-
-  // =====================================================
-  // DELETE LOAN IMAGE
-  // =====================================================
-
-  deleteLoanImage(
-    image: LoanImage
-  ): void {
-
-    if (!image.id) {
-
-      return;
-
-    }
-
-
-    const confirmed =
-      confirm(
-        `Are you sure you want to delete "${image.fileName || 'this image'}"?`
-      );
-
-
-    if (!confirmed) {
-
-      return;
-
-    }
-
-
-    this.loanService
-      .deleteImage(
-        image.id
-      )
-      .subscribe({
-
-        next: () => {
-
-          alert(
-            'Loan image deleted successfully.'
-          );
-
-
-          if (
-            this.selectedLoan?.id
-          ) {
-
-            this.loadLoanImages(
-              Number(
-                this.selectedLoan.id
-              )
-            );
-
-          }
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Loan image delete error:',
-            error
-          );
-
-
-          alert(
-            error?.error?.message ||
-            'Failed to delete loan image.'
-          );
-
-        }
-
-      });
-
-  }
-
-
-  // =====================================================
-  // CLOSE DETAILS
-  // =====================================================
 
   closeLoanDetails(): void {
 
     this.selectedLoan = null;
 
+    this.loanImages = [];
+
+    this.clearImageSelection();
+
   }
 
 
-  // =====================================================
-  // CMRC NAME
-  // =====================================================
+  // =========================================================
+  // CL SCHEDULE POPUP
+  // =========================================================
 
-  getCmrcNameById(
-    cmrcId?: number | null
-  ): string {
+  openClSchedulePopup(
+    loan: Loan
+  ): void {
 
-    if (!cmrcId) {
+    if (!loan || !loan.id) {
 
-      return '';
+      alert(
+        'Loan ID is not available.'
+      );
 
+      return;
     }
 
 
-    const cmrc: any =
-      this.cmrcList.find(
-        (item: any) =>
-          Number(item.id) ===
-          Number(cmrcId)
-      );
+    this.selectedClScheduleLoanId =
+      Number(loan.id);
 
+    this.showClSchedulePopup =
+      true;
 
-    return cmrc?.cmrcName || '';
+    this.cdr.detectChanges();
 
   }
 
 
-  // =====================================================
-  // VO / ALF NAME
-  // =====================================================
+  closeClSchedulePopup(): void {
 
-  getVoAlfNameById(
-    voAlfId?: number | null
-  ): string {
+    this.showClSchedulePopup =
+      false;
 
-    if (!voAlfId) {
+    this.selectedClScheduleLoanId =
+      null;
 
-      return '';
+  }
 
+
+  // =========================================================
+  // IMAGE SELECTION
+  // =========================================================
+
+  onImageSelected(
+    event: Event
+  ): void {
+
+    const input =
+      event.target as HTMLInputElement;
+
+
+    if (
+      !input.files ||
+      input.files.length === 0
+    ) {
+      return;
     }
 
 
-    const voAlf: any =
-      this.voAlfList.find(
-        (item: any) =>
-          Number(item.id) ===
-          Number(voAlfId)
-      );
+    this.selectedImageFiles =
+      Array.from(input.files);
+
+    this.imagePreviews = [];
 
 
-    return voAlf?.voAlfName || '';
+    this.selectedImageFiles.forEach(
+      (file: File) => {
+
+        const reader =
+          new FileReader();
+
+        reader.onload =
+          () => {
+
+            this.imagePreviews.push(
+              String(reader.result)
+            );
+
+          };
+
+        reader.readAsDataURL(file);
+
+      }
+    );
 
   }
 
 
-  // =====================================================
-  // GROUP NAME
-  // =====================================================
+  // HTML compatibility
+  onLoanImagesSelected(
+    event: Event
+  ): void {
 
-  getGroupNameById(
-    groupId?: number | null
-  ): string {
+    this.onImageSelected(event);
 
-    if (!groupId) {
+  }
 
-      return '';
 
+  removeSelectedImage(
+    index: number
+  ): void {
+
+    if (
+      index < 0 ||
+      index >= this.selectedImageFiles.length
+    ) {
+      return;
     }
 
 
-    const group: any =
-      this.groupList.find(
-        (item: any) =>
-          Number(item.id) ===
-          Number(groupId)
-      );
+    this.selectedImageFiles.splice(
+      index,
+      1
+    );
 
-
-    return group?.groupName || '';
-
-  }
-
-
-  // =====================================================
-  // SELECTED CMRC NAME
-  // =====================================================
-
-  getSelectedCmrcName(): string {
-
-    return this.getCmrcNameById(
-      this.selectedCmrcId
+    this.imagePreviews.splice(
+      index,
+      1
     );
 
   }
 
 
-  // =====================================================
-  // SELECTED VO / ALF NAME
-  // =====================================================
+  clearImageSelection(): void {
 
-  getSelectedVoAlfName(): string {
+    this.selectedImageFiles = [];
 
-    return this.getVoAlfNameById(
-      this.selectedVoAlfId
-    );
+    this.imagePreviews = [];
 
   }
 
 
-  // =====================================================
-  // SELECTED GROUP NAME
-  // =====================================================
-
-  getSelectedGroupName(): string {
-
-    return this.getGroupNameById(
-      this.selectedGroupId
-    );
-
-  }
-
-
-  // =====================================================
-  // SELECTED WOMAN NAME
-  // =====================================================
-
-  getSelectedWomanName(): string {
-
-    if (!this.selectedWomanId) {
-
-      return '';
-
-    }
-
-
-    const woman: any =
-      this.womenList.find(
-        (item: any) =>
-          Number(item.id) ===
-          Number(this.selectedWomanId)
-      );
-
-
-    return woman?.womanName || '';
-
-  }
-
-
-  // =====================================================
-  // SELECTED VILLAGE
-  // =====================================================
-
-  getSelectedVillageName(): string {
-
-    if (!this.selectedVoAlfId) {
-
-      return '';
-
-    }
-
-
-    const groups =
-      this.groupList.filter(
-        group =>
-          Number(group.voAlfId) ===
-          Number(this.selectedVoAlfId)
-      );
-
-
-    if (!groups.length) {
-
-      return '';
-
-    }
-
-
-    const village =
-      groups.find(
-        group =>
-          group.villageName &&
-          group.villageName.trim() !== ''
-      );
-
-
-    return village?.villageName || '';
-
-  }
-
-
-  // =====================================================
-  // TOTAL LOAN AMOUNT
-  // =====================================================
-
-  getTotalLoanAmount(): number {
-
-    return this.filteredLoanList.reduce(
-      (
-        total: number,
-        loan: any
-      ) => {
-
-        return total +
-          (
-            Number(
-              loan.loanAmount
-            ) || 0
-          );
-
-      },
-      0
-    );
-
-  }
-
-
-  // =====================================================
-  // TOTAL SANCTIONED
-  // =====================================================
-
-  getTotalSanctionedAmount(): number {
-
-    return this.filteredLoanList.reduce(
-      (
-        total: number,
-        loan: any
-      ) => {
-
-        return total +
-          (
-            Number(
-              loan.sanctionedAmount
-            ) || 0
-          );
-
-      },
-      0
-    );
-
-  }
-
-
-  // =====================================================
-  // TOTAL PROCESSING FEE
-  // =====================================================
-
-  getTotalProcessingFee(): number {
-
-    return this.filteredLoanList.reduce(
-      (
-        total: number,
-        loan: any
-      ) => {
-
-        return total +
-          (
-            Number(
-              loan.processingFee
-            ) || 0
-          );
-
-      },
-      0
-    );
-
-  }
-
-
-  // =====================================================
-  // TOTAL DISBURSED
-  // =====================================================
-
-  getTotalDisbursedAmount(): number {
-
-    return this.filteredLoanList.reduce(
-      (
-        total: number,
-        loan: any
-      ) => {
-
-        const amount =
-          Number(
-            loan.totalAmount
-          ) ||
-          Number(
-            loan.loanAmount
-          ) ||
-          0;
-
-
-        return total + amount;
-
-      },
-      0
-    );
-
-  }
-
-
-  // =====================================================
-  // TOTAL MONTHLY EMI
-  // =====================================================
-
-  getTotalMonthlyEmi(): number {
-
-    return this.filteredLoanList.reduce(
-      (
-        total: number,
-        loan: any
-      ) => {
-
-        return total +
-          (
-            Number(
-              loan.monthlyEmi
-            ) || 0
-          );
-
-      },
-      0
-    );
-
-  }
-
-
-  // =====================================================
-  // SCROLL TO FORM
-  // =====================================================
-
-  private scrollToLoanForm(): void {
-
-    setTimeout(() => {
-
-      const element =
-        document.getElementById(
-          'loanFormSection'
+  // =========================================================
+  // UPLOAD IMAGES
+  // =========================================================
+
+  uploadLoanImages(
+    loanId?: number,
+    callback?: () => void
+  ): void {
+
+    // If called without ID from the details screen
+    if (!loanId) {
+
+      loanId =
+        Number(
+          this.selectedLoan?.id ||
+          this.editingLoanId ||
+          0
         );
 
+    }
 
-      if (element) {
 
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
+    if (
+      !loanId ||
+      this.selectedImageFiles.length === 0
+    ) {
+
+      if (callback) {
+        callback();
+      }
+
+      return;
+    }
+
+
+    this.imageUploading =
+      true;
+
+
+    this.loanService.uploadImages(
+      loanId,
+      this.selectedImageFiles
+    ).subscribe({
+
+      next: (
+        images: LoanImage[]
+      ) => {
+
+        this.loanImages =
+          images || [];
+
+        this.imageUploading =
+          false;
+
+        this.clearImageSelection();
+
+
+        if (callback) {
+          callback();
+        }
+
+      },
+
+      error: (error: any) => {
+
+        console.error(
+          'Image upload failed:',
+          error
+        );
+
+        this.imageUploading =
+          false;
+
+
+        if (callback) {
+          callback();
+        }
 
       }
 
-    }, 100);
+    });
 
   }
 
 
-  // =====================================================
+  // =========================================================
+  // LOAD LOAN IMAGES
+  // =========================================================
+
+  loadLoanImages(
+    loanId: number
+  ): void {
+
+    if (!loanId) {
+      return;
+    }
+
+
+    this.loanService.getImagesByLoan(
+      loanId
+    ).subscribe({
+
+      next: (
+        images: LoanImage[]
+      ) => {
+
+        this.loanImages =
+          images || [];
+
+      },
+
+      error: (error: any) => {
+
+        console.error(
+          'Error loading loan images:',
+          error
+        );
+
+        this.loanImages = [];
+
+      }
+
+    });
+
+  }
+
+
+  // =========================================================
+  // IMAGE URL HELPERS
+  // =========================================================
+
+  getImageViewUrl(
+    imageId: number
+  ): string {
+
+    return this.loanService.getImageViewUrl(
+      Number(imageId)
+    );
+
+  }
+
+
+  getImageDownloadUrl(
+    imageId: number
+  ): string {
+
+    return this.loanService.getImageDownloadUrl(
+      Number(imageId)
+    );
+
+  }
+
+
+  // =========================================================
+  // DELETE IMAGE
+  // =========================================================
+
+deleteLoanImage(image: LoanImage): void {
+
+  if (!image?.id) {
+    return;
+  }
+
+  const confirmed = confirm(
+    'Are you sure you want to delete this image?'
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const imageId = Number(image.id);
+
+  this.loanService.deleteImage(imageId).subscribe({
+
+    next: () => {
+
+      // Remove immediately from UI
+      this.loanImages = this.loanImages.filter(
+        item =>
+          Number(item.id) !== imageId
+      );
+
+      // Clear image selection if required
+      this.clearImageSelection();
+
+      console.log(
+        'Loan image deleted successfully:',
+        imageId
+      );
+    },
+
+    error: (error: any) => {
+
+      console.error(
+        'Delete image API error:',
+        error
+      );
+
+      /*
+       * Some Spring Boot DELETE APIs may delete successfully
+       * but Angular can still receive an unexpected response.
+       *
+       * Check the actual Network response before showing
+       * failure to the user.
+       */
+
+      if (
+        error?.status === 200 ||
+        error?.status === 204
+      ) {
+
+        this.loanImages = this.loanImages.filter(
+          item =>
+            Number(item.id) !== imageId
+        );
+
+        return;
+      }
+
+      alert(
+        'Failed to delete image.'
+      );
+
+    }
+
+  });
+
+}
+
+
+
+  // =========================================================
   // NUMBER TO WORDS
-  // =====================================================
+  // =========================================================
 
   numberToWords(
     amount: number
@@ -2716,9 +1916,7 @@ export class LoanManagementComponent implements OnInit {
       amount === undefined ||
       Number(amount) === 0
     ) {
-
       return '';
-
     }
 
 
@@ -2728,9 +1926,12 @@ export class LoanManagementComponent implements OnInit {
       );
 
 
-    if (num > 999999999) {
+    if (num < 0) {
 
-      return '';
+      return 'Minus ' +
+        this.numberToWords(
+          Math.abs(num)
+        );
 
     }
 
@@ -2774,9 +1975,7 @@ export class LoanManagementComponent implements OnInit {
 
 
     const convertBelowThousand =
-      (
-        n: number
-      ): string => {
+      (n: number): string => {
 
         let result = '';
 
@@ -2789,7 +1988,6 @@ export class LoanManagementComponent implements OnInit {
             ] +
             ' Hundred ';
 
-
           n %= 100;
 
         }
@@ -2800,20 +1998,20 @@ export class LoanManagementComponent implements OnInit {
           result +=
             tens[
               Math.floor(n / 10)
-            ] +
-            ' ';
+            ];
 
+          if (n % 10 !== 0) {
 
-          n %= 10;
+            result +=
+              ' ' +
+              ones[n % 10];
 
-        }
+          }
 
-
-        if (n > 0) {
+        } else if (n > 0) {
 
           result +=
-            ones[n] +
-            ' ';
+            ones[n];
 
         }
 
@@ -2826,75 +2024,132 @@ export class LoanManagementComponent implements OnInit {
     let result = '';
 
 
-    const lakhs =
-      Math.floor(
-        num / 100000
-      );
-
-
-    const remainderAfterLakhs =
-      num % 100000;
-
-
-    if (lakhs > 0) {
+    if (num >= 10000000) {
 
       result +=
         convertBelowThousand(
-          lakhs
+          Math.floor(
+            num / 10000000
+          )
+        ) +
+        ' Crore ';
+
+    }
+
+
+    const croreRemainder =
+      num % 10000000;
+
+
+    if (croreRemainder >= 100000) {
+
+      result +=
+        convertBelowThousand(
+          Math.floor(
+            croreRemainder / 100000
+          )
         ) +
         ' Lakh ';
 
     }
 
 
-    const thousands =
-      Math.floor(
-        remainderAfterLakhs / 1000
-      );
+    const lakhRemainder =
+      croreRemainder % 100000;
 
 
-    const remainder =
-      remainderAfterLakhs % 1000;
-
-
-    if (thousands > 0) {
+    if (lakhRemainder >= 1000) {
 
       result +=
         convertBelowThousand(
-          thousands
+          Math.floor(
+            lakhRemainder / 1000
+          )
         ) +
         ' Thousand ';
 
     }
 
 
-    if (remainder > 0) {
+    const thousandRemainder =
+      lakhRemainder % 1000;
+
+
+    if (thousandRemainder > 0) {
 
       result +=
         convertBelowThousand(
-          remainder
+          thousandRemainder
         );
 
     }
 
 
-    return (
-      result.trim() +
-      ' Rupees Only'
-    );
+    return result.trim() +
+      ' Rupees Only';
 
   }
 
 
-  // =====================================================
-  // EXPORT
-  // =====================================================
+  // =========================================================
+  // NAME HELPERS
+  // =========================================================
 
-  exportToExcel(): void {
+  getVoAlfNameById(
+    voAlfId: number | null | undefined
+  ): string {
 
-    console.log(
-      'Export requested:',
-      this.filteredLoanList
+    if (voAlfId == null) {
+      return '';
+    }
+
+
+    const voAlf =
+      this.voAlfList.find(
+        item =>
+          Number(item.id) ===
+          Number(voAlfId)
+      );
+
+
+    return voAlf?.voAlfName || '';
+
+  }
+
+
+  getVillageNameByVoAlfId(
+    voAlfId: number | null | undefined
+  ): string {
+
+    if (voAlfId == null) {
+      return '';
+    }
+
+
+    const voAlf =
+      this.voAlfList.find(
+        item =>
+          Number(item.id) ===
+          Number(voAlfId)
+      );
+
+
+    return voAlf?.villageName || '';
+
+  }
+
+
+  // =========================================================
+  // TRACK BY
+  // =========================================================
+
+  trackByLoanId(
+    index: number,
+    loan: Loan
+  ): number {
+
+    return Number(
+      loan.id || index
     );
 
   }

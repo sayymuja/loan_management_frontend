@@ -24,10 +24,7 @@ export class DashboardComponent implements OnInit {
   cmrcList: any[] = [];
   voAlfList: any[] = [];
 
-  // Currently displayed loans
   loanList: any[] = [];
-
-  // All loans - always keep original complete list
   allLoanList: any[] = [];
 
   recentLoans: any[] = [];
@@ -97,7 +94,6 @@ export class DashboardComponent implements OnInit {
   regularRepayments = 0;
   irregularRepayments = 0;
 
-  // Keep all repayments for chart/filtering
   allRepaymentList: any[] = [];
 
   // =====================================================
@@ -318,9 +314,16 @@ export class DashboardComponent implements OnInit {
 
   loadDashboard(): void {
 
-    this.loadCmrc();
+    /*
+     * CMRC loads first and automatically selects
+     * the first CMRC.
+     *
+     * Loans / schedules / repayments are loaded
+     * independently and then applied to the
+     * currently selected filter.
+     */
 
-    this.loadAllVoAlf();
+    this.loadCmrc();
 
     this.loadAllLoans();
 
@@ -344,6 +347,7 @@ export class DashboardComponent implements OnInit {
         this.totalCmrc =
           this.cmrcList.length;
 
+        // Overall CMRC balance
         this.totalCmrcBalance =
           this.cmrcList.reduce(
             (sum, cmrc) =>
@@ -354,6 +358,7 @@ export class DashboardComponent implements OnInit {
             0
           );
 
+        // Overall left CMRC balance
         this.leftCmrcBalance =
           this.cmrcList.reduce(
             (sum, cmrc) => {
@@ -373,9 +378,42 @@ export class DashboardComponent implements OnInit {
                   totalFund - received,
                   0
                 );
+
             },
             0
           );
+
+        // =================================================
+        // DEFAULT FIRST CMRC
+        // =================================================
+
+        if (this.cmrcList.length > 0) {
+
+          this.selectedCmrcId =
+            Number(
+              this.cmrcList[0].id
+            );
+
+          this.selectedVoAlfId = null;
+          this.selectedVoAlf = null;
+
+          // Load selected CMRC data
+          this.onCmrcChange();
+
+        } else {
+
+          this.selectedCmrcId = null;
+          this.selectedVoAlfId = null;
+          this.selectedVoAlf = null;
+
+          this.voAlfList = [];
+
+          this.loanList = [];
+
+          this.calculateLoanTotals([]);
+
+        }
+
       },
 
       error: (error) => {
@@ -384,7 +422,13 @@ export class DashboardComponent implements OnInit {
           'CMRC loading error:',
           error
         );
+
+        this.cmrcList = [];
+        this.selectedCmrcId = null;
+        this.voAlfList = [];
+
       }
+
     });
   }
 
@@ -398,7 +442,33 @@ export class DashboardComponent implements OnInit {
 
       next: (data: any[]) => {
 
-        this.voAlfList = data || [];
+        const allVoAlf =
+          data || [];
+
+        /*
+         * If a CMRC is already selected,
+         * do not replace the displayed list
+         * with all CMRCs' VO/ALFs.
+         */
+
+        if (this.selectedCmrcId !== null) {
+
+          this.voAlfList =
+            allVoAlf.filter(
+              vo =>
+                Number(
+                  vo.cmrcId
+                ) ===
+                Number(
+                  this.selectedCmrcId
+                )
+            );
+
+        } else {
+
+          this.voAlfList =
+            allVoAlf;
+        }
 
         this.totalVoAlf =
           this.voAlfList.length;
@@ -415,6 +485,7 @@ export class DashboardComponent implements OnInit {
 
         this.leftAlfBalance =
           this.totalAlfBalance;
+
       },
 
       error: (error) => {
@@ -423,7 +494,11 @@ export class DashboardComponent implements OnInit {
           'VO/ALF loading error:',
           error
         );
+
+        this.voAlfList = [];
+
       }
+
     });
   }
 
@@ -433,20 +508,26 @@ export class DashboardComponent implements OnInit {
 
   onCmrcChange(): void {
 
+    // Reset VO / ALF filter
     this.selectedVoAlfId = null;
-
     this.selectedVoAlf = null;
+
+    // =================================================
+    // NO CMRC SELECTED
+    // =================================================
 
     if (this.selectedCmrcId === null) {
 
       this.voAlfList = [];
 
-      this.loadAllVoAlf();
-
-      // Restore all loans
       this.loanList = [
         ...this.allLoanList
       ];
+
+      this.totalVoAlf = 0;
+
+      this.totalAlfBalance = 0;
+      this.leftAlfBalance = 0;
 
       this.calculateLoanTotals(
         this.loanList
@@ -461,9 +542,44 @@ export class DashboardComponent implements OnInit {
       return;
     }
 
-    // ---------------------------------------------
-    // Load VO / ALF for selected CMRC
-    // ---------------------------------------------
+    // =================================================
+    // SELECTED CMRC BALANCE
+    // =================================================
+
+    const selectedCmrc =
+      this.cmrcList.find(
+        cmrc =>
+          Number(cmrc.id) ===
+          Number(this.selectedCmrcId)
+      );
+
+    if (selectedCmrc) {
+
+      this.totalCmrcBalance =
+        Number(
+          selectedCmrc.totalFund || 0
+        );
+
+      const totalFund =
+        Number(
+          selectedCmrc.totalFund || 0
+        );
+
+      const received =
+        Number(
+          selectedCmrc.tezshreeFundReceivedTotal || 0
+        );
+
+      this.leftCmrcBalance =
+        Math.max(
+          totalFund - received,
+          0
+        );
+    }
+
+    // =================================================
+    // LOAD VO / ALF FOR SELECTED CMRC
+    // =================================================
 
     this.voAlfService
       .getByCmrcId(
@@ -473,7 +589,11 @@ export class DashboardComponent implements OnInit {
 
         next: (data: any[]) => {
 
-          this.voAlfList = data || [];
+          this.voAlfList =
+            data || [];
+
+          this.totalVoAlf =
+            this.voAlfList.length;
 
           this.totalAlfBalance =
             this.voAlfList.reduce(
@@ -488,63 +608,12 @@ export class DashboardComponent implements OnInit {
           this.leftAlfBalance =
             this.totalAlfBalance;
 
-          const selectedCmrc =
-            this.cmrcList.find(
-              c =>
-                Number(c.id) ===
-                Number(this.selectedCmrcId)
-            );
+          // =================================================
+          // FILTER ALL LOANS BY CMRC
+          // =================================================
 
-          if (selectedCmrc) {
+          this.refreshLoansForCurrentFilter();
 
-            this.totalCmrcBalance =
-              Number(
-                selectedCmrc.totalFund || 0
-              );
-
-            const totalFund =
-              Number(
-                selectedCmrc.totalFund || 0
-              );
-
-            const received =
-              Number(
-                selectedCmrc.tezshreeFundReceivedTotal || 0
-              );
-
-            this.leftCmrcBalance =
-              Math.max(
-                totalFund - received,
-                0
-              );
-          }
-
-          // -----------------------------------------
-          // Filter loans by CMRC
-          // -----------------------------------------
-
-          this.loanList =
-            this.allLoanList.filter(
-              loan =>
-                Number(
-                  loan.cmrcId
-                ) ===
-                Number(
-                  this.selectedCmrcId
-                )
-            );
-
-          this.calculateLoanTotals(
-            this.loanList
-          );
-
-          this.buildMonthlyLoanChart();
-
-          this.buildRepaymentPurposeChart(
-            this.getRepaymentsForLoans(
-              this.loanList
-            )
-          );
         },
 
         error: (error) => {
@@ -554,9 +623,106 @@ export class DashboardComponent implements OnInit {
             error
           );
 
-          this.loanList = [];
+          this.voAlfList = [];
+
+          this.totalVoAlf = 0;
+
+          this.totalAlfBalance = 0;
+          this.leftAlfBalance = 0;
+
+          this.refreshLoansForCurrentFilter();
+
         }
+
       });
+  }
+
+  // =====================================================
+  // REFRESH LOANS FOR CURRENT FILTER
+  // =====================================================
+
+  refreshLoansForCurrentFilter(): void {
+
+    // =================================================
+    // SELECTED VO / ALF
+    // =================================================
+
+    if (this.selectedVoAlfId !== null) {
+
+      this.loanList =
+        this.allLoanList.filter(
+          loan =>
+            Number(
+              loan.voAlfId
+            ) ===
+            Number(
+              this.selectedVoAlfId
+            )
+        );
+
+      this.calculateLoanTotals(
+        this.loanList
+      );
+
+      this.buildMonthlyLoanChart();
+
+      this.buildRepaymentPurposeChart(
+        this.getRepaymentsForLoans(
+          this.loanList
+        )
+      );
+
+      return;
+    }
+
+    // =================================================
+    // SELECTED CMRC
+    // =================================================
+
+    if (this.selectedCmrcId !== null) {
+
+      this.loanList =
+        this.allLoanList.filter(
+          loan =>
+            Number(
+              loan.cmrcId
+            ) ===
+            Number(
+              this.selectedCmrcId
+            )
+        );
+
+      this.calculateLoanTotals(
+        this.loanList
+      );
+
+      this.buildMonthlyLoanChart();
+
+      this.buildRepaymentPurposeChart(
+        this.getRepaymentsForLoans(
+          this.loanList
+        )
+      );
+
+      return;
+    }
+
+    // =================================================
+    // NO FILTER
+    // =================================================
+
+    this.loanList =
+      [...this.allLoanList];
+
+    this.calculateLoanTotals(
+      this.loanList
+    );
+
+    this.buildMonthlyLoanChart();
+
+    this.buildRepaymentPurposeChart(
+      this.allRepaymentList
+    );
   }
 
   // =====================================================
@@ -565,9 +731,9 @@ export class DashboardComponent implements OnInit {
 
   onVoAlfChange(): void {
 
-    // ---------------------------------------------
-    // All VO / ALF
-    // ---------------------------------------------
+    // =================================================
+    // ALL VO / ALF OF SELECTED CMRC
+    // =================================================
 
     if (this.selectedVoAlfId === null) {
 
@@ -575,31 +741,41 @@ export class DashboardComponent implements OnInit {
 
       if (this.selectedCmrcId !== null) {
 
-        this.onCmrcChange();
+        /*
+         * Do NOT call onCmrcChange() here.
+         * It would unnecessarily reload VO/ALF.
+         *
+         * Just restore all loans of current CMRC.
+         */
+
+        this.refreshLoansForCurrentFilter();
+
+        // Restore CMRC-level VO/ALF balance
+        this.totalAlfBalance =
+          this.voAlfList.reduce(
+            (sum, vo) =>
+              sum +
+              Number(
+                vo.receivedFund || 0
+              ),
+            0
+          );
+
+        this.leftAlfBalance =
+          this.totalAlfBalance;
 
       } else {
 
-        this.loanList = [
-          ...this.allLoanList
-        ];
+        this.refreshLoansForCurrentFilter();
 
-        this.calculateLoanTotals(
-          this.loanList
-        );
-
-        this.buildMonthlyLoanChart();
-
-        this.buildRepaymentPurposeChart(
-          this.allRepaymentList
-        );
       }
 
       return;
     }
 
-    // ---------------------------------------------
-    // Selected VO / ALF
-    // ---------------------------------------------
+    // =================================================
+    // SELECTED VO / ALF
+    // =================================================
 
     this.selectedVoAlf =
       this.voAlfList.find(
@@ -614,9 +790,12 @@ export class DashboardComponent implements OnInit {
 
       this.loanList = [];
 
+      this.calculateLoanTotals([]);
+
       return;
     }
 
+    // Selected VO / ALF fund
     this.totalAlfBalance =
       Number(
         this.selectedVoAlf.receivedFund || 0
@@ -625,9 +804,9 @@ export class DashboardComponent implements OnInit {
     this.leftAlfBalance =
       this.totalAlfBalance;
 
-    // ---------------------------------------------
-    // Load selected VO / ALF loans
-    // ---------------------------------------------
+    // =================================================
+    // LOAD SELECTED VO / ALF LOANS
+    // =================================================
 
     this.loanService
       .getByVoAlfId(
@@ -640,20 +819,21 @@ export class DashboardComponent implements OnInit {
           const loans =
             data || [];
 
-          // IMPORTANT:
-          // Update loanList so Loans tab can display
           this.loanList = [
             ...loans
           ];
+
+          /*
+           * Keep master list intact.
+           * Do not overwrite allLoanList.
+           */
 
           this.calculateLoanTotals(
             this.loanList
           );
 
-          // Monthly chart
           this.buildMonthlyLoanChart();
 
-          // Selected VO/ALF repayment chart
           const repayments =
             this.getRepaymentsForLoans(
               this.loanList
@@ -663,10 +843,10 @@ export class DashboardComponent implements OnInit {
             repayments
           );
 
-          // Schedule + repayment summary
           this.loadSelectedVoAlfSchedules(
-            loans
+            this.loanList
           );
+
         },
 
         error: (error) => {
@@ -676,12 +856,32 @@ export class DashboardComponent implements OnInit {
             error
           );
 
-          this.loanList = [];
+          // Fallback to locally filtered master list
+          this.loanList =
+            this.allLoanList.filter(
+              loan =>
+                Number(
+                  loan.voAlfId
+                ) ===
+                Number(
+                  this.selectedVoAlfId
+                )
+            );
 
           this.calculateLoanTotals(
-            []
+            this.loanList
           );
+
+          this.buildMonthlyLoanChart();
+
+          this.buildRepaymentPurposeChart(
+            this.getRepaymentsForLoans(
+              this.loanList
+            )
+          );
+
         }
+
       });
   }
 
@@ -695,35 +895,22 @@ export class DashboardComponent implements OnInit {
 
       next: (data: any[]) => {
 
-        // Keep original complete list
+        // Keep complete master list
         this.allLoanList =
           data || [];
 
-        // Initially display all loans
-        this.loanList = [
-          ...this.allLoanList
-        ];
+        /*
+         * IMPORTANT:
+         *
+         * CMRC may already be selected because
+         * CMRC API and Loan API load asynchronously.
+         *
+         * Therefore always apply the current
+         * filter after loan data arrives.
+         */
 
-        this.calculateLoanTotals(
-          this.loanList
-        );
+        this.refreshLoansForCurrentFilter();
 
-        this.buildMonthlyLoanChart();
-
-        // Important:
-        // If repayments already loaded,
-        // build chart now.
-        if (
-          this.allRepaymentList &&
-          this.allRepaymentList.length > 0
-        ) {
-
-          this.buildRepaymentPurposeChart(
-            this.getRepaymentsForLoans(
-              this.loanList
-            )
-          );
-        }
       },
 
       error: (error) => {
@@ -737,10 +924,10 @@ export class DashboardComponent implements OnInit {
 
         this.loanList = [];
 
-        this.calculateLoanTotals(
-          []
-        );
+        this.calculateLoanTotals([]);
+
       }
+
     });
   }
 
@@ -752,76 +939,96 @@ export class DashboardComponent implements OnInit {
     loans: any[]
   ): void {
 
-    this.totalLoans =
-      loans.length;
+    const currentLoans =
+      loans || [];
 
-    // ---------------------------------------------
-    // Loan amount
-    // ---------------------------------------------
+    // =================================================
+    // TOTAL LOANS
+    // =================================================
+
+    this.totalLoans =
+      currentLoans.length;
+
+    // =================================================
+    // TOTAL LOAN AMOUNT
+    // =================================================
 
     this.totalLoanAmount =
-      loans.reduce(
-        (sum, loan) =>
-          sum +
-          Number(
-            loan.loanAmount || 0
-          ),
+      currentLoans.reduce(
+        (sum, loan) => {
+
+          const amount =
+            this.getLoanAmount(
+              loan
+            );
+
+          return sum + amount;
+
+        },
         0
       );
 
-    // ---------------------------------------------
-    // Active / Closed
-    // ---------------------------------------------
+    // =================================================
+    // ACTIVE LOANS
+    // =================================================
 
     this.activeLoans =
-      loans.filter(
+      currentLoans.filter(
         loan =>
           this.normalizeLoanStatus(
             loan.loanStatus
           ) === 'ACTIVE'
       ).length;
 
+    // =================================================
+    // CLOSED LOANS
+    // =================================================
+
     this.closedLoans =
-      loans.filter(
+      currentLoans.filter(
         loan =>
           this.normalizeLoanStatus(
             loan.loanStatus
           ) === 'CLOSED'
       ).length;
 
-    // ---------------------------------------------
-    // Women
-    // ---------------------------------------------
+    // =================================================
+    // WOMEN
+    // =================================================
 
     const womenSet =
       new Set<string>();
 
-    loans.forEach(loan => {
+    currentLoans.forEach(loan => {
 
-      const woman =
+      const womanName =
         String(
-          loan.womanName || ''
+          loan.womanName ||
+          loan.woman?.womanName ||
+          ''
         )
           .trim()
           .toLowerCase();
 
-      if (woman) {
+      if (womanName) {
 
         womenSet.add(
-          woman
+          womanName
         );
+
       }
+
     });
 
     this.totalWomen =
       womenSet.size;
 
-    // ---------------------------------------------
-    // Recent Loans
-    // ---------------------------------------------
+    // =================================================
+    // RECENT LOANS
+    // =================================================
 
     this.recentLoans =
-      [...loans]
+      [...currentLoans]
         .sort((a, b) => {
 
           const dateA =
@@ -835,8 +1042,51 @@ export class DashboardComponent implements OnInit {
             ).getTime();
 
           return dateB - dateA;
+
         })
         .slice(0, 5);
+
+    // Refresh recent activity fallback
+    if (
+      this.allRepaymentList &&
+      this.allRepaymentList.length > 0
+    ) {
+
+      this.buildRecentActivities(
+        this.getRepaymentsForLoans(
+          currentLoans
+        )
+      );
+
+    }
+
+  }
+
+  // =====================================================
+  // GET LOAN AMOUNT
+  // =====================================================
+
+  getLoanAmount(
+    loan: any
+  ): number {
+
+    if (!loan) {
+      return 0;
+    }
+
+    const amount =
+      loan.loanAmount ??
+      loan.disbursedAmount ??
+      loan.totalAmount ??
+      loan.sanctionedAmount ??
+      0;
+
+    const value =
+      Number(amount);
+
+    return isNaN(value)
+      ? 0
+      : value;
   }
 
   // =====================================================
@@ -848,7 +1098,7 @@ export class DashboardComponent implements OnInit {
   ): void {
 
     this.loanList = [
-      ...loans
+      ...(loans || [])
     ];
 
     this.calculateLoanTotals(
@@ -888,8 +1138,8 @@ export class DashboardComponent implements OnInit {
         date.getMonth();
 
       monthlyAmount[month] +=
-        Number(
-          loan.loanAmount || 0
+        this.getLoanAmount(
+          loan
         );
     });
 
@@ -932,6 +1182,7 @@ export class DashboardComponent implements OnInit {
           pointRadius: 5,
 
           pointHoverRadius: 7
+
         }
       ]
     };
@@ -952,18 +1203,53 @@ export class DashboardComponent implements OnInit {
           const schedules =
             data || [];
 
-          this.totalScheduledEmi =
-            schedules.reduce(
-              (sum, schedule) =>
-                sum +
-                Number(
-                  schedule.monthlyInstallment || 0
-                ),
-              0
-            );
+          /*
+           * If CMRC / VO filter is selected,
+           * calculate schedule only for current loans.
+           */
 
-          this.totalInstallments =
-            schedules.length;
+          if (this.loanList.length > 0) {
+
+            const loanIds =
+              new Set(
+                this.loanList.map(
+                  loan =>
+                    Number(
+                      loan.id
+                    )
+                )
+              );
+
+            const selectedSchedules =
+              schedules.filter(
+                schedule =>
+                  loanIds.has(
+                    Number(
+                      schedule.loanId
+                    )
+                  )
+              );
+
+            this.totalScheduledEmi =
+              selectedSchedules.reduce(
+                (sum, schedule) =>
+                  sum +
+                  Number(
+                    schedule.monthlyInstallment || 0
+                  ),
+                0
+              );
+
+            this.totalInstallments =
+              selectedSchedules.length;
+
+          } else {
+
+            this.totalScheduledEmi = 0;
+            this.totalInstallments = 0;
+
+          }
+
         },
 
         error: (error) => {
@@ -972,7 +1258,9 @@ export class DashboardComponent implements OnInit {
             'CL Schedule loading error:',
             error
           );
+
         }
+
       });
   }
 
@@ -991,25 +1279,24 @@ export class DashboardComponent implements OnInit {
           this.allRepaymentList =
             data || [];
 
+          /*
+           * Always calculate repayment summary
+           * according to current dashboard filter.
+           */
+
+          const currentRepayments =
+            this.getRepaymentsForLoans(
+              this.loanList
+            );
+
           this.calculateRepaymentSummary(
-            this.allRepaymentList
+            currentRepayments
           );
 
-          // IMPORTANT:
-          // Loans may already be loaded OR may
-          // load later. If loans are available,
-          // build chart immediately.
-          if (
-            this.allLoanList &&
-            this.allLoanList.length > 0
-          ) {
+          this.buildRepaymentPurposeChart(
+            currentRepayments
+          );
 
-            this.buildRepaymentPurposeChart(
-              this.getRepaymentsForLoans(
-                this.loanList
-              )
-            );
-          }
         },
 
         error: (error) => {
@@ -1024,7 +1311,9 @@ export class DashboardComponent implements OnInit {
           this.repaymentPurposeChartData = [];
 
           this.resetRepaymentChart();
+
         }
+
       });
   }
 
@@ -1075,22 +1364,18 @@ export class DashboardComponent implements OnInit {
   ): void {
 
     this.totalPaidAmount = 0;
-
     this.totalPenalty = 0;
 
     this.paidInstallments = 0;
-
     this.partialInstallments = 0;
-
     this.pendingInstallments = 0;
 
     this.partialAmount = 0;
 
     this.regularRepayments = 0;
-
     this.irregularRepayments = 0;
 
-    repayments.forEach(rep => {
+    (repayments || []).forEach(rep => {
 
       const paid =
         Number(
@@ -1115,15 +1400,11 @@ export class DashboardComponent implements OnInit {
           .trim()
           .toUpperCase();
 
-      if (
-        status === 'PAID'
-      ) {
+      if (status === 'PAID') {
 
         this.paidInstallments++;
 
-      } else if (
-        status === 'PARTIAL'
-      ) {
+      } else if (status === 'PARTIAL') {
 
         this.partialInstallments++;
 
@@ -1133,6 +1414,7 @@ export class DashboardComponent implements OnInit {
       } else {
 
         this.pendingInstallments++;
+
       }
 
       const regular =
@@ -1149,12 +1431,12 @@ export class DashboardComponent implements OnInit {
 
         this.regularRepayments++;
 
-      } else if (
-        regular
-      ) {
+      } else if (regular) {
 
         this.irregularRepayments++;
+
       }
+
     });
 
     this.totalOutstandingAmount =
@@ -1165,7 +1447,7 @@ export class DashboardComponent implements OnInit {
       );
 
     this.buildRecentActivities(
-      repayments
+      repayments || []
     );
   }
 
@@ -1173,82 +1455,148 @@ export class DashboardComponent implements OnInit {
   // REPAYMENT PURPOSE CHART
   // =====================================================
 
-  buildRepaymentPurposeChart(repayments: any[]): void {
+  buildRepaymentPurposeChart(
+    repayments: any[]
+  ): void {
 
-  const purposeMap: {
-    [key: string]: {
-      purpose: string;
-      amount: number;
-      women: Set<number>;
-    };
-  } = {};
-
-  repayments.forEach(rep => {
-
-    const loan = this.allLoanList.find(
-      l => Number(l.id) === Number(rep.loanId)
-    );
-
-    if (!loan) {
-      return;
-    }
-
-    // Case-insensitive purpose
-    const rawPurpose = (loan.loanPurpose || 'Other').trim();
-
-    // Same purpose regardless of case
-    const purposeKey = rawPurpose.toLowerCase();
-
-    // Display name
-    const displayPurpose =
-      rawPurpose.charAt(0).toUpperCase() +
-      rawPurpose.slice(1).toLowerCase();
-
-    const paidAmount =
-      Number(
-        rep.paidAmount ??
-        rep.amountPaid ??
-        rep.repaymentAmount ??
-        rep.amount ??
-        0
-      );
-
-    if (!purposeMap[purposeKey]) {
-      purposeMap[purposeKey] = {
-        purpose: displayPurpose,
-        amount: 0,
-        women: new Set<number>()
+    const purposeMap: {
+      [key: string]: {
+        purpose: string;
+        amount: number;
+        women: Set<number>;
       };
-    }
+    } = {};
 
-    purposeMap[purposeKey].amount += paidAmount;
+    (repayments || []).forEach(rep => {
 
-    if (loan.womanId) {
-      purposeMap[purposeKey].women.add(Number(loan.womanId));
-    }
-  });
+      const loan =
+        this.allLoanList.find(
+          l =>
+            Number(l.id) ===
+            Number(rep.loanId)
+        );
 
-  this.repaymentPurposeChartData = Object.values(purposeMap)
-    .filter(item => item.amount > 0)
-    .map(item => ({
-      purpose: item.purpose,
-      amount: item.amount,
-      womenCount: item.women.size
-    }));
-
-  this.repaymentChartData = {
-    labels: this.repaymentPurposeChartData.map(
-      item => item.purpose
-    ),
-    datasets: [
-      {
-        data: this.repaymentPurposeChartData.map(
-          item => item.amount
-        )
+      if (!loan) {
+        return;
       }
-    ]
-  };
-}
+
+      const rawPurpose =
+        String(
+          loan.loanPurpose ||
+          'Other'
+        ).trim();
+
+      const purposeKey =
+        rawPurpose.toLowerCase();
+
+      const displayPurpose =
+        rawPurpose.charAt(0).toUpperCase() +
+        rawPurpose.slice(1).toLowerCase();
+
+      const paidAmount =
+        Number(
+          rep.paidAmount ??
+          rep.amountPaid ??
+          rep.repaymentAmount ??
+          rep.amount ??
+          0
+        );
+
+      if (!purposeMap[purposeKey]) {
+
+        purposeMap[purposeKey] = {
+
+          purpose:
+            displayPurpose,
+
+          amount:
+            0,
+
+          women:
+            new Set<number>()
+
+        };
+
+      }
+
+      purposeMap[purposeKey].amount +=
+        paidAmount;
+
+      if (loan.womanId) {
+
+        purposeMap[purposeKey].women.add(
+          Number(
+            loan.womanId
+          )
+        );
+
+      }
+
+    });
+
+    this.repaymentPurposeChartData =
+      Object.values(
+        purposeMap
+      )
+        .filter(
+          item =>
+            item.amount > 0
+        )
+        .map(
+          item => ({
+
+            purpose:
+              item.purpose,
+
+            amount:
+              item.amount,
+
+            womenCount:
+              item.women.size
+
+          })
+        );
+
+    this.repaymentChartData = {
+
+      labels:
+        this.repaymentPurposeChartData.map(
+          item =>
+            item.purpose
+        ),
+
+      datasets: [
+
+        {
+
+          data:
+            this.repaymentPurposeChartData.map(
+              item =>
+                item.amount
+            ),
+
+          backgroundColor:
+            this.repaymentPurposeChartData.map(
+              (_item, index) =>
+                this.getPurposeColor(index)
+            ),
+
+          borderWidth:
+            3,
+
+          borderColor:
+            '#ffffff',
+
+          hoverOffset:
+            8
+
+        }
+
+      ]
+
+    };
+  }
+
   // =====================================================
   // RESET REPAYMENT CHART
   // =====================================================
@@ -1260,6 +1608,7 @@ export class DashboardComponent implements OnInit {
       labels: [],
 
       datasets: [
+
         {
 
           data: [],
@@ -1272,8 +1621,11 @@ export class DashboardComponent implements OnInit {
             '#ffffff',
 
           hoverOffset: 8
+
         }
+
       ]
+
     };
   }
 
@@ -1300,7 +1652,7 @@ export class DashboardComponent implements OnInit {
   ): void {
 
     const loanIds =
-      loans.map(
+      (loans || []).map(
         loan =>
           Number(
             loan.id
@@ -1351,6 +1703,7 @@ export class DashboardComponent implements OnInit {
           this.buildRepaymentPurposeChart(
             selectedRepayments
           );
+
         },
 
         error: (error) => {
@@ -1359,7 +1712,9 @@ export class DashboardComponent implements OnInit {
             'Selected schedule loading error:',
             error
           );
+
         }
+
       });
   }
 
@@ -1371,6 +1726,7 @@ export class DashboardComponent implements OnInit {
 
     // Existing bank balance API
     // can remain here.
+
   }
 
   // =====================================================
@@ -1384,7 +1740,7 @@ export class DashboardComponent implements OnInit {
     this.recentActivities = [];
 
     const recentPaid =
-      [...repayments]
+      [...(repayments || [])]
         .filter(
           rep =>
             Number(
@@ -1419,7 +1775,9 @@ export class DashboardComponent implements OnInit {
           Number(
             rep.paidAmount || 0
           )
+
       });
+
     });
 
     if (
@@ -1443,11 +1801,14 @@ export class DashboardComponent implements OnInit {
           'Unknown',
 
         amount:
-          Number(
-            loan.loanAmount || 0
+          this.getLoanAmount(
+            loan
           )
+
       });
+
     }
+
   }
 
   // =====================================================
@@ -1465,6 +1826,27 @@ export class DashboardComponent implements OnInit {
         .trim()
         .toUpperCase();
 
+    if (
+      value === 'ACTIVE' ||
+      value === 'RUNNING' ||
+      value === 'OPEN'
+    ) {
+
+      return 'ACTIVE';
+
+    }
+
+    if (
+      value === 'CLOSED' ||
+      value === 'CLOSE' ||
+      value === 'COMPLETED' ||
+      value === 'PAID'
+    ) {
+
+      return 'CLOSED';
+
+    }
+
     return value || '-';
   }
 
@@ -1480,6 +1862,7 @@ export class DashboardComponent implements OnInit {
     ) {
 
       return 0;
+
     }
 
     return this.loanList.filter(
@@ -1502,6 +1885,7 @@ export class DashboardComponent implements OnInit {
     ) {
 
       return 0;
+
     }
 
     return this.loanList.filter(
@@ -1524,34 +1908,39 @@ export class DashboardComponent implements OnInit {
     ) {
 
       return 0;
+
     }
 
     return this.loanList.reduce(
       (total, loan) =>
         total +
-        Number(
-          loan.loanAmount || 0
+        this.getLoanAmount(
+          loan
         ),
       0
     );
   }
 
   // =====================================================
-  // RESET
+  // RESET / CLEAR FILTERS
   // =====================================================
 
   clearFilters(): void {
 
-    this.selectedCmrcId =
-      null;
+    /*
+     * Keep original "clear filters" behavior:
+     * show complete data.
+     */
 
-    this.selectedVoAlfId =
-      null;
+    this.selectedCmrcId = null;
 
-    this.selectedVoAlf =
-      null;
+    this.selectedVoAlfId = null;
 
-    // Restore all data
+    this.selectedVoAlf = null;
+
+    this.voAlfList = [];
+
+    // Restore all loans
     this.loanList = [
       ...this.allLoanList
     ];
@@ -1566,25 +1955,48 @@ export class DashboardComponent implements OnInit {
       this.allRepaymentList
     );
 
-    // Restore overall balances
+    // Restore overall CMRC
     this.totalCmrc =
       this.cmrcList.length;
 
-    this.totalVoAlf =
-      this.voAlfList.length;
+    // Load all VO/ALF again
+    this.voAlfService
+      .getAll()
+      .subscribe({
 
-    this.totalAlfBalance =
-      this.voAlfList.reduce(
-        (sum, vo) =>
-          sum +
-          Number(
-            vo.receivedFund || 0
-          ),
-        0
-      );
+        next: (data: any[]) => {
 
-    this.leftAlfBalance =
-      this.totalAlfBalance;
+          this.voAlfList =
+            data || [];
+
+          this.totalVoAlf =
+            this.voAlfList.length;
+
+          this.totalAlfBalance =
+            this.voAlfList.reduce(
+              (sum, vo) =>
+                sum +
+                Number(
+                  vo.receivedFund || 0
+                ),
+              0
+            );
+
+          this.leftAlfBalance =
+            this.totalAlfBalance;
+
+        },
+
+        error: (error) => {
+
+          console.error(
+            'VO/ALF reset loading error:',
+            error
+          );
+
+        }
+
+      });
 
     this.totalCmrcBalance =
       this.cmrcList.reduce(
@@ -1615,11 +2027,12 @@ export class DashboardComponent implements OnInit {
               totalFund - received,
               0
             );
+
         },
         0
       );
 
-    // Reset repayment summary from all repayments
+    // Reset repayment summary
     this.calculateRepaymentSummary(
       this.allRepaymentList
     );

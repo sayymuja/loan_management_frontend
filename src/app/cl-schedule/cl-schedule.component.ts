@@ -53,6 +53,12 @@ export class ClScheduleComponent implements OnInit {
 
   @Input() loanId: number | null = null;
 
+  /**
+   * false = normal CL Schedule page
+   * true  = opened from Loan Management popup
+   */
+  @Input() popupMode = false;
+
   @Output() close = new EventEmitter<void>();
 
 
@@ -129,6 +135,14 @@ export class ClScheduleComponent implements OnInit {
 
   ngOnInit(): void {
 
+    /*
+     * Popup mode:
+     * Loan Management passes [loanId].
+     *
+     * We still load CMRC + loans because the existing
+     * backend structure is already secured and the
+     * selected loan is resolved from the loan list.
+     */
     this.loadCurrentCmrc();
 
     this.loadAllLoans();
@@ -169,11 +183,21 @@ export class ClScheduleComponent implements OnInit {
 
             this.filteredLoanList = [];
 
+            /*
+             * If popup has loanId, we still let
+             * loadAllLoans() try to resolve it.
+             */
+            this.tryResolveInputLoan();
+
             return;
 
           }
 
 
+          /*
+           * Normal page behavior:
+           * first/current CMRC selected.
+           */
           const currentCmrc =
             this.cmrcList[0];
 
@@ -190,6 +214,11 @@ export class ClScheduleComponent implements OnInit {
           );
 
 
+          /*
+           * In both modes we can load VO/ALF.
+           * In popup mode this is only supporting
+           * selected-loan information.
+           */
           if (
             this.selectedCmrcId !== null
           ) {
@@ -251,6 +280,11 @@ export class ClScheduleComponent implements OnInit {
 
           this.applyLoanFilters();
 
+          /*
+           * Important for popup:
+           * once loans arrive, resolve the exact
+           * loan passed from Loan Management.
+           */
           this.tryResolveInputLoan();
 
 
@@ -286,6 +320,9 @@ export class ClScheduleComponent implements OnInit {
 
   private tryResolveInputLoan(): void {
 
+    /*
+     * Nothing to resolve if loanId is not supplied.
+     */
     if (
       this.inputLoanResolved ||
       !this.loanId ||
@@ -306,6 +343,11 @@ export class ClScheduleComponent implements OnInit {
 
 
     if (!loan) {
+
+      console.warn(
+        'Loan not found for CL Schedule:',
+        this.loanId
+      );
 
       return;
 
@@ -353,6 +395,10 @@ export class ClScheduleComponent implements OnInit {
       this.selectedLoan.villageName || '';
 
 
+    /*
+     * Load hierarchy only for resolving/displaying
+     * the selected loan.
+     */
     this.loadVoAlfForInputLoan();
 
   }
@@ -607,6 +653,11 @@ export class ClScheduleComponent implements OnInit {
 
           this.applyLoanFilters();
 
+          /*
+           * This is the important point:
+           * selected loan is already known,
+           * so load its CL schedule directly.
+           */
           this.loadScheduleForSelectedLoan();
 
         },
@@ -1008,7 +1059,16 @@ export class ClScheduleComponent implements OnInit {
         );
 
 
-      if (!exists) {
+      /*
+       * In popup mode do NOT clear the selected loan
+       * simply because hierarchy lists are still loading.
+       *
+       * The loanId received from parent is authoritative.
+       */
+      if (
+        !exists &&
+        !this.popupMode
+      ) {
 
         this.selectedLoanId = null;
 
@@ -1652,6 +1712,15 @@ export class ClScheduleComponent implements OnInit {
   ===================================================== */
 
   private scrollToSchedule(): void {
+
+    /*
+     * Don't scroll the background page when
+     * CL Schedule is displayed inside popup.
+     */
+    if (this.popupMode) {
+      return;
+    }
+
 
     setTimeout(() => {
 

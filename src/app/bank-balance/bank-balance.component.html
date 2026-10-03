@@ -1,689 +1,1097 @@
 <div class="bank-balance">
 
-  <!-- ===================================================== -->
-  <!-- PAGE HEADER -->
-  <!-- ===================================================== -->
+  <!-- =====================================================
+       PAGE HEADER
+  ====================================================== -->
 
   <div class="page-header">
 
-    <div>
-      <h2>Bank Balance</h2>
 
-      <p>
-        VO / ALF fund received, loan utilization and
-        month-wise remaining balance
-      </p>
+<div class="header-content">
+  <h2 class="page-title">
+    <i class="bi bi-bank"></i>
+    Bank Balance
+  </h2>
+
+  <p class="page-subtitle">
+    Track CMRC funds, VO / ALF utilization and
+    month-wise remaining balance
+  </p>
+</div>
+
+
+  </div>
+
+  <!-- =====================================================
+       CMRC FILTER + BALANCE
+  ====================================================== -->
+
+  <div class="filter-card">
+
+
+<div class="filter-row">
+
+  <!-- CMRC -->
+  <div class="filter-group cmrc-filter-group">
+
+    <label class="filter-label">
+      <i class="bi bi-building"></i>
+      Select CMRC
+    </label>
+
+    <select
+      class="form-select"
+      [(ngModel)]="selectedCmrcId"
+      (change)="loadBankBalance()"
+    >
+
+      <option [ngValue]="null">
+        Select CMRC
+      </option>
+
+      <option
+        *ngFor="let cmrc of cmrcList"
+        [ngValue]="cmrc.id"
+      >
+        {{ cmrc.cmrcName }}
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <!-- CMRC BALANCE -->
+  <div class="balance-card">
+
+    <div class="balance-icon">
+      <i class="bi bi-wallet2"></i>
+    </div>
+
+    <div class="balance-content">
+
+      <span class="balance-label">
+        CMRC Balance
+      </span>
+
+      <strong class="balance-value">
+        ₹ {{ cmrcBalance | number:'1.0-0' }}
+      </strong>
+
     </div>
 
   </div>
 
 
-  <!-- ===================================================== -->
-  <!-- CMRC FILTER -->
-  <!-- ===================================================== -->
+  <!-- LEFT CMRC BALANCE -->
+  <div class="balance-card left-balance">
 
-  <div class="filter-card">
+    <div class="balance-icon">
+      <i class="bi bi-cash-stack"></i>
+    </div>
 
-    <div class="filter-group">
+    <div class="balance-content">
+
+      <span class="balance-label">
+        Left CMRC Balance
+      </span>
+
+      <strong class="balance-value">
+        ₹ {{ getLeftCmrcBalance() | number:'1.0-0' }}
+      </strong>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+  </div>
+
+  <!-- =====================================================
+       LOADING
+  ====================================================== -->
+
+  <div
+    class="loading-state"
+    *ngIf="loadingBalance || loadingVoAlf || loadingLoans"
+  >
+
+
+<div
+  class="spinner-border"
+  role="status"
+></div>
+
+<span>
+  Loading bank balance data...
+</span>
+
+
+  </div>
+
+  <!-- =====================================================
+       SUMMARY
+  ====================================================== -->
+
+  <div
+    class="summary-grid"
+    *ngIf="
+      !loadingBalance &&
+      !loadingVoAlf &&
+      !loadingLoans &&
+      selectedCmrcId
+    "
+  >
+
+
+<!-- TOTAL RECEIVED -->
+<div class="summary-card">
+
+  <div class="summary-icon">
+    <i class="bi bi-arrow-down-circle"></i>
+  </div>
+
+  <div class="summary-content">
+
+    <span class="summary-label">
+      Total VO / ALF Received
+    </span>
+
+    <strong>
+      ₹ {{ getTotalReceivedFund() | number:'1.0-0' }}
+    </strong>
+
+  </div>
+
+</div>
+
+
+<!-- TOTAL LOAN -->
+<div class="summary-card">
+
+  <div class="summary-icon">
+    <i class="bi bi-cash-coin"></i>
+  </div>
+
+  <div class="summary-content">
+
+    <span class="summary-label">
+      Total Loan Disbursed
+    </span>
+
+    <strong>
+      ₹ {{ getTotalLoanAmount() | number:'1.0-0' }}
+    </strong>
+
+  </div>
+
+</div>
+
+
+<!-- CURRENT BALANCE -->
+<div class="summary-card">
+
+  <div class="summary-icon">
+    <i class="bi bi-wallet"></i>
+  </div>
+
+  <div class="summary-content">
+
+    <span class="summary-label">
+      Current Remaining Balance
+    </span>
+
+    <strong>
+      ₹ {{ getTotalCurrentBalance() | number:'1.0-0' }}
+    </strong>
+
+  </div>
+
+</div>
+
+
+<!-- UTILIZATION -->
+<div class="summary-card">
+
+  <div class="summary-icon">
+    <i class="bi bi-graph-up"></i>
+  </div>
+
+  <div class="summary-content">
+
+    <span class="summary-label">
+      Loan Utilization
+    </span>
+
+    <strong>
+      {{ getUtilizationPercentage() | number:'1.1-1' }}%
+    </strong>
+
+  </div>
+
+</div>
+
+
+  </div>
+
+  <!-- =====================================================
+       VO / ALF TABLE CARD
+  ====================================================== -->
+
+  <div
+    class="table-card"
+    *ngIf="
+      !loadingBalance &&
+      !loadingVoAlf &&
+      !loadingLoans &&
+      selectedCmrcId
+    "
+  >
+
+
+<!-- TABLE HEADER -->
+<div class="table-header">
+
+  <div class="table-title-section">
+
+    <h3>
+      <i class="bi bi-list-columns-reverse"></i>
+      VO / ALF Bank Balance
+    </h3>
+
+    <p>
+      View received funds, loan utilization and
+      month-wise remaining balance
+    </p>
+
+  </div>
+
+
+  <!-- FILTER ACTIONS -->
+  <div class="table-actions">
+
+    <!-- SEARCH -->
+    <div class="table-search">
+
+      <i class="bi bi-search search-icon"></i>
+
+      <input
+        type="text"
+        class="form-control search-input"
+        [(ngModel)]="searchText"
+        placeholder="Search VO / ALF or Village..."
+      />
+
+      <button
+        type="button"
+        class="search-clear-btn"
+        *ngIf="searchText"
+        (click)="searchText = ''"
+        title="Clear Search"
+      >
+        <i class="bi bi-x"></i>
+      </button>
+
+    </div>
+
+
+    <!-- FINANCIAL YEAR -->
+    <div class="financial-year-filter">
 
       <label>
-        Select CMRC
+        <i class="bi bi-calendar3"></i>
+        Financial Year
       </label>
 
       <select
         class="form-select"
-        [(ngModel)]="selectedCmrcId"
-        (change)="loadBankBalance()">
+        [(ngModel)]="selectedYear"
+        (change)="onYearChange()"
+      >
 
         <option [ngValue]="null">
-          Select CMRC
+          All Financial Years
         </option>
 
         <option
-          *ngFor="let cmrc of cmrcList"
-          [ngValue]="cmrc.id">
-
-          {{ cmrc.cmrcName }}
-
+          *ngFor="let year of availableYears"
+          [ngValue]="year"
+        >
+          FY {{ year }}-{{
+            (year + 1).toString().slice(-2)
+          }}
         </option>
 
       </select>
 
     </div>
 
-  </div>
 
+    <!-- EXPORT -->
+    <button
+      type="button"
+      class="btn btn-success export-btn"
+      (click)="exportToExcel()"
+    >
 
-  <!-- ===================================================== -->
-  <!-- LOADING -->
-  <!-- ===================================================== -->
+      <i class="bi bi-file-earmark-excel"></i>
 
-  <div
-    *ngIf="loadingVoAlf || loadingBalance"
-    class="loading-box">
+      Export
 
-    <div
-      class="spinner-border spinner-border-sm">
-    </div>
-
-    <span>
-      Loading bank balance...
-    </span>
+    </button>
 
   </div>
 
-
-  <!-- ===================================================== -->
-  <!-- MAIN CONTENT -->
-  <!-- ===================================================== -->
-
-  <div
-    *ngIf="
-      selectedCmrcId &&
-      !loadingVoAlf &&
-      !loadingBalance
-    ">
+</div>
 
 
-    <!-- =================================================== -->
-    <!-- SUMMARY CARDS -->
-    <!-- =================================================== -->
+<!-- TABLE -->
+<div class="table-responsive">
 
-    <div class="balance-summary">
+  <table class="table bank-balance-table">
+
+    <thead>
+
+      <tr>
+
+        <th class="text-center">
+          Sr. No.
+        </th>
+
+        <th>
+          Village
+        </th>
+
+        <th>
+          VO / ALF
+        </th>
+
+        <th class="text-end">
+          Received Fund
+        </th>
+
+        <th
+          *ngFor="let month of loanMonths"
+          class="text-end month-header"
+        >
+          {{ formatMonth(month) }}
+        </th>
+
+        <th class="text-end">
+          Total Loan Disbursed
+        </th>
+
+        <th class="text-end">
+          Remaining Balance
+        </th>
+
+      </tr>
+
+    </thead>
 
 
-      <!-- TOTAL VO / ALF -->
+    <tbody>
 
-      <div class="summary-card">
+      <tr
+        *ngFor="
+          let voAlf of getFilteredVoAlfList();
+          let i = index
+        "
+      >
 
-        <div class="summary-icon">
-          <i class="bi bi-diagram-3"></i>
-        </div>
+        <!-- SR NO -->
+        <td class="text-center">
+          {{ i + 1 }}
+        </td>
 
-        <div>
 
-          <span class="summary-label">
-            Total VO / ALF
+        <!-- VILLAGE -->
+        <td>
+          <span class="village-name">
+            {{ voAlf.villageName || '-' }}
           </span>
+        </td>
 
-          <strong class="summary-value">
-            {{ voAlfList.length }}
-          </strong>
 
-        </div>
-
-      </div>
-
-
-      <!-- TOTAL FUND RECEIVED -->
-
-      <div class="summary-card">
-
-        <div class="summary-icon">
-          <i class="bi bi-cash-stack"></i>
-        </div>
-
-        <div>
-
-          <span class="summary-label">
-            Fund Received
-          </span>
-
-          <strong class="summary-value">
-            ₹{{ getTotalReceivedFund() | number:'1.2-2' }}
-          </strong>
-
-        </div>
-
-      </div>
-
-
-      <!-- TOTAL LOAN DISBURSED -->
-
-      <div class="summary-card">
-
-        <div class="summary-icon">
-          <i class="bi bi-bank"></i>
-        </div>
-
-        <div>
-
-          <span class="summary-label">
-            Loan Disbursed
-          </span>
-
-          <strong class="summary-value">
-            ₹{{ getTotalLoanAmount() | number:'1.2-2' }}
-          </strong>
-
-        </div>
-
-      </div>
-
-
-      <!-- CURRENT BALANCE -->
-
-      <div class="summary-card">
-
-        <div class="summary-icon">
-          <i class="bi bi-wallet2"></i>
-        </div>
-
-        <div>
-
-          <span class="summary-label">
-            Current Balance
-          </span>
-
-          <strong class="summary-value">
-            ₹{{ getTotalCurrentBalance() | number:'1.2-2' }}
-          </strong>
-
-        </div>
-
-      </div>
-
-
-      <!-- UTILIZATION -->
-
-      <div class="summary-card">
-
-        <div class="summary-icon">
-          <i class="bi bi-pie-chart"></i>
-        </div>
-
-        <div>
-
-          <span class="summary-label">
-            Utilization
-          </span>
-
-          <strong class="summary-value">
-
-            {{ getUtilizationPercentage() | number:'1.2-2' }}%
-
-          </strong>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- =================================================== -->
-    <!-- ANALYSIS FILTER -->
-    <!-- =================================================== -->
-
-    <div class="table-card filter-panel">
-
-      <div class="filter-panel-header">
-
-
-        <!-- TITLE -->
-
-        <div>
-
-          <h3>
-            Bank Balance Analysis
-          </h3>
-
-          <p>
-            View month-wise remaining amount
-            against VO / ALF received fund.
-          </p>
-
-        </div>
-
-
-        <!-- ACTION AREA -->
-
-        <div class="action-buttons">
-
-
-          <!-- SEARCH -->
-
-          <div class="search-filter">
-
-            <label>
-              Search
-            </label>
-
-            <div class="search-box">
-
-              <i class="bi bi-search"></i>
-
-              <input
-                type="text"
-                class="form-control"
-                placeholder="VO / ALF or Village"
-                [(ngModel)]="searchText">
-
-            </div>
-
-          </div>
-
-
-          <!-- FINANCIAL YEAR -->
-
-          <div class="year-filter">
-
-            <label>
-              Financial Year
-            </label>
-
-            <select
-              class="form-select form-select-sm"
-              [(ngModel)]="selectedYear"
-              (change)="onYearChange()">
-
-              <!-- ALL -->
-
-              <option [ngValue]="null">
-                All
-              </option>
-
-
-              <!-- DYNAMIC YEARS -->
-
-              <option
-                *ngFor="let year of availableYears"
-                [ngValue]="year">
-
-                {{ year }}-{{ (year + 1).toString().slice(-2) }}
-
-              </option>
-
-            </select>
-
-          </div>
-
-
-          <!-- EXPORT -->
+        <!-- VO / ALF -->
+        <td>
 
           <button
             type="button"
-            class="btn btn-outline-success btn-sm export-btn"
-            (click)="exportToExcel()">
+            class="vo-alf-link"
+            (click)="openVoAlfDetails(voAlf)"
+            title="View Group and Women Details"
+          >
 
-            <i
-              class="bi bi-file-earmark-excel me-1">
-            </i>
+            <i class="bi bi-eye"></i>
 
-            Export Excel
+            {{ voAlf.voAlfName || '-' }}
 
           </button>
 
-        </div>
+        </td>
 
-      </div>
+
+        <!-- RECEIVED FUND -->
+        <td class="text-end amount-cell received-amount">
+
+          ₹ {{
+            (voAlf.receivedFund || 0)
+              | number:'1.0-0'
+          }}
+
+        </td>
+
+
+        <!-- MONTH-WISE REMAINING -->
+        <td
+          *ngFor="let month of loanMonths"
+          class="text-end month-balance-cell"
+        >
+
+          <span
+            class="month-balance"
+            [class.negative-balance]="
+              getMonthlyRemainingAmount(
+                voAlf.id!,
+                month,
+                voAlf.receivedFund
+              ) < 0
+            "
+          >
+
+            ₹ {{
+              getMonthlyRemainingAmount(
+                voAlf.id!,
+                month,
+                voAlf.receivedFund
+              ) | number:'1.0-0'
+            }}
+
+          </span>
+
+        </td>
+
+
+        <!-- TOTAL LOAN -->
+        <td class="text-end amount-cell loan-amount">
+
+          ₹ {{
+            getTotalLoanAmountForVoAlf(
+              voAlf.id!
+            ) | number:'1.0-0'
+          }}
+
+        </td>
+
+
+        <!-- REMAINING BALANCE -->
+        <td class="text-end amount-cell remaining-amount">
+
+          <strong>
+            ₹ {{
+              getSelectedPeriodCurrentBalance(
+                voAlf
+              ) | number:'1.0-0'
+            }}
+          </strong>
+
+        </td>
+
+      </tr>
+
+
+      <!-- EMPTY -->
+      <tr
+        *ngIf="
+          getFilteredVoAlfList().length === 0
+        "
+      >
+
+        <td
+          [attr.colspan]="7 + loanMonths.length"
+          class="empty-state"
+        >
+
+          <i class="bi bi-search"></i>
+
+          <div>
+            No VO / ALF records found.
+          </div>
+
+          <small>
+            Try changing the search text or financial year.
+          </small>
+
+        </td>
+
+      </tr>
+
+    </tbody>
+
+
+    <!-- TOTAL -->
+    <tfoot
+      *ngIf="
+        getFilteredVoAlfList().length > 0
+      "
+    >
+
+      <tr>
+
+        <th
+          colspan="3"
+          class="text-end"
+        >
+          Total
+        </th>
+
+
+        <!-- RECEIVED -->
+        <th class="text-end">
+
+          ₹ {{
+            getTotalReceivedFund()
+              | number:'1.0-0'
+          }}
+
+        </th>
+
+
+        <!-- MONTHLY -->
+        <th
+          *ngFor="let month of loanMonths"
+          class="text-end"
+        >
+
+          ₹ {{
+            getTotalMonthlyRemaining(month)
+              | number:'1.0-0'
+          }}
+
+        </th>
+
+
+        <!-- TOTAL LOAN -->
+        <th class="text-end">
+
+          ₹ {{
+            getTotalLoanAmount()
+              | number:'1.0-0'
+          }}
+
+        </th>
+
+
+        <!-- CURRENT BALANCE -->
+        <th class="text-end">
+
+          ₹ {{
+            getTotalCurrentBalance()
+              | number:'1.0-0'
+          }}
+
+        </th>
+
+      </tr>
+
+    </tfoot>
+
+  </table>
+
+</div>
+
+
+  </div>
+
+  <!-- =====================================================
+       MONTH-WISE BALANCE
+  ====================================================== -->
+
+  <div
+    class="analysis-card"
+    *ngIf="
+      !loadingBalance &&
+      !loadingVoAlf &&
+      !loadingLoans &&
+      selectedCmrcId &&
+      loanMonths.length > 0
+    "
+  >
+
+
+<div class="analysis-header">
+
+  <div>
+
+    <h3>
+      <i class="bi bi-bar-chart-line"></i>
+      Month-wise Remaining Balance
+    </h3>
+
+    <p>
+      Remaining Balance =
+      <strong>
+        Total VO / ALF Received Fund − Cumulative Loan Disbursed
+      </strong>
+    </p>
+
+  </div>
+
+</div>
+
+
+<div class="table-responsive">
+
+  <table class="table monthly-summary-table">
+
+    <thead>
+
+      <tr>
+
+        <th>
+          Month
+        </th>
+
+        <th class="text-end">
+          Loan Disbursed in Month
+        </th>
+
+        <th class="text-end">
+          Remaining Balance
+        </th>
+
+      </tr>
+
+    </thead>
+
+
+    <tbody>
+
+      <tr
+        *ngFor="let month of loanMonths"
+      >
+
+        <td>
+          <strong>
+            {{ formatMonth(month) }}
+          </strong>
+        </td>
+
+
+        <td class="text-end">
+
+          ₹ {{
+            getTotalMonthlyLoanExpense(month)
+              | number:'1.0-0'
+          }}
+
+        </td>
+
+
+        <td class="text-end">
+
+          <strong
+            [class.negative-balance]="
+              getTotalMonthlyRemaining(month) < 0
+            "
+          >
+
+            ₹ {{
+              getTotalMonthlyRemaining(month)
+                | number:'1.0-0'
+            }}
+
+          </strong>
+
+        </td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+
+</div>
+
+
+  </div>
+
+  <!-- =====================================================
+       NO DATA
+  ====================================================== -->
+
+  <div
+    class="empty-state page-empty-state"
+    *ngIf="
+      !loadingBalance &&
+      !loadingVoAlf &&
+      !loadingLoans &&
+      selectedCmrcId &&
+      voAlfList.length === 0
+    "
+  >
+
+
+<i class="bi bi-bank"></i>
+
+<h4>
+  No Bank Balance Data
+</h4>
+
+<p>
+  No VO / ALF records are available for the selected CMRC.
+</p>
+
+
+  </div>
+
+  <!-- =====================================================
+       VO / ALF DETAILS POPUP
+  ====================================================== -->
+
+  <div
+    class="vo-alf-popup-backdrop"
+    *ngIf="showVoAlfDetailsPopup"
+    (click)="closeVoAlfDetails()"
+  >
+
+
+<div
+  class="vo-alf-popup"
+  (click)="$event.stopPropagation()"
+>
+
+  <!-- POPUP HEADER -->
+  <div class="vo-alf-popup-header">
+
+    <div>
+
+      <h3>
+        <i class="bi bi-diagram-3"></i>
+        {{ selectedVoAlf?.voAlfName || 'VO / ALF' }}
+      </h3>
+
+      <p>
+
+        Village:
+        <strong>
+          {{ selectedVoAlf?.villageName || '-' }}
+        </strong>
+
+        <span class="popup-separator">
+          |
+        </span>
+
+        Received Fund:
+        <strong>
+          ₹ {{
+            (selectedVoAlf?.receivedFund || 0)
+              | number:'1.0-0'
+          }}
+        </strong>
+
+      </p>
 
     </div>
 
 
-    <!-- =================================================== -->
-    <!-- TABLE -->
-    <!-- =================================================== -->
+    <button
+      type="button"
+      class="popup-close-btn"
+      (click)="closeVoAlfDetails()"
+      title="Close"
+    >
+      <i class="bi bi-x-lg"></i>
+    </button>
 
-    <div class="table-card">
+  </div>
 
 
-      <!-- TABLE HEADER -->
+  <!-- POPUP TOOLBAR -->
+  <div class="vo-alf-popup-toolbar">
 
-      <div class="table-card-header">
+    <div class="popup-search">
 
-        <div>
+      <i class="bi bi-search"></i>
 
-          <h3>
-            VO / ALF Bank Balance
-          </h3>
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="voAlfDetailsSearchText"
+        (input)="applyVoAlfDetailsFilter()"
+        placeholder="Search group, woman, husband, mobile..."
+      />
 
-          <p>
+    </div>
 
-            {{ getFinancialYearLabel() }}
 
-            &nbsp;•&nbsp;
+    <div class="popup-page-size">
 
-            Monthly remaining balance
+      <label>
+        Show
+      </label>
 
-          </p>
+      <select
+        class="form-select"
+        [(ngModel)]="voAlfDetailsPageSize"
+        (change)="onVoAlfDetailsPageSizeChange()"
+      >
 
-        </div>
+        <option [ngValue]="5">
+          5
+        </option>
 
+        <option [ngValue]="10">
+          10
+        </option>
 
-        <!-- RECORD COUNT -->
+        <option [ngValue]="20">
+          20
+        </option>
 
-        <div class="record-count">
+        <option [ngValue]="50">
+          50
+        </option>
 
-          {{ getFilteredVoAlfList().length }}
+      </select>
 
-          VO / ALF
+      <span>
+        records
+      </span>
 
-        </div>
+    </div>
 
-      </div>
+  </div>
 
 
-      <!-- TABLE -->
+  <!-- POPUP BODY -->
+  <div class="vo-alf-popup-body">
 
-      <div class="table-responsive">
+    <!-- LOADING -->
+    <div
+      class="loading-state"
+      *ngIf="voAlfDetailsLoading"
+    >
 
-        <table
-          class="table table-bordered table-hover bank-balance-table">
+      <div class="spinner-border"></div>
 
+      <span>
+        Loading group and women details...
+      </span>
 
-          <!-- ================================================= -->
-          <!-- THEAD -->
-          <!-- ================================================= -->
+    </div>
 
-          <thead>
 
-            <tr>
+    <!-- DATA -->
+    <div
+      class="table-responsive"
+      *ngIf="!voAlfDetailsLoading"
+    >
 
-              <!-- SERIAL -->
+      <table class="table popup-detail-table">
 
-              <th class="sr-column">
-                #
-              </th>
+        <thead>
 
+          <tr>
 
-              <!-- CMRC -->
+            <th>
+              Group
+            </th>
 
-              <th>
-                CMRC
-              </th>
+            <th>
+              Woman
+            </th>
 
+            <th>
+              Husband Name
+            </th>
 
-              <!-- VILLAGE -->
+            <th>
+              Mobile
+            </th>
 
-              <th>
-                Village
-              </th>
+            <th>
+              Status
+            </th>
 
+          </tr>
 
-              <!-- VO / ALF -->
+        </thead>
 
-              <th>
-                VO / ALF
-              </th>
 
+        <tbody>
 
-              <!-- RECEIVED FUND -->
+          <tr
+            *ngFor="
+              let row of getPaginatedVoAlfDetails()
+            "
+          >
 
-              <th>
-                Received Fund
-              </th>
+            <td>
+              <strong>
+                {{ getGroupName(row.group) }}
+              </strong>
+            </td>
 
+            <td>
+              {{ getWomanName(row.woman) }}
+            </td>
 
-              <!-- MONTHS -->
+            <td>
+              {{ getHusbandName(row.woman) }}
+            </td>
 
-              <th
-                *ngFor="let month of loanMonths">
+            <td>
+              {{ getWomanMobile(row.woman) }}
+            </td>
 
-                {{ formatMonth(month) }}
+            <td>
 
-              </th>
+              <span
+                class="status-badge"
+                *ngIf="row.woman"
+                [ngClass]="{
+                  'status-active':
+                    getWomanStatus(row.woman) === 'ACTIVE',
+                  'status-inactive':
+                    getWomanStatus(row.woman) === 'INACTIVE'
+                }"
+              >
+                {{ getWomanStatus(row.woman) }}
+              </span>
 
+              <span
+                *ngIf="!row.woman"
+              >
+                -
+              </span>
 
-              <!-- TOTAL LOAN -->
+            </td>
 
-              <th>
-                Total Loan Disbursed
-              </th>
+          </tr>
 
 
-              <!-- CURRENT BALANCE -->
-
-              <th>
-                Current Balance
-              </th>
-
-            </tr>
-
-          </thead>
-
-
-          <!-- ================================================= -->
-          <!-- TBODY -->
-          <!-- ================================================= -->
-
-          <tbody>
-
-
-            <!-- DATA ROWS -->
-
-            <tr
-              *ngFor="
-                let voAlf of getFilteredVoAlfList();
-                let i = index
-              ">
-
-
-              <!-- SERIAL -->
-
-              <td
-                class="text-center serial-cell">
-
-                {{ i + 1 }}
-
-              </td>
-
-
-              <!-- CMRC -->
-
-              <td>
-
-                {{ getSelectedCmrcName() || '-' }}
-
-              </td>
-
-
-              <!-- VILLAGE -->
-
-              <td>
-
-                {{ voAlf.villageName || '-' }}
-
-              </td>
-
-
-              <!-- VO / ALF -->
-
-              <td>
-
-                <strong>
-
-                  {{ voAlf.voAlfName || '-' }}
-
-                </strong>
-
-              </td>
-
-
-              <!-- RECEIVED FUND -->
-
-              <td
-                class="text-end amount-cell received-cell">
-
-                ₹{{
-                  voAlf.receivedFund || 0
-                  | number:'1.2-2'
-                }}
-
-              </td>
-
-
-              <!-- ================================================= -->
-              <!-- MONTHLY REMAINING -->
-              <!-- ================================================= -->
-
-              <td
-                *ngFor="let month of loanMonths"
-                class="text-end amount-cell month-balance-cell">
-
-                ₹{{
-                  getMonthlyRemainingAmount(
-                    voAlf.id!,
-                    month,
-                    voAlf.receivedFund
-                  )
-                  | number:'1.2-2'
-                }}
-
-              </td>
-
-
-              <!-- TOTAL LOAN DISBURSED -->
-
-              <td
-                class="text-end amount-cell total-loan-cell">
-
-                ₹{{
-                  getTotalLoanAmountForVoAlf(
-                    voAlf.id!
-                  )
-                  | number:'1.2-2'
-                }}
-
-              </td>
-
-
-              <!-- CURRENT BALANCE -->
-
-              <td
-                class="text-end amount-cell current-balance-cell">
-
-                ₹{{
-                  getSelectedPeriodCurrentBalance(
-                    voAlf
-                  )
-                  | number:'1.2-2'
-                }}
-
-              </td>
-
-            </tr>
-
-
-            <!-- ================================================= -->
-            <!-- NO DATA -->
-            <!-- ================================================= -->
-
-            <tr
-              *ngIf="
-                getFilteredVoAlfList().length === 0
-              ">
-
-              <td
-                [attr.colspan]="loanMonths.length + 8"
-                class="no-data">
-
-                <i class="bi bi-bank"></i>
-
-                <div>
-                  No VO / ALF data available
-                </div>
-
-                <small>
-
-                  No bank balance information
-                  found for the selected filters.
-
-                </small>
-
-              </td>
-
-            </tr>
-
-          </tbody>
-
-
-          <!-- ================================================= -->
-          <!-- TFOOT -->
-          <!-- ================================================= -->
-
-          <tfoot
+          <!-- NO DETAILS -->
+          <tr
             *ngIf="
-              getFilteredVoAlfList().length > 0
-            ">
+              getPaginatedVoAlfDetails().length === 0
+            "
+          >
 
-            <tr>
+            <td
+              colspan="5"
+              class="empty-state"
+            >
 
+              <i class="bi bi-inbox"></i>
 
-              <!-- TOTAL LABEL -->
+              <div>
+                No group or woman details found.
+              </div>
 
-              <th
-                colspan="4"
-                class="text-end">
+            </td>
 
-                Total
+          </tr>
 
-              </th>
+        </tbody>
 
-
-              <!-- TOTAL RECEIVED -->
-
-              <th
-                class="text-end">
-
-                ₹{{
-                 getTotalReceivedFund()
-    | number:'1.2-2'
-                }}
-
-              </th>
-
-
-              <!-- MONTHLY TOTAL REMAINING -->
-
-              <th
-                *ngFor="let month of loanMonths"
-                class="text-end">
-
-                ₹{{
-                  getTotalMonthlyRemaining(
-                    month
-                  )
-                  | number:'1.2-2'
-                }}
-
-              </th>
-
-
-              <!-- TOTAL LOAN -->
-
-              <th
-                class="text-end">
-
-                ₹{{
-                  getTotalLoanAmount()
-                  | number:'1.2-2'
-                }}
-
-              </th>
-
-
-              <!-- TOTAL CURRENT BALANCE -->
-
-              <th
-                class="text-end">
-
-                ₹{{
-                  getTotalCurrentBalance()
-                  | number:'1.2-2'
-                }}
-
-              </th>
-
-            </tr>
-
-          </tfoot>
-
-        </table>
-
-      </div>
+      </table>
 
     </div>
+
+  </div>
+
+
+  <!-- POPUP FOOTER -->
+  <div class="vo-alf-popup-footer">
+
+    <div class="pagination-info">
+
+      Showing
+
+      <strong>
+        {{
+          filteredVoAlfDetails.length === 0
+            ? 0
+            : (
+                (voAlfDetailsCurrentPage - 1) *
+                voAlfDetailsPageSize
+              ) + 1
+        }}
+      </strong>
+
+      -
+
+      <strong>
+        {{ getVoAlfDetailsShowingTo() }}
+      </strong>
+
+      of
+
+      <strong>
+        {{ filteredVoAlfDetails.length }}
+      </strong>
+
+      records
+
+    </div>
+
+
+    <div
+      class="popup-pagination"
+      *ngIf="
+        getVoAlfDetailsTotalPages() > 1
+      "
+    >
+
+      <button
+        type="button"
+        class="pagination-btn"
+        [disabled]="
+          voAlfDetailsCurrentPage === 1
+        "
+        (click)="previousVoAlfDetailsPage()"
+      >
+        <i class="bi bi-chevron-left"></i>
+      </button>
+
+
+      <button
+        type="button"
+        class="pagination-btn"
+        *ngFor="
+          let page of getVoAlfDetailsPages()
+        "
+        [class.active]="
+          page === voAlfDetailsCurrentPage
+        "
+        (click)="goToVoAlfDetailsPage(page)"
+      >
+        {{ page }}
+      </button>
+
+
+      <button
+        type="button"
+        class="pagination-btn"
+        [disabled]="
+          voAlfDetailsCurrentPage ===
+          getVoAlfDetailsTotalPages()
+        "
+        (click)="nextVoAlfDetailsPage()"
+      >
+        <i class="bi bi-chevron-right"></i>
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
 
   </div>
 

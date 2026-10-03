@@ -1,4 +1,3 @@
-html
 <div class="loan-page">
 
   <!-- =====================================================
@@ -6,70 +5,71 @@ html
   ====================================================== -->
   <div class="page-header">
     <div class="header-content">
-      <h2 class="page-title">
-        <i class="bi bi-cash-stack"></i>
-        Loan Management
-      </h2>
+      <div class="page-title-row">
+        <div class="page-title-icon">
+          <i class="bi bi-cash-stack"></i>
+        </div>
 
-      <p class="page-subtitle">
-        Manage loans through CMRC → VO / ALF → Group → Woman
-      </p>
+        <div>
+          <h2 class="page-title">Loan Management</h2>
+          <p class="page-subtitle">
+            Manage loans through CMRC → VO / ALF → Group → Woman
+          </p>
+        </div>
+      </div>
     </div>
 
-    <div class="header-actions">
-      <button
-        type="button"
-        class="btn btn-primary"
-        (click)="openAddForm()"
-      >
-        <i class="bi bi-plus-circle me-1"></i>
-        Add Loan
-      </button>
-
-      <button
-        type="button"
-        class="btn btn-outline-success"
-        (click)="exportToExcel()"
-      >
-        <i class="bi bi-file-earmark-excel me-1"></i>
-        Export
-      </button>
-    </div>
+    <button
+      type="button"
+      class="btn btn-primary add-loan-btn"
+      (click)="openAddForm()"
+    >
+      <i class="bi bi-plus-lg"></i>
+      <span>Add Loan</span>
+    </button>
   </div>
 
 
   <!-- =====================================================
-       HIERARCHY FILTER CARD
+       FILTER SECTION
   ====================================================== -->
-  <div class="content-card">
+  <div class="filter-card">
 
-    <div class="card-title-row">
-      <div>
-        <h5 class="card-title">
-          <i class="bi bi-diagram-3 me-2"></i>
-          Loan Hierarchy
-        </h5>
+    <div class="section-header filter-header">
+      <div class="section-heading">
+        <div class="section-icon">
+          <i class="bi bi-funnel"></i>
+        </div>
 
-        <p class="card-subtitle">
-          Select hierarchy to filter loan records
-        </p>
+        <div>
+          <h4>Loan Filters</h4>
+          <p>Select hierarchy to view related loan records</p>
+        </div>
       </div>
+
+      <button
+        type="button"
+        class="btn btn-outline-secondary btn-sm reset-btn"
+        (click)="clearFilters()"
+      >
+        <i class="bi bi-arrow-clockwise"></i>
+        <span>Reset</span>
+      </button>
     </div>
 
     <div class="filter-grid">
 
       <!-- CMRC -->
       <div class="filter-item">
-        <label>CMRC</label>
+        <label for="filterCmrc">CMRC</label>
 
         <select
+          id="filterCmrc"
           class="form-select"
           [(ngModel)]="selectedCmrcId"
-          (change)="loadVoAlfByCmrc()"
+          (change)="onCmrcChange()"
         >
-          <option [ngValue]="null">
-            All CMRC
-          </option>
+          <option [ngValue]="null">All CMRC</option>
 
           <option
             *ngFor="let cmrc of cmrcList"
@@ -83,23 +83,22 @@ html
 
       <!-- VO / ALF -->
       <div class="filter-item">
-        <label>VO / ALF</label>
+        <label for="filterVoAlf">VO / ALF</label>
 
         <select
+          id="filterVoAlf"
           class="form-select"
           [(ngModel)]="selectedVoAlfId"
           (change)="onVoAlfChange()"
           [disabled]="!selectedCmrcId"
         >
-          <option [ngValue]="null">
-            Select VO / ALF
-          </option>
+          <option [ngValue]="null">All VO / ALF</option>
 
           <option
-            *ngFor="let voAlf of voAlfList"
-            [ngValue]="voAlf.id"
+            *ngFor="let vo of voAlfList"
+            [ngValue]="vo.id"
           >
-            {{ voAlf.voAlfName }}
+            {{ vo.voAlfName }}
           </option>
         </select>
       </div>
@@ -107,13 +106,14 @@ html
 
       <!-- VILLAGE -->
       <div class="filter-item">
-        <label>Village</label>
+        <label for="filterVillage">Village</label>
 
         <input
+          id="filterVillage"
           type="text"
-          class="form-control"
-          [value]="getSelectedVillageName()"
-          placeholder="Village"
+          class="form-control readonly-field"
+          [value]="selectedVoAlfId ? getSelectedVillageName() : ''"
+          placeholder="Auto selected"
           readonly
         />
       </div>
@@ -121,17 +121,16 @@ html
 
       <!-- GROUP -->
       <div class="filter-item">
-        <label>Group</label>
+        <label for="filterGroup">Group</label>
 
         <select
+          id="filterGroup"
           class="form-select"
           [(ngModel)]="selectedGroupId"
-          (change)="loadWomenByGroup()"
+          (change)="onGroupChange()"
           [disabled]="!selectedVoAlfId"
         >
-          <option [ngValue]="null">
-            All Groups
-          </option>
+          <option [ngValue]="null">All Groups</option>
 
           <option
             *ngFor="let group of groupList"
@@ -145,17 +144,16 @@ html
 
       <!-- WOMAN -->
       <div class="filter-item">
-        <label>Woman</label>
+        <label for="filterWoman">Woman</label>
 
         <select
+          id="filterWoman"
           class="form-select"
           [(ngModel)]="selectedWomanId"
-          (change)="applyLoanFilters()"
+          (change)="onWomanChange()"
           [disabled]="!selectedGroupId"
         >
-          <option [ngValue]="null">
-            All Women
-          </option>
+          <option [ngValue]="null">All Women</option>
 
           <option
             *ngFor="let woman of womenList"
@@ -167,633 +165,552 @@ html
       </div>
 
     </div>
-
-
-    <!-- SELECTED HIERARCHY SUMMARY -->
-    <div class="loan-context">
-
-      <div class="context-item">
-        <span class="context-label">CMRC</span>
-        <strong>
-          {{ getSelectedCmrcName() || 'All CMRC' }}
-        </strong>
-      </div>
-
-      <div class="context-item">
-        <span class="context-label">VO / ALF</span>
-        <strong>
-          {{ getSelectedVoAlfName() || 'All VO / ALF' }}
-        </strong>
-      </div>
-
-      <div class="context-item">
-        <span class="context-label">Group</span>
-        <strong>
-          {{ getSelectedGroupName() || 'All Groups' }}
-        </strong>
-      </div>
-
-      <div class="context-item">
-        <span class="context-label">Woman</span>
-        <strong>
-          {{ getSelectedWomanName() || 'All Women' }}
-        </strong>
-      </div>
-
-    </div>
-
   </div>
 
 
   <!-- =====================================================
        FUND SUMMARY
   ====================================================== -->
-  <section
-    class="summary-grid fund-summary"
-    *ngIf="selectedVoAlfId"
-  >
+  <div class="summary-grid">
 
-    <div class="summary-card summary-purple">
-
+    <!-- VO / ALF Balance -->
+    <div class="summary-card balance-card">
       <div class="summary-icon">
         <i class="bi bi-wallet2"></i>
       </div>
 
       <div class="summary-content">
+        <span class="summary-label">VO / ALF Balance</span>
 
-        <span class="summary-label">
-          Left ALF Balance
-        </span>
-
-        <h3>
-          ₹{{ leftAlfBalance | number:'1.2-2' }}
-        </h3>
-
-        <small>
-          Selected VO / ALF Fund − Total Sanctioned Loan Amount
-        </small>
-
+        <strong>
+          ₹{{ totalAlfBalance | number:'1.0-0' }}
+        </strong>
       </div>
-
     </div>
 
-  </section>
+
+    <!-- Total Sanctioned -->
+    <div class="summary-card sanctioned-card">
+      <div class="summary-icon">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+
+      <div class="summary-content">
+        <span class="summary-label">
+          Total Sanctioned Amount
+        </span>
+
+        <strong>
+          ₹{{ totalSanctionedAmount | number:'1.0-0' }}
+        </strong>
+      </div>
+    </div>
+
+
+    <!-- Left Balance -->
+    <div class="summary-card left-balance-card">
+      <div class="summary-icon">
+        <i class="bi bi-bank"></i>
+      </div>
+
+      <div class="summary-content">
+        <span class="summary-label">
+          Left VO / ALF Balance
+        </span>
+
+        <strong>
+          ₹{{ leftAlfBalance | number:'1.0-0' }}
+        </strong>
+      </div>
+    </div>
+
+  </div>
 
 
   <!-- =====================================================
-       ADD / EDIT LOAN FORM
+       SEARCH TOOLBAR
+  ====================================================== -->
+  <div class="table-toolbar">
+
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="globalSearch"
+        (input)="applyGlobalSearch()"
+        placeholder="Search loans..."
+      />
+    </div>
+
+    <div class="record-count">
+      <i class="bi bi-list-ul"></i>
+      <span>{{ filteredLoanList.length }} Records</span>
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       LOAN FORM
   ====================================================== -->
   <div
-    class="content-card form-card"
+    class="loan-form-card"
     *ngIf="showForm"
   >
 
-    <div class="card-title-row">
+    <div class="section-header form-header">
 
-      <div>
-        <h5 class="card-title">
+      <div class="section-heading">
+        <div class="section-icon">
+          <i class="bi bi-file-earmark-text"></i>
+        </div>
 
-          <i
-            class="bi"
-            [ngClass]="isEditMode ? 'bi-pencil-square' : 'bi-plus-circle'"
-          ></i>
+        <div>
+          <h4>
+            {{ isEditMode ? 'Edit Loan' : 'Add Loan' }}
+          </h4>
 
-          {{ isEditMode ? 'Edit Loan' : 'Add New Loan' }}
-
-        </h5>
-
-        <p class="card-subtitle">
-          {{ isEditMode
-            ? 'Update existing loan details'
-            : 'Enter loan details'
-          }}
-        </p>
+          <p>Enter loan details below</p>
+        </div>
       </div>
 
       <button
         type="button"
-        class="btn-close"
+        class="form-close-btn"
+        title="Close"
         (click)="closeForm()"
-      ></button>
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
 
     </div>
 
 
-    <!-- FORM CONTEXT -->
-    <div class="loan-context form-context">
-
-      <div class="context-item">
-        <span class="context-label">CMRC</span>
-        <strong>
-          {{ getSelectedCmrcName() || 'N/A' }}
-        </strong>
-      </div>
-
-      <div class="context-item">
-        <span class="context-label">VO / ALF</span>
-        <strong>
-          {{ getSelectedVoAlfName() || 'N/A' }}
-        </strong>
-      </div>
-
-      <div class="context-item">
-        <span class="context-label">Group</span>
-        <strong>
-          {{ getSelectedGroupName() || 'N/A' }}
-        </strong>
-      </div>
-
-      <div class="context-item">
-        <span class="context-label">Woman</span>
-        <strong>
-          {{ getSelectedWomanName() || 'N/A' }}
-        </strong>
-      </div>
-
-    </div>
-
-
-    <!-- FORM -->
-    <div class="form-grid">
-
-      <!-- SANCTIONED AMOUNT -->
-      <div class="form-group">
-        <label>
-          Sanctioned Amount <span class="required">*</span>
-        </label>
-
-        <input
-          type="number"
-          class="form-control"
-          [(ngModel)]="newLoan.sanctionedAmount"
-          (input)="calculateDisbursedAmount()"
-          min="0"
-          placeholder="Enter sanctioned amount"
-        />
-      </div>
-
-
-      <!-- PROCESSING FEE -->
-      <div class="form-group">
-        <label>
-          Processing Fee
-        </label>
-
-        <input
-          type="number"
-          class="form-control"
-          [(ngModel)]="newLoan.processingFee"
-          (input)="calculateDisbursedAmount()"
-          min="0"
-          placeholder="Enter processing fee"
-        />
-      </div>
-
-
-      <!-- DISBURSED AMOUNT -->
-      <div class="form-group">
-        <label>
-          Disbursed Amount
-        </label>
-
-        <input
-          type="number"
-          class="form-control"
-          [value]="newLoan.totalAmount || 0"
-          readonly
-        />
-
-        <small class="text-muted">
-          Sanctioned Amount − Processing Fee
-        </small>
-      </div>
-
-
-      <!-- LOAN AMOUNT -->
-      <div class="form-group">
-        <label>
-          Loan Amount
-        </label>
-
-        <input
-          type="number"
-          class="form-control"
-          [value]="newLoan.totalAmount || 0"
-          readonly
-        />
-      </div>
-
-
-      <!-- LOAN PURPOSE -->
-      <div class="form-group">
-        <label>
-          Loan Purpose <span class="required">*</span>
-        </label>
-
-        <input
-          type="text"
-          class="form-control"
-          [(ngModel)]="newLoan.loanPurpose"
-          placeholder="Enter loan purpose"
-        />
-      </div>
-
-
-      <!-- LOAN GIVEN DATE -->
-      <div class="form-group">
-        <label>
-          Loan Given Date <span class="required">*</span>
-        </label>
-
-        <input
-          type="date"
-          class="form-control"
-          [(ngModel)]="newLoan.loanGivenDate"
-        />
-      </div>
-
-
-      <!-- REPAYMENT PERIOD -->
-      <div class="form-group">
-        <label>
-          Repayment Period (Months)
-        </label>
-
-        <input
-          type="number"
-          class="form-control"
-          [(ngModel)]="newLoan.repaymentPeriodMonths"
-          (input)="calculateEmi()"
-          min="1"
-          placeholder="Months"
-        />
-      </div>
-
-
-      <!-- INTEREST RATE -->
-      <div class="form-group">
-        <label>
-          Interest Rate (%)
-        </label>
-
-        <input
-          type="number"
-          class="form-control"
-          [(ngModel)]="newLoan.interestRate"
-          (input)="calculateEmi()"
-          min="0"
-          step="0.01"
-          placeholder="Interest rate"
-        />
-      </div>
-
-
-      <!-- INTEREST TYPE -->
-      <div class="form-group">
-        <label>
-          Interest Type
-        </label>
-
-        <select
-          class="form-select"
-          [(ngModel)]="newLoan.interestType"
-          (change)="calculateEmi()"
-        >
-          <option value="FLAT">
-            FLAT
-          </option>
-
-          <option value="REDUCING">
-            REDUCING
-          </option>
-        </select>
-      </div>
-
-
-      <!-- MONTHLY EMI -->
-      <div class="form-group">
-        <label>
-          Monthly EMI
-        </label>
-
-        <input
-          type="number"
-          class="form-control"
-          [value]="newLoan.monthlyEmi || 0"
-          readonly
-        />
-
-        <small class="text-muted">
-          Automatically calculated
-        </small>
-      </div>
-
-
-      <!-- LOAN STATUS -->
-      <div class="form-group">
-        <label>
-          Loan Status
-        </label>
-
-        <select
-          class="form-select"
-          [(ngModel)]="newLoan.loanStatus"
-        >
-          <option value="ACTIVE">
-            ACTIVE
-          </option>
-
-          <option value="CLOSED">
-            CLOSED
-          </option>
-
-          <option value="PENDING">
-            PENDING
-          </option>
-        </select>
-      </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         LOAN IMAGE UPLOAD
-    ====================================================== -->
-   <div class="loan-image-upload-section">
-
-  <div class="section-heading">
-    <div>
-      <h6 class="mb-1">
-        <i class="bi bi-images me-2"></i>
-        Loan Documents / Images
-      </h6>
-
-      <small class="text-muted">
-        Multiple images select kar sakte hain.
-        JPG, PNG, WEBP — Maximum 5 MB per image.
-      </small>
-    </div>
-  </div>
-
-  <!-- Upload -->
-  <div class="image-upload-box">
-
-    <label
-      for="loanImageInput"
-      class="image-upload-label"
-    >
-      <i class="bi bi-cloud-arrow-up"></i>
-
-      <span>Click to select images</span>
-
-      <small>
-        You can select multiple images
-      </small>
-    </label>
-
-    <input
-      id="loanImageInput"
-      type="file"
-      class="d-none"
-      multiple
-      accept="image/jpeg,image/png,image/webp"
-      (change)="onImageSelected($event)"
-    />
-
-  </div>
-
-
-  <!-- Selected images preview -->
-  <div
-    class="selected-image-preview"
-    *ngIf="imagePreviews.length > 0"
-  >
-
-    <div
-      class="image-preview-card"
-      *ngFor="let preview of imagePreviews; let i = index"
+    <form
+      #loanForm="ngForm"
+      (ngSubmit)="saveLoan()"
     >
 
-      <div class="image-preview-wrapper">
+      <div class="form-section">
 
-        <img
-          [src]="getSafeImageUrl(preview)"
-          [alt]="'Loan image ' + (i + 1)"
-          class="image-preview"
-        />
+        <div class="form-section-title">
+          <i class="bi bi-diagram-3"></i>
+          <span>Loan Hierarchy</span>
+        </div>
+
+        <div class="form-grid">
+
+          <!-- CMRC -->
+          <div class="form-group">
+            <label for="formCmrc">
+              CMRC <span class="required">*</span>
+            </label>
+
+            <select
+              id="formCmrc"
+              class="form-select"
+              [(ngModel)]="newLoan.cmrcId"
+              name="cmrcId"
+              (change)="onFormCmrcChange()"
+              required
+            >
+              <option [ngValue]="null">Select CMRC</option>
+
+              <option
+                *ngFor="let cmrc of cmrcList"
+                [ngValue]="cmrc.id"
+              >
+                {{ cmrc.cmrcName }}
+              </option>
+            </select>
+          </div>
+
+
+          <!-- VO / ALF -->
+          <div class="form-group">
+            <label for="formVoAlf">
+              VO / ALF <span class="required">*</span>
+            </label>
+
+            <select
+              id="formVoAlf"
+              class="form-select"
+              [(ngModel)]="newLoan.voAlfId"
+              name="voAlfId"
+              (change)="onFormVoAlfChange()"
+              required
+            >
+              <option [ngValue]="null">Select VO / ALF</option>
+
+              <option
+                *ngFor="let vo of voAlfList"
+                [ngValue]="vo.id"
+              >
+                {{ vo.voAlfName }}
+              </option>
+            </select>
+          </div>
+
+
+          <!-- Village -->
+          <div class="form-group">
+            <label for="formVillage">Village</label>
+
+            <input
+              id="formVillage"
+              type="text"
+              class="form-control readonly-field"
+              [value]="getFormVillageName()"
+              readonly
+              placeholder="Auto selected"
+            />
+          </div>
+
+
+          <!-- Group -->
+          <div class="form-group">
+            <label for="formGroup">
+              Group <span class="required">*</span>
+            </label>
+
+            <select
+              id="formGroup"
+              class="form-select"
+              [(ngModel)]="newLoan.groupId"
+              name="groupId"
+              (change)="onFormGroupChange()"
+              required
+            >
+              <option [ngValue]="null">Select Group</option>
+
+              <option
+                *ngFor="let group of groupList"
+                [ngValue]="group.id"
+              >
+                {{ group.groupName }}
+              </option>
+            </select>
+          </div>
+
+
+          <!-- Woman -->
+          <div class="form-group">
+            <label for="formWoman">Woman</label>
+
+            <select
+              id="formWoman"
+              class="form-select"
+              [(ngModel)]="newLoan.womanId"
+              name="womanId"
+            >
+              <option [ngValue]="null">Select Woman</option>
+
+              <option
+                *ngFor="let woman of womenList"
+                [ngValue]="woman.id"
+              >
+                {{ woman.womanName }}
+              </option>
+            </select>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           FINANCIAL DETAILS
+      ================================================== -->
+      <div class="form-section">
+
+        <div class="form-section-title">
+          <i class="bi bi-currency-rupee"></i>
+          <span>Financial Details</span>
+        </div>
+
+        <div class="form-grid">
+
+          <!-- Sanctioned -->
+          <div class="form-group">
+            <label for="sanctionedAmount">
+              Sanctioned Amount <span class="required">*</span>
+            </label>
+
+            <input
+              id="sanctionedAmount"
+              type="number"
+              class="form-control"
+              [(ngModel)]="newLoan.sanctionedAmount"
+              name="sanctionedAmount"
+              min="0"
+              (input)="calculateDisbursedAmount()"
+              required
+            />
+          </div>
+
+
+          <!-- Processing Fee -->
+          <div class="form-group">
+            <label for="processingFee">
+              Processing Fee
+            </label>
+
+            <input
+              id="processingFee"
+              type="number"
+              class="form-control"
+              [(ngModel)]="newLoan.processingFee"
+              name="processingFee"
+              min="0"
+              (input)="calculateDisbursedAmount()"
+            />
+          </div>
+
+
+          <!-- Disbursed -->
+          <div class="form-group">
+            <label for="disbursedAmount">
+              Disbursed Amount
+            </label>
+
+            <input
+              id="disbursedAmount"
+              type="number"
+              class="form-control calculated-field"
+              [value]="newLoan.loanAmount || newLoan.totalAmount || 0"
+              readonly
+            />
+          </div>
+
+
+          <!-- Loan Purpose -->
+          <div class="form-group">
+            <label for="loanPurpose">Loan Purpose</label>
+
+            <input
+              id="loanPurpose"
+              type="text"
+              class="form-control"
+              [(ngModel)]="newLoan.loanPurpose"
+              name="loanPurpose"
+              placeholder="Enter loan purpose"
+            />
+          </div>
+
+
+          <!-- Loan Date -->
+          <div class="form-group">
+            <label for="loanGivenDate">
+              Loan Given Date
+            </label>
+
+            <input
+              id="loanGivenDate"
+              type="date"
+              class="form-control"
+              [(ngModel)]="newLoan.loanGivenDate"
+              name="loanGivenDate"
+            />
+          </div>
+
+
+          <!-- Repayment Period -->
+          <div class="form-group">
+            <label for="repaymentPeriodMonths">
+              Repayment Period (Months)
+            </label>
+
+            <input
+              id="repaymentPeriodMonths"
+              type="number"
+              class="form-control"
+              [(ngModel)]="newLoan.repaymentPeriodMonths"
+              name="repaymentPeriodMonths"
+              min="1"
+              (input)="calculateEmi()"
+            />
+          </div>
+
+
+          <!-- Interest Rate -->
+          <div class="form-group">
+            <label for="interestRate">
+              Interest Rate (%)
+            </label>
+
+            <input
+              id="interestRate"
+              type="number"
+              class="form-control"
+              [(ngModel)]="newLoan.interestRate"
+              name="interestRate"
+              min="0"
+              step="0.01"
+              (input)="calculateEmi()"
+            />
+          </div>
+
+
+          <!-- Interest Type -->
+          <div class="form-group">
+            <label for="interestType">
+              Interest Type
+            </label>
+
+            <select
+              id="interestType"
+              class="form-select"
+              [(ngModel)]="newLoan.interestType"
+              name="interestType"
+              (change)="calculateEmi()"
+            >
+              <option value="FLAT">FLAT</option>
+              <option value="REDUCING">REDUCING</option>
+            </select>
+          </div>
+
+
+          <!-- Monthly EMI -->
+          <div class="form-group">
+            <label for="monthlyEmi">
+              Monthly EMI
+            </label>
+
+            <input
+              id="monthlyEmi"
+              type="number"
+              class="form-control"
+              [(ngModel)]="newLoan.monthlyEmi"
+              name="monthlyEmi"
+              min="0"
+            />
+          </div>
+
+
+          <!-- Status -->
+          <div class="form-group">
+            <label for="loanStatus">
+              Loan Status
+            </label>
+
+            <select
+              id="loanStatus"
+              class="form-select"
+              [(ngModel)]="newLoan.loanStatus"
+              name="loanStatus"
+            >
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="CLOSED">CLOSED</option>
+              <option value="PENDING">PENDING</option>
+            </select>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- NUMBER TO WORDS -->
+      <div
+        class="amount-words"
+        *ngIf="newLoan.sanctionedAmount"
+      >
+        <i class="bi bi-info-circle"></i>
+
+        <div>
+          <strong>Sanctioned Amount in Words</strong>
+          <span>
+            {{ numberToWords(newLoan.sanctionedAmount) }}
+          </span>
+        </div>
+      </div>
+
+
+      <!-- FORM ACTIONS -->
+      <div class="form-actions">
 
         <button
           type="button"
-          class="image-remove-btn"
-          title="Remove image"
-          (click)="removeSelectedImage(i)"
+          class="btn btn-outline-secondary"
+          (click)="closeForm()"
         >
-          <i class="bi bi-x"></i>
+          <i class="bi bi-x-lg me-1"></i>
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="loading || !loanForm.valid"
+        >
+          <span
+            *ngIf="loading"
+            class="spinner-border spinner-border-sm me-2"
+          ></span>
+
+          <i
+            *ngIf="!loading"
+            class="bi bi-check-lg me-1"
+          ></i>
+
+          {{ isEditMode ? 'Update Loan' : 'Save Loan' }}
         </button>
 
       </div>
 
-      <small class="image-preview-name">
-        {{ selectedImageFiles[i]?.name }}
-      </small>
-
-    </div>
-
-  </div>
-
-
-  <!-- Count -->
-  <div
-    class="image-count-info"
-    *ngIf="selectedImageFiles.length > 0"
-  >
-
-    <i class="bi bi-check-circle me-1"></i>
-
-    {{ selectedImageFiles.length }}
-    image{{ selectedImageFiles.length > 1 ? 's' : '' }}
-    selected
-
-  </div>
-
-</div>
-
-
-    <!-- EMI PREVIEW -->
-    <div class="emi-preview">
-
-      <div>
-        <span>Disbursed Amount</span>
-
-        <strong>
-          ₹{{ (newLoan.totalAmount || 0) | number:'1.2-2' }}
-        </strong>
-      </div>
-
-      <div>
-        <span>Monthly EMI</span>
-
-        <strong>
-          ₹{{ (newLoan.monthlyEmi || 0) | number:'1.2-2' }}
-        </strong>
-      </div>
-
-      <div>
-        <span>Repayment Period</span>
-
-        <strong>
-          {{ newLoan.repaymentPeriodMonths || 0 }} Months
-        </strong>
-      </div>
-
-    </div>
-
-
-    <!-- FORM ACTIONS -->
-    <div class="form-actions">
-
-      <button
-        type="button"
-        class="btn btn-secondary"
-        (click)="closeForm()"
-      >
-        <i class="bi bi-x-circle me-1"></i>
-        Cancel
-      </button>
-
-      <button
-        type="button"
-        class="btn btn-primary"
-        (click)="saveLoan()"
-        [disabled]="loading"
-      >
-
-        <i
-          class="bi"
-          [ngClass]="loading
-            ? 'bi-arrow-repeat'
-            : (isEditMode ? 'bi-check-circle' : 'bi-save')"
-        ></i>
-
-        {{ loading
-          ? 'Saving...'
-          : (isEditMode ? 'Update Loan' : 'Save Loan')
-        }}
-
-      </button>
-
-    </div>
+    </form>
 
   </div>
 
 
   <!-- =====================================================
-       LOAN LIST
+       LOAN TABLE
   ====================================================== -->
-  <div class="content-card">
+  <div class="table-card">
 
-    <!-- TOOLBAR -->
-    <div class="table-toolbar">
+    <div class="table-card-header">
 
       <div>
-        <h5 class="card-title mb-1">
-          <i class="bi bi-list-ul me-2"></i>
+        <h4>
+          <i class="bi bi-table"></i>
           Loan Records
-        </h5>
+        </h4>
 
-        <small class="text-muted">
-          {{ filteredLoanList.length }} record(s) found
-        </small>
+        <p>
+          All loans matching the selected filters
+        </p>
       </div>
 
-
-      <!-- SEARCH -->
-      <div class="search-box">
-
-        <i class="bi bi-search"></i>
-
-        <input
-          type="text"
-          class="form-control"
-          [(ngModel)]="globalSearch"
-          (input)="onSearchChange()"
-          placeholder="Search loan, woman, group, amount..."
-        />
-
+      <div class="table-record-badge">
+        <i class="bi bi-list-ul"></i>
+        {{ filteredLoanList.length }} Records
       </div>
 
     </div>
 
 
-    <!-- LOADING -->
-    <div
-      class="text-center py-5"
-      *ngIf="loading && !showForm"
-    >
-      <div
-        class="spinner-border text-primary"
-        role="status"
-      ></div>
-
-      <p class="mt-2 text-muted">
-        Loading loans...
-      </p>
-    </div>
-
-
-    <!-- TABLE -->
-    <div
-      class="table-responsive"
-      *ngIf="!loading || showForm"
-    >
+    <div class="table-responsive loan-table-wrapper">
 
       <table class="table loan-table">
 
         <thead>
           <tr>
-
-            <th>#</th>
-
-            <th>
-              Group / Village
-            </th>
-
-            <th>
-              Woman
-            </th>
-
-            <th>
-              Purpose
-            </th>
-
-            <th>
-              Date
-            </th>
-
-            <th class="text-end">
-              Sanctioned
-            </th>
-
-            <th class="text-end">
-              Loan Amount
-            </th>
-
-            <th class="text-end">
-              Processing Fee
-            </th>
-
-            <th class="text-end">
-              EMI
-            </th>
-
-            <th>
-              Status
-            </th>
-
-            <th class="text-center">
-              Actions
-            </th>
-
+            <th class="col-number">#</th>
+            <th>CMRC</th>
+            <th>VO / ALF</th>
+            <th>Village</th>
+            <th>Group</th>
+            <th>Woman</th>
+            <th class="amount-column">Sanctioned</th>
+            <th class="amount-column">Processing Fee</th>
+            <th class="amount-column">Disbursed</th>
+            <th class="amount-column">Monthly EMI</th>
+            <th>Loan Date</th>
+            <th>Status</th>
+            <th class="actions-column">Actions</th>
           </tr>
         </thead>
 
@@ -804,155 +721,108 @@ html
             *ngFor="let loan of filteredLoanList; let i = index"
           >
 
-            <!-- ID -->
-            <td>
-              <strong>
-                {{ loan.id }}
-              </strong>
+            <td class="col-number">
+              {{ i + 1 }}
             </td>
 
-
-            <!-- GROUP / VILLAGE -->
             <td>
-
               <div class="table-primary-text">
-                {{ loan.groupName || '-' }}
+                {{ loan.cmrcName || getCmrcNameById(loan.cmrcId) || '-' }}
               </div>
-
-              <small class="text-muted">
-                {{ loan.villageName || '-' }}
-              </small>
-
             </td>
 
-
-            <!-- WOMAN -->
             <td>
-
-              <div class="table-primary-text">
-                {{ loan.womanName || '-' }}
-              </div>
-
+              {{ loan.voAlfName || '-' }}
             </td>
 
-
-            <!-- PURPOSE -->
             <td>
-              {{ loan.loanPurpose || '-' }}
+              {{ loan.villageName || '-' }}
             </td>
 
-
-            <!-- DATE -->
             <td>
-              {{ loan.loanGivenDate
-                ? (loan.loanGivenDate | date:'dd-MM-yyyy')
-                : '-'
-              }}
+              {{ loan.groupName || '-' }}
             </td>
 
-
-            <!-- SANCTIONED -->
-            <td class="text-end">
-
-              ₹{{
-                (loan.sanctionedAmount || 0)
-                  | number:'1.2-2'
-              }}
-
-            </td>
-
-
-            <!-- LOAN AMOUNT -->
-            <td class="text-end">
-
-              ₹{{
-                (
-                  loan.totalAmount ??
-                  loan.loanAmount ??
-                  0
-                ) | number:'1.2-2'
-              }}
-
-            </td>
-
-
-            <!-- PROCESSING FEE -->
-            <td class="text-end">
-
-              ₹{{
-                (loan.processingFee || 0)
-                  | number:'1.2-2'
-              }}
-
-            </td>
-
-
-            <!-- EMI -->
-            <td class="text-end">
-
-              ₹{{
-                (loan.monthlyEmi || 0)
-                  | number:'1.2-2'
-              }}
-
-            </td>
-
-
-            <!-- STATUS -->
             <td>
+              {{ loan.womanName || '-' }}
+            </td>
 
+            <td class="amount-cell">
+              ₹{{ loan.sanctionedAmount || 0 | number:'1.0-0' }}
+            </td>
+
+            <td class="amount-cell">
+              ₹{{ loan.processingFee || 0 | number:'1.0-0' }}
+            </td>
+
+            <td class="amount-cell">
+              ₹{{
+                loan.loanAmount || loan.totalAmount || 0
+                | number:'1.0-0'
+              }}
+            </td>
+
+            <td class="amount-cell">
+              ₹{{ loan.monthlyEmi || 0 | number:'1.0-0' }}
+            </td>
+
+            <td>
+              {{ loan.loanGivenDate | date:'dd-MM-yyyy' }}
+            </td>
+
+            <td>
               <span
                 class="status-badge"
                 [ngClass]="{
-                  'status-active':
-                    loan.loanStatus === 'ACTIVE',
-
-                  'status-closed':
-                    loan.loanStatus === 'CLOSED',
-
-                  'status-pending':
-                    loan.loanStatus === 'PENDING'
+                  'status-active': loan.loanStatus === 'ACTIVE',
+                  'status-closed': loan.loanStatus === 'CLOSED',
+                  'status-pending': loan.loanStatus === 'PENDING'
                 }"
               >
-                {{ loan.loanStatus || 'N/A' }}
+                {{ loan.loanStatus || '-' }}
               </span>
-
             </td>
 
-
-            <!-- ACTIONS -->
-            <td>
+            <td class="actions-cell">
 
               <div class="action-buttons">
 
-                <!-- DETAILS -->
+                <!-- Details -->
                 <button
                   type="button"
-                  class="btn btn-sm btn-outline-info"
+                  class="action-btn action-view"
                   title="View Details"
-                  (click)="openLoanDetails(loan)"
+                  (click)="viewLoanDetails(loan)"
                 >
                   <i class="bi bi-eye"></i>
                 </button>
 
-
-                <!-- EDIT -->
+                <!-- CL Schedule -->
                 <button
                   type="button"
-                  class="btn btn-sm btn-outline-primary"
+                  class="action-btn action-schedule"
+                  title="View CL Schedule"
+                  (click)="openClSchedulePopup(loan)"
+                >
+                  <i class="bi bi-calendar3"></i>
+                </button>
+
+                <!-- Edit -->
+                <button
+                  type="button"
+                  class="action-btn action-edit"
                   title="Edit Loan"
                   (click)="editLoan(loan)"
                 >
                   <i class="bi bi-pencil"></i>
                 </button>
 
-
-                <!-- DELETE -->
+                <!-- Delete -->
                 <button
                   type="button"
-                  class="btn btn-sm btn-outline-danger"
+                  class="action-btn action-delete"
                   title="Delete Loan"
-                  (click)="deleteLoan(loan.id!)"
+                  (click)="deleteLoan(loan)"
                 >
                   <i class="bi bi-trash"></i>
                 </button>
@@ -964,26 +834,24 @@ html
           </tr>
 
 
-          <!-- NO RECORD -->
-          <tr
-            *ngIf="filteredLoanList.length === 0"
-          >
+          <!-- NO RECORDS -->
+          <tr *ngIf="filteredLoanList.length === 0">
 
             <td
-              colspan="11"
-              class="text-center py-5"
+              colspan="13"
+              class="no-records"
             >
 
               <div class="empty-state">
 
-                <i class="bi bi-inbox"></i>
+                <div class="empty-icon">
+                  <i class="bi bi-inbox"></i>
+                </div>
 
-                <h6>
-                  No Loan Records Found
-                </h6>
+                <h5>No Loan Records Found</h5>
 
-                <p class="text-muted mb-0">
-                  No loan records match the selected filters.
+                <p>
+                  No loans match the selected filters.
                 </p>
 
               </div>
@@ -995,61 +863,32 @@ html
         </tbody>
 
 
-        <!-- TABLE FOOTER -->
-        <tfoot
-          *ngIf="filteredLoanList.length > 0"
-        >
+        <!-- TABLE TOTAL -->
+        <tfoot *ngIf="filteredLoanList.length > 0">
 
           <tr>
 
-            <td
-              colspan="5"
-              class="text-end fw-bold"
-            >
+            <th colspan="6" class="total-label">
               Total
-            </td>
+            </th>
 
-            <td class="text-end fw-bold">
+            <th class="amount-cell">
+              ₹{{ getTotalSanctionedAmount() | number:'1.0-0' }}
+            </th>
 
-              ₹{{
-                getTotalSanctionedAmount()
-                  | number:'1.2-2'
-              }}
+            <th class="amount-cell">
+              ₹{{ getTotalProcessingFee() | number:'1.0-0' }}
+            </th>
 
-            </td>
+            <th class="amount-cell">
+              ₹{{ getTotalLoanAmount() | number:'1.0-0' }}
+            </th>
 
+            <th class="amount-cell">
+              ₹{{ getTotalMonthlyEmi() | number:'1.0-0' }}
+            </th>
 
-            <td class="text-end fw-bold">
-
-              ₹{{
-                getTotalLoanAmount()
-                  | number:'1.2-2'
-              }}
-
-            </td>
-
-
-            <td class="text-end fw-bold">
-
-              ₹{{
-                getTotalProcessingFee()
-                  | number:'1.2-2'
-              }}
-
-            </td>
-
-
-            <td class="text-end fw-bold">
-
-              ₹{{
-                getTotalMonthlyEmi()
-                  | number:'1.2-2'
-              }}
-
-            </td>
-
-
-            <td colspan="2"></td>
+            <th colspan="3"></th>
 
           </tr>
 
@@ -1063,392 +902,422 @@ html
 
 
   <!-- =====================================================
-       LOAN DETAILS
+       LOAN DETAILS MODAL
   ====================================================== -->
   <div
-    class="content-card details-card"
+    class="custom-modal-backdrop"
     *ngIf="selectedLoan"
+    (click)="closeLoanDetails()"
   >
 
-    <div class="card-title-row">
+    <div
+      class="custom-modal"
+      (click)="$event.stopPropagation()"
+    >
 
-      <div>
+      <div class="custom-modal-header">
 
-        <h5 class="card-title">
-          <i class="bi bi-info-circle me-2"></i>
-          Loan Details
-        </h5>
+        <div class="section-heading">
 
-        <p class="card-subtitle">
-          Complete loan information
-        </p>
+          <div class="section-icon">
+            <i class="bi bi-file-earmark-text"></i>
+          </div>
 
-      </div>
+          <div>
+            <h3>Loan Details</h3>
 
-
-      <button
-        type="button"
-        class="btn-close"
-        (click)="closeLoanDetails()"
-      ></button>
-
-    </div>
-
-
-    <!-- DETAILS GRID -->
-    <div class="details-grid">
-
-      <!-- LOAN ID -->
-      <div class="detail-item">
-        <span>Loan ID</span>
-        <strong>
-          {{ selectedLoan.id || '-' }}
-        </strong>
-      </div>
-
-
-      <!-- CMRC -->
-      <div class="detail-item">
-        <span>CMRC</span>
-        <strong>
-          {{
-            selectedLoan.cmrcName ||
-            getCmrcNameById(selectedLoan.cmrcId) ||
-            '-'
-          }}
-        </strong>
-      </div>
-
-
-      <!-- VO / ALF -->
-      <div class="detail-item">
-        <span>VO / ALF</span>
-        <strong>
-          {{
-            selectedLoan.voAlfName ||
-            getVoAlfNameById(selectedLoan.voAlfId) ||
-            '-'
-          }}
-        </strong>
-      </div>
-
-
-      <!-- VILLAGE -->
-      <div class="detail-item">
-        <span>Village</span>
-        <strong>
-          {{ selectedLoan.villageName || '-' }}
-        </strong>
-      </div>
-
-
-      <!-- GROUP -->
-      <div class="detail-item">
-        <span>Group</span>
-        <strong>
-          {{
-            selectedLoan.groupName ||
-            getGroupNameById(selectedLoan.groupId) ||
-            '-'
-          }}
-        </strong>
-      </div>
-
-
-      <!-- WOMAN -->
-      <div class="detail-item">
-        <span>Woman</span>
-        <strong>
-          {{ selectedLoan.womanName || '-' }}
-        </strong>
-      </div>
-
-
-      <!-- PURPOSE -->
-      <div class="detail-item">
-        <span>Loan Purpose</span>
-        <strong>
-          {{ selectedLoan.loanPurpose || '-' }}
-        </strong>
-      </div>
-
-
-      <!-- DATE -->
-      <div class="detail-item">
-        <span>Loan Given Date</span>
-        <strong>
-          {{
-            selectedLoan.loanGivenDate
-              ? (selectedLoan.loanGivenDate | date:'dd-MM-yyyy')
-              : '-'
-          }}
-        </strong>
-      </div>
-
-
-      <!-- SANCTIONED -->
-      <div class="detail-item">
-        <span>Sanctioned Amount</span>
-        <strong>
-          ₹{{
-            (selectedLoan.sanctionedAmount || 0)
-              | number:'1.2-2'
-          }}
-        </strong>
-      </div>
-
-
-      <!-- PROCESSING -->
-      <div class="detail-item">
-        <span>Processing Fee</span>
-        <strong>
-          ₹{{
-            (selectedLoan.processingFee || 0)
-              | number:'1.2-2'
-          }}
-        </strong>
-      </div>
-
-
-      <!-- DISBURSED -->
-      <div class="detail-item">
-        <span>Disbursed Amount</span>
-        <strong>
-          ₹{{
-            (
-              selectedLoan.totalAmount ??
-              selectedLoan.loanAmount ??
-              0
-            ) | number:'1.2-2'
-          }}
-        </strong>
-      </div>
-
-
-      <!-- REPAYMENT PERIOD -->
-      <div class="detail-item">
-        <span>Repayment Period</span>
-        <strong>
-          {{ selectedLoan.repaymentPeriodMonths || 0 }}
-          Months
-        </strong>
-      </div>
-
-
-      <!-- INTEREST RATE -->
-      <div class="detail-item">
-        <span>Interest Rate</span>
-        <strong>
-          {{ selectedLoan.interestRate || 0 }}%
-        </strong>
-      </div>
-
-
-      <!-- INTEREST TYPE -->
-      <div class="detail-item">
-        <span>Interest Type</span>
-        <strong>
-          {{ selectedLoan.interestType || '-' }}
-        </strong>
-      </div>
-
-
-      <!-- EMI -->
-      <div class="detail-item">
-        <span>Monthly EMI</span>
-        <strong>
-          ₹{{
-            (selectedLoan.monthlyEmi || 0)
-              | number:'1.2-2'
-          }}
-        </strong>
-      </div>
-
-
-      <!-- STATUS -->
-      <div class="detail-item">
-        <span>Loan Status</span>
-
-        <strong>
-
-          <span
-            class="status-badge"
-            [ngClass]="{
-              'status-active':
-                selectedLoan.loanStatus === 'ACTIVE',
-
-              'status-closed':
-                selectedLoan.loanStatus === 'CLOSED',
-
-              'status-pending':
-                selectedLoan.loanStatus === 'PENDING'
-            }"
-          >
-            {{ selectedLoan.loanStatus || 'N/A' }}
-          </span>
-
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         LOAN IMAGES
-    ====================================================== -->
-    <div class="loan-images-section">
-
-      <div class="loan-images-header">
-
-        <div>
-
-          <h6 class="mb-1">
-            <i class="bi bi-images me-2"></i>
-            Loan Documents / Images
-          </h6>
-
-          <small class="text-muted">
-            {{ loanImages.length }}
-            image{{ loanImages.length !== 1 ? 's' : '' }}
-            uploaded
-          </small>
+            <p>
+              Complete information of selected loan
+            </p>
+          </div>
 
         </div>
 
+        <button
+          type="button"
+          class="modal-close-btn"
+          title="Close"
+          (click)="closeLoanDetails()"
+        >
+          ×
+        </button>
+
       </div>
 
 
-      <!-- IMAGES AVAILABLE -->
-      <div
-        class="loan-image-gallery"
-        *ngIf="loanImages.length > 0"
-      >
+      <div class="custom-modal-body">
 
-        <div
-          class="loan-image-card"
-          *ngFor="let image of loanImages"
-        >
+        <!-- LOAN INFORMATION -->
+        <div class="details-section">
 
-          <!-- IMAGE -->
-          <div class="loan-image-wrapper">
+          <div class="details-section-title">
+            <i class="bi bi-info-circle"></i>
+            Loan Information
+          </div>
 
-            <img
-              *ngIf="image.id"
-              [src]="getLoanImageViewUrl(image.id)"
-              [alt]="image.fileName || 'Loan image'"
-              class="loan-gallery-image"
-            />
+          <div class="details-grid">
 
-            <!-- ZOOM ICON -->
-            <div class="image-zoom-indicator">
-              <i class="bi bi-zoom-in"></i>
+            <div class="detail-item">
+              <label>CMRC</label>
+              <span>
+                {{
+                  selectedLoan.cmrcName ||
+                  getCmrcNameById(selectedLoan.cmrcId) ||
+                  '-'
+                }}
+              </span>
+            </div>
+
+            <div class="detail-item">
+              <label>VO / ALF</label>
+              <span>{{ selectedLoan.voAlfName || '-' }}</span>
+            </div>
+
+            <div class="detail-item">
+              <label>Village</label>
+              <span>{{ selectedLoan.villageName || '-' }}</span>
+            </div>
+
+            <div class="detail-item">
+              <label>Group</label>
+              <span>{{ selectedLoan.groupName || '-' }}</span>
+            </div>
+
+            <div class="detail-item">
+              <label>Woman</label>
+              <span>{{ selectedLoan.womanName || '-' }}</span>
+            </div>
+
+            <div class="detail-item">
+              <label>Sanctioned Amount</label>
+              <span>
+                ₹{{ selectedLoan.sanctionedAmount || 0 | number:'1.0-0' }}
+              </span>
+            </div>
+
+            <div class="detail-item">
+              <label>Processing Fee</label>
+              <span>
+                ₹{{ selectedLoan.processingFee || 0 | number:'1.0-0' }}
+              </span>
+            </div>
+
+            <div class="detail-item">
+              <label>Disbursed Amount</label>
+              <span>
+                ₹{{
+                  selectedLoan.loanAmount ||
+                  selectedLoan.totalAmount ||
+                  0
+                  | number:'1.0-0'
+                }}
+              </span>
+            </div>
+
+            <div class="detail-item">
+              <label>Loan Purpose</label>
+              <span>{{ selectedLoan.loanPurpose || '-' }}</span>
+            </div>
+
+            <div class="detail-item">
+              <label>Loan Given Date</label>
+              <span>
+                {{ selectedLoan.loanGivenDate | date:'dd-MM-yyyy' }}
+              </span>
+            </div>
+
+            <div class="detail-item">
+              <label>Repayment Period</label>
+              <span>
+                {{ selectedLoan.repaymentPeriodMonths || 0 }} Months
+              </span>
+            </div>
+
+            <div class="detail-item">
+              <label>Interest Rate</label>
+              <span>
+                {{ selectedLoan.interestRate || 0 }}%
+              </span>
+            </div>
+
+            <div class="detail-item">
+              <label>Interest Type</label>
+              <span>{{ selectedLoan.interestType || '-' }}</span>
+            </div>
+
+            <div class="detail-item">
+              <label>Monthly EMI</label>
+              <span>
+                ₹{{ selectedLoan.monthlyEmi || 0 | number:'1.0-0' }}
+              </span>
+            </div>
+
+            <div class="detail-item">
+              <label>Loan Status</label>
+              <span>
+                {{ selectedLoan.loanStatus || '-' }}
+              </span>
             </div>
 
           </div>
 
+        </div>
 
-          <!-- IMAGE INFO -->
-          <div class="loan-image-info">
+
+        <!-- =================================================
+             LOAN IMAGES
+        ================================================== -->
+        <div class="loan-images-section">
+
+          <div class="details-section-title">
+            <i class="bi bi-images"></i>
+            Loan Documents / Images
+          </div>
+
+
+          <!-- UPLOAD -->
+          <div
+            class="image-upload-area"
+            *ngIf="selectedLoan.id"
+          >
+
+            <input
+              type="file"
+              #loanImageInput
+              multiple
+              accept="image/*"
+              hidden
+              (change)="onLoanImagesSelected($event)"
+            />
+
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              (click)="loanImageInput.click()"
+            >
+              <i class="bi bi-upload me-1"></i>
+              Select Images
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              *ngIf="selectedImageFiles.length > 0"
+              [disabled]="imageUploading"
+              (click)="uploadLoanImages()"
+            >
+
+              <span
+                *ngIf="imageUploading"
+                class="spinner-border spinner-border-sm me-1"
+              ></span>
+
+              <i
+                *ngIf="!imageUploading"
+                class="bi bi-cloud-upload me-1"
+              ></i>
+
+              Upload
+
+            </button>
+
+          </div>
+
+
+          <!-- SELECTED IMAGE PREVIEWS -->
+          <div
+            class="selected-image-previews"
+            *ngIf="imagePreviews.length > 0"
+          >
 
             <div
-              class="loan-image-name"
-              [title]="image.fileName || ''"
+              class="selected-image-preview"
+              *ngFor="let preview of imagePreviews; let i = index"
             >
-              <i class="bi bi-file-image me-1"></i>
 
-              {{ image.fileName || 'Loan Image' }}
-            </div>
+              <img
+                [src]="preview"
+                alt="Selected image"
+              />
 
-
-            <small
-              class="text-muted"
-              *ngIf="image.fileSize"
-            >
-              {{
-                (image.fileSize / 1024)
-                  | number:'1.0-0'
-              }} KB
-            </small>
-
-
-            <!-- IMAGE ACTIONS -->
-            <div class="loan-image-actions">
-
-              <!-- DOWNLOAD -->
-              <a
-                *ngIf="image.id"
-                class="btn btn-sm btn-outline-primary"
-                [href]="getLoanImageDownloadUrl(image.id)"
-                target="_blank"
-                title="Download Image"
-              >
-                <i class="bi bi-download"></i>
-              </a>
-
-
-              <!-- DELETE -->
               <button
                 type="button"
-                class="btn btn-sm btn-outline-danger"
-                title="Delete Image"
-                (click)="deleteLoanImage(image)"
+                class="remove-preview-btn"
+                (click)="removeSelectedImage(i)"
               >
-                <i class="bi bi-trash"></i>
+                ×
               </button>
 
             </div>
 
           </div>
 
+
+          <!-- EXISTING IMAGES -->
+          <div
+            class="existing-images"
+            *ngIf="loanImages.length > 0"
+          >
+
+            <div
+              class="loan-image-card"
+              *ngFor="let image of loanImages"
+            >
+
+              <img
+                *ngIf="image.id"
+                [src]="getImageViewUrl(image.id)"
+                [alt]="image.fileName || 'Loan Image'"
+                class="loan-image-preview"
+              />
+
+
+              <div class="loan-image-info">
+
+                <div class="image-file-name">
+                  {{ image.fileName || 'Image' }}
+                </div>
+
+                <div class="image-file-size">
+                  {{
+                    image.fileSize
+                      ? (image.fileSize / 1024 | number:'1.0-0') + ' KB'
+                      : ''
+                  }}
+                </div>
+
+              </div>
+
+
+              <div class="loan-image-actions">
+
+                <!-- View -->
+                <a
+                  *ngIf="image.id"
+                  class="action-btn action-view"
+                  [href]="getImageViewUrl(image.id)"
+                  target="_blank"
+                  title="View Image"
+                >
+                  <i class="bi bi-eye"></i>
+                </a>
+
+                <!-- Download -->
+                <a
+                  *ngIf="image.id"
+                  class="action-btn action-schedule"
+                  [href]="getImageDownloadUrl(image.id)"
+                  target="_blank"
+                  title="Download Image"
+                >
+                  <i class="bi bi-download"></i>
+                </a>
+
+                <!-- Delete -->
+                <button
+                  type="button"
+                  class="action-btn action-delete"
+                  *ngIf="image.id"
+                  title="Delete Image"
+                  (click)="deleteLoanImage(image)"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- NO IMAGES -->
+          <div
+            class="no-images"
+            *ngIf="loanImages.length === 0"
+          >
+            <i class="bi bi-image"></i>
+            <span>No images uploaded for this loan.</span>
+          </div>
+
         </div>
 
       </div>
 
 
-      <!-- NO IMAGES -->
-      <div
-        class="loan-no-images"
-        *ngIf="loanImages.length === 0"
-      >
+      <div class="custom-modal-footer">
 
-        <i class="bi bi-image"></i>
-
-        <div>
-          <strong>
-            No loan images uploaded
-          </strong>
-
-          <small class="text-muted d-block">
-            You can upload images while adding a new loan.
-          </small>
-        </div>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeLoanDetails()"
+        >
+          <i class="bi bi-x-lg me-1"></i>
+          Close
+        </button>
 
       </div>
 
     </div>
 
+  </div>
 
-    <!-- DETAIL FOOTER -->
-    <div class="details-footer">
 
-      <button
-        type="button"
-        class="btn btn-secondary"
-        (click)="closeLoanDetails()"
-      >
-        <i class="bi bi-x-circle me-1"></i>
-        Close
-      </button>
+  <!-- =====================================================
+       CL SCHEDULE POPUP
+  ====================================================== -->
+  <div
+    class="cl-schedule-modal-backdrop"
+    *ngIf="showClSchedulePopup"
+    (click)="closeClSchedulePopup()"
+  >
 
-      <button
-        type="button"
-        class="btn btn-primary"
-        (click)="editLoan(selectedLoan)"
-      >
-        <i class="bi bi-pencil me-1"></i>
-        Edit Loan
-      </button>
+    <div
+      class="cl-schedule-modal"
+      (click)="$event.stopPropagation()"
+    >
+
+      <div class="cl-schedule-modal-header">
+
+        <div class="section-heading">
+
+          <div class="section-icon">
+            <i class="bi bi-calendar3"></i>
+          </div>
+
+          <div>
+            <h3>CL Repayment Schedule</h3>
+
+            <p>
+              View loan-wise CL repayment schedule
+            </p>
+          </div>
+
+        </div>
+
+        <button
+          type="button"
+          class="cl-schedule-close-btn"
+          title="Close"
+          (click)="closeClSchedulePopup()"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div class="cl-schedule-modal-body">
+
+        <app-cl-schedule
+          *ngIf="selectedClScheduleLoanId !== null"
+          [loanId]="selectedClScheduleLoanId"
+          [popupMode]="true"
+          (close)="closeClSchedulePopup()"
+        >
+        </app-cl-schedule>
+
+      </div>
 
     </div>
 

@@ -58,7 +58,7 @@ import { GroupComponent } from './group/group.component';
     HttpClientModule,
     FormsModule,
     NgChartsModule,
-    CommonModule
+    CommonModule,
     
   ],
   providers: [{
