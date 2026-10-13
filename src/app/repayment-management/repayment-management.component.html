@@ -1,16 +1,11 @@
+
 <div class="page-container">
 
-  <!-- =====================================================
-       PAGE HEADER
-  ====================================================== -->
+  <!-- PAGE HEADER -->
   <div class="page-header">
-
     <div>
       <h2>Repayment Management</h2>
-
-      <p>
-        Manage EMI payments, repayment status and loan schedule
-      </p>
+      <p>Manage EMI payments, repayment status and loan schedule</p>
     </div>
 
     <button
@@ -18,812 +13,399 @@
       class="export-btn"
       (click)="exportToExcel()"
       [disabled]="!repaymentList || repaymentList.length === 0">
-
       <span>📊</span>
       Export Excel
-
     </button>
-
   </div>
 
-
-  <!-- =====================================================
-       FILTER CARD
-       CMRC → VO / ALF → Village Auto → Group → Woman → Loan
-  ====================================================== -->
+  <!-- FILTER CARD -->
   <div class="filter-card">
-
     <div class="filter-title">
-
-      <div class="filter-icon">
-        🔎
-      </div>
-
+      <div class="filter-icon">🔎</div>
       <div>
         <h3>Select Loan</h3>
-
-        <p>
-          Select CMRC, VO / ALF, Group, Woman and Loan
-        </p>
+        <p>Select CMRC, VO / ALF, Group, Woman and Loan</p>
       </div>
-
     </div>
-
 
     <div class="filter-row">
 
-
-      <!-- =================================================
-           CMRC
-      ================================================== -->
+      <!-- CMRC -->
       <div class="form-group">
-
-        <label>
-          CMRC
-        </label>
-
+        <label>CMRC</label>
         <select
           [(ngModel)]="selectedCmrcId"
           (change)="loadVoAlfByCmrc()"
           class="form-control">
 
-          <option [ngValue]="null">
-            Select CMRC
-          </option>
+          <option [ngValue]="null">Select CMRC</option>
 
           <option
             *ngFor="let cmrc of cmrcList"
             [ngValue]="cmrc.id">
-
             {{ cmrc.cmrcName || '-' }}
-
           </option>
-
         </select>
-
       </div>
 
-
-      <!-- =================================================
-           VO / ALF
-      ================================================== -->
+      <!-- VO / ALF -->
       <div class="form-group">
-
-        <label>
-          VO / ALF
-        </label>
-
+        <label>VO / ALF</label>
         <select
           [(ngModel)]="selectedVoAlfId"
           (change)="onVoAlfChange()"
           [disabled]="selectedCmrcId === null"
           class="form-control">
 
-          <option [ngValue]="null">
-            Select VO / ALF
-          </option>
+          <option [ngValue]="null">Select VO / ALF</option>
 
           <option
             *ngFor="let voAlf of voAlfList"
             [ngValue]="voAlf.id">
-
             {{ voAlf.voAlfName || '-' }}
-
           </option>
-
         </select>
-
       </div>
 
-
-      <!-- =================================================
-           VILLAGE - AUTOMATIC
-      ================================================== -->
+      <!-- VILLAGE -->
       <div class="form-group">
-
-        <label>
-          Village
-        </label>
-
+        <label>Village</label>
         <input
           type="text"
           class="form-control"
           [value]="getSelectedVillageName()"
           readonly
           placeholder="Village will appear automatically">
-
       </div>
 
-
-      <!-- =================================================
-           GROUP
-      ================================================== -->
+      <!-- GROUP -->
       <div class="form-group">
-
-        <label>
-          Group
-        </label>
-
+        <label>Group</label>
         <select
           [(ngModel)]="selectedGroupId"
           (change)="loadWomenByGroup()"
           [disabled]="selectedVoAlfId === null"
           class="form-control">
 
-          <option [ngValue]="null">
-            Select Group
-          </option>
+          <option [ngValue]="null">Select Group</option>
 
           <option
             *ngFor="let group of groupList"
             [ngValue]="group.id">
-
             {{ group.groupName || '-' }}
-
           </option>
-
         </select>
-
       </div>
 
-
-      <!-- =================================================
-           WOMAN
-      ================================================== -->
+      <!-- WOMAN -->
       <div class="form-group">
-
-        <label>
-          Woman
-        </label>
-
+        <label>Woman</label>
         <select
           [(ngModel)]="selectedWomanId"
           (change)="loadLoansByWoman()"
           [disabled]="selectedGroupId === null"
           class="form-control">
 
-          <option [ngValue]="null">
-            Select Woman
-          </option>
+          <option [ngValue]="null">Select Woman</option>
 
           <option
             *ngFor="let woman of womenList"
             [ngValue]="woman.id">
-
             {{ woman.womanName || '-' }}
-
           </option>
-
         </select>
-
       </div>
 
-
-      <!-- =================================================
-           LOAN
-      ================================================== -->
+      <!-- LOAN -->
       <div class="form-group">
-
-        <label>
-          Loan
-        </label>
-
+        <label>Loan</label>
         <select
           [(ngModel)]="selectedLoanId"
           (change)="onLoanChange()"
           [disabled]="selectedWomanId === null"
           class="form-control">
 
-          <option [ngValue]="null">
-            Select Loan
-          </option>
+          <option [ngValue]="null">Select Loan</option>
 
           <option
             *ngFor="let loanItem of loanList"
             [ngValue]="loanItem.id">
-
             Loan #{{ loanItem.id }}
-            -
-            {{ loanItem.womanName || '-' }}
-            -
-            ₹{{ (loanItem.sanctionedAmount || 0) | number:'1.2-2' }}
-
+            - {{ loanItem.womanName || '-' }}
+            - ₹{{ (loanItem.sanctionedAmount || 0) | number:'1.2-2' }}
           </option>
-
         </select>
-
       </div>
 
     </div>
-
   </div>
 
+  <!-- SELECTED LOAN SUMMARY -->
+  <div class="loan-card" *ngIf="selectedLoan && !loading">
 
-  <!-- =====================================================
-       SELECTED LOAN SUMMARY
-  ====================================================== -->
-  <div
-    class="loan-card"
-    *ngIf="selectedLoan && !loading">
-
-
-    <!-- Loan Header -->
     <div class="loan-card-header">
-
       <div>
-
         <div class="loan-title">
-
-          <span class="loan-label">
-            Loan
-          </span>
-
-          <span class="loan-number">
-            #{{ selectedLoan.id }}
-          </span>
-
+          <span class="loan-label">Loan</span>
+          <span class="loan-number">#{{ selectedLoan.id }}</span>
         </div>
-
-        <p>
-          Repayment Summary
-        </p>
-
+        <p>Repayment Summary</p>
       </div>
 
-
-      <!-- Loan Status -->
       <span
         class="loan-status"
         [ngClass]="{
           'active': getLoanStatus() === 'ACTIVE',
           'closed': getLoanStatus() === 'CLOSED'
         }">
-
         {{ getLoanStatus() }}
-
       </span>
-
     </div>
 
-
-    <!-- Loan Information -->
     <div class="loan-summary-grid">
 
-
-      <!-- Group -->
       <div class="loan-summary-item">
-
-        <span class="summary-label">
-          Group Name
-        </span>
-
+        <span class="summary-label">Group Name</span>
         <strong>
           {{ selectedLoan.groupName || getSelectedGroupName() || '-' }}
         </strong>
-
       </div>
 
-
-      <!-- Woman -->
       <div class="loan-summary-item">
-
-        <span class="summary-label">
-          Woman Name
-        </span>
-
+        <span class="summary-label">Woman Name</span>
         <strong>
           {{ selectedLoan.womanName || getSelectedWomanName() || '-' }}
         </strong>
-
       </div>
 
-
-      <!-- Loan Amount -->
       <div class="loan-summary-item highlight">
-
-        <span class="summary-label">
-          Loan Amount
-        </span>
-
+        <span class="summary-label">Loan Amount</span>
         <strong>
           ₹{{ (selectedLoan.sanctionedAmount || 0) | number:'1.2-2' }}
         </strong>
-
       </div>
 
-
-      <!-- Monthly EMI -->
       <div class="loan-summary-item highlight">
-
-        <span class="summary-label">
-          Monthly EMI
-        </span>
-
+        <span class="summary-label">Monthly EMI</span>
         <strong>
           ₹{{ (selectedLoan.monthlyEmi || 0) | number:'1.2-2' }}
         </strong>
-
       </div>
 
-
-      <!-- Interest -->
       <div class="loan-summary-item">
-
-        <span class="summary-label">
-          Interest Rate
-        </span>
-
-        <strong>
-          {{ selectedLoan.interestRate || 0 }}%
-        </strong>
-
+        <span class="summary-label">Interest Rate</span>
+        <strong>{{ selectedLoan.interestRate || 0 }}%</strong>
       </div>
 
-
-      <!-- Installments -->
       <div class="loan-summary-item">
-
-        <span class="summary-label">
-          Total Installments
-        </span>
-
-        <strong>
-          {{ getTotalInstallments() }}
-        </strong>
-
+        <span class="summary-label">Total Installments</span>
+        <strong>{{ getTotalInstallments() }}</strong>
       </div>
 
     </div>
-
   </div>
 
+  <!-- REPAYMENT STATISTICS -->
+  <div class="stats-grid" *ngIf="selectedLoan && !loading">
 
-  <!-- =====================================================
-       REPAYMENT STATISTICS
-  ====================================================== -->
-  <div
-    class="stats-grid"
-    *ngIf="selectedLoan && !loading">
-
-
-    <!-- Total -->
     <div class="stat-card total-card">
-
-      <div class="stat-icon">
-        📋
-      </div>
-
+      <div class="stat-icon">📋</div>
       <div class="stat-content">
-
-        <span>
-          Total Installments
-        </span>
-
-        <strong>
-          {{ getTotalInstallments() }}
-        </strong>
-
+        <span>Total Installments</span>
+        <strong>{{ getTotalInstallments() }}</strong>
       </div>
-
     </div>
 
-
-    <!-- Paid -->
     <div class="stat-card paid-card">
-
-      <div class="stat-icon">
-        ✓
-      </div>
-
+      <div class="stat-icon">✓</div>
       <div class="stat-content">
-
-        <span>
-          Paid
-        </span>
-
-        <strong>
-          {{ getPaidCount() }}
-        </strong>
-
+        <span>Paid</span>
+        <strong>{{ getPaidCount() }}</strong>
       </div>
-
     </div>
 
-
-    <!-- Partial -->
     <div class="stat-card partial-card">
-
-      <div class="stat-icon">
-        ◐
-      </div>
-
+      <div class="stat-icon">◐</div>
       <div class="stat-content">
-
-        <span>
-          Partial
-        </span>
-
-        <strong>
-          {{ getPartialCount() }}
-        </strong>
-
+        <span>Partial</span>
+        <strong>{{ getPartialCount() }}</strong>
       </div>
-
     </div>
 
-
-    <!-- Pending -->
     <div class="stat-card pending-card">
-
-      <div class="stat-icon">
-        !
-      </div>
-
+      <div class="stat-icon">!</div>
       <div class="stat-content">
-
-        <span>
-          Pending
-        </span>
-
-        <strong>
-          {{ getPendingCount() }}
-        </strong>
-
+        <span>Pending</span>
+        <strong>{{ getPendingCount() }}</strong>
       </div>
-
     </div>
 
   </div>
 
-
-  <!-- =====================================================
-       FINANCIAL SUMMARY
-  ====================================================== -->
-  <div
-    class="financial-card"
-    *ngIf="selectedLoan && !loading">
+  <!-- FINANCIAL SUMMARY -->
+  <div class="financial-card" *ngIf="selectedLoan && !loading">
 
     <div class="section-title">
-
       <div>
-
-        <h3>
-          Financial Summary
-        </h3>
-
-        <p>
-          Current repayment position
-        </p>
-
+        <h3>Financial Summary</h3>
+        <p>Current repayment position</p>
       </div>
-
     </div>
-
 
     <div class="financial-grid">
 
-
-      <!-- Total Paid -->
       <div class="financial-item">
-
-        <span>
-          Total Paid
-        </span>
-
+        <span>Total Paid</span>
         <strong class="green-text">
           ₹{{ getTotalPaidAmount() | number:'1.2-2' }}
         </strong>
-
       </div>
 
-
-      <!-- Penalty -->
       <div class="financial-item">
-
-        <span>
-          Total Penalty
-        </span>
-
+        <span>Total Penalty</span>
         <strong class="orange-text">
           ₹{{ getTotalPenalty() | number:'1.2-2' }}
         </strong>
-
       </div>
 
-
-      <!-- Outstanding -->
       <div class="financial-item">
-
-        <span>
-          Outstanding Principal
-        </span>
-
+        <span>Outstanding Principal</span>
         <strong class="red-text">
           ₹{{ getOutstandingPrincipal() | number:'1.2-2' }}
         </strong>
-
       </div>
 
-
-      <!-- Next EMI -->
       <div class="financial-item">
-
-        <span>
-          Next EMI Date
-        </span>
-
+        <span>Next EMI Date</span>
         <strong>
-
           {{
             getNextEmiDate()
               ? (getNextEmiDate() | date:'dd-MMM-yyyy')
               : '-'
           }}
-
         </strong>
-
       </div>
 
     </div>
-
   </div>
 
-
-  <!-- =====================================================
-       LOADING
-  ====================================================== -->
-  <div
-    class="loading-card"
-    *ngIf="loading">
-
+  <!-- LOADING -->
+  <div class="loading-card" *ngIf="loading">
     <div class="spinner"></div>
-
-    <span>
-      Loading repayment schedule...
-    </span>
-
+    <span>Loading repayment schedule...</span>
   </div>
 
+  <!-- REPAYMENT SCHEDULE -->
+  <div class="schedule-card" *ngIf="selectedLoan && !loading">
 
-  <!-- =====================================================
-       REPAYMENT SCHEDULE
-  ====================================================== -->
-  <div
-    class="schedule-card"
-    *ngIf="selectedLoan && !loading">
-
-
-    <!-- Schedule Header -->
     <div class="schedule-header">
-
       <div>
-
-        <h3>
-          Repayment Schedule
-        </h3>
-
-        <p>
-          Complete EMI payment schedule
-        </p>
-
+        <h3>Repayment Schedule</h3>
+        <p>Complete EMI payment schedule</p>
       </div>
 
-
-      <!-- Schedule Summary -->
       <div class="schedule-summary">
 
         <span class="summary-count total-summary">
-
-          Total
-
-          <strong>
-            {{ getTotalInstallments() }}
-          </strong>
-
+          Total <strong>{{ getTotalInstallments() }}</strong>
         </span>
-
 
         <span class="summary-count paid-summary">
-
-          Paid
-
-          <strong>
-            {{ getPaidCount() }}
-          </strong>
-
+          Paid <strong>{{ getPaidCount() }}</strong>
         </span>
-
 
         <span class="summary-count partial-summary">
-
-          Partial
-
-          <strong>
-            {{ getPartialCount() }}
-          </strong>
-
+          Partial <strong>{{ getPartialCount() }}</strong>
         </span>
 
-
         <span class="summary-count pending-summary">
-
-          Pending
-
-          <strong>
-            {{ getPendingCount() }}
-          </strong>
-
+          Pending <strong>{{ getPendingCount() }}</strong>
         </span>
 
       </div>
-
     </div>
 
-
-    <!-- ===================================================
-         REPAYMENT TABLE
-    ==================================================== -->
-    <div
-      class="table-wrapper"
-      *ngIf="repaymentList.length > 0">
+    <!-- REPAYMENT TABLE -->
+    <div class="table-wrapper" *ngIf="repaymentList.length > 0">
 
       <table class="schedule-table">
 
         <thead>
-
           <tr>
-
-            <th>
-              #
-            </th>
-
-            <th>
-              Installment Date
-            </th>
-
-            <th class="amount-column">
-              Scheduled Amount
-            </th>
-
-            <th class="amount-column">
-              Paid Amount
-            </th>
-
-            <th class="amount-column">
-              Principal
-            </th>
-
-            <th class="amount-column">
-              Interest
-            </th>
-
-            <th class="amount-column">
-              Penalty
-            </th>
-
-            <th>
-              Payment Date
-            </th>
-
-            <th>
-              Status
-            </th>
-
-            <th>
-              Action
-            </th>
-
+            <th>#</th>
+            <th>Installment Date</th>
+            <th class="amount-column">Scheduled Amount</th>
+            <th class="amount-column">Paid Amount</th>
+            <th class="amount-column">Principal</th>
+            <th class="amount-column">Interest</th>
+            <th class="amount-column">Penalty</th>
+            <th>Payment Date</th>
+            <th>Status</th>
+            <th>Action</th>
           </tr>
-
         </thead>
 
-
         <tbody>
-
           <tr
             *ngFor="let repayment of repaymentList"
             [ngClass]="{
-              'paid-row':
-                repayment.paymentStatus === 'PAID',
-
-              'partial-row':
-                repayment.paymentStatus === 'PARTIAL',
-
+              'paid-row': repayment.paymentStatus === 'PAID',
+              'partial-row': repayment.paymentStatus === 'PARTIAL',
               'pending-row':
                 !repayment.paymentStatus ||
                 repayment.paymentStatus === 'PENDING'
             }">
 
-
-            <!-- Installment Number -->
             <td class="installment-number">
-
               {{ repayment.installmentNo }}
-
             </td>
 
-
-            <!-- Installment Date -->
             <td>
-
               {{
                 repayment.installmentDate
                   ? (repayment.installmentDate | date:'dd-MMM-yyyy')
                   : '-'
               }}
-
             </td>
 
-
-            <!-- Scheduled Amount -->
             <td class="amount-cell">
-
               ₹{{ (repayment.scheduledAmount || 0) | number:'1.2-2' }}
-
             </td>
 
-
-            <!-- Paid Amount -->
             <td class="amount-cell">
-
               ₹{{ (repayment.paidAmount || 0) | number:'1.2-2' }}
-
             </td>
 
-
-            <!-- Principal -->
             <td class="amount-cell">
-
               ₹{{ (repayment.principalAmount || 0) | number:'1.2-2' }}
-
             </td>
 
-
-            <!-- Interest -->
             <td class="amount-cell">
-
               ₹{{ (repayment.interestAmount || 0) | number:'1.2-2' }}
-
             </td>
 
-
-            <!-- Penalty -->
             <td class="amount-cell">
-
               ₹{{ (repayment.penaltyAmount || 0) | number:'1.2-2' }}
-
             </td>
 
-
-            <!-- Payment Date -->
             <td>
-
               {{
                 repayment.repaymentDate
                   ? (repayment.repaymentDate | date:'dd-MMM-yyyy')
                   : '-'
               }}
-
             </td>
 
-
-            <!-- Status -->
             <td>
-
               <span
                 class="status-badge"
                 [ngClass]="{
-                  'status-paid':
-                    repayment.paymentStatus === 'PAID',
-
-                  'status-partial':
-                    repayment.paymentStatus === 'PARTIAL',
-
+                  'status-paid': repayment.paymentStatus === 'PAID',
+                  'status-partial': repayment.paymentStatus === 'PARTIAL',
                   'status-pending':
                     !repayment.paymentStatus ||
                     repayment.paymentStatus === 'PENDING'
                 }">
-
                 {{
                   repayment.paymentStatus === 'PAID'
                     ? 'PAID'
@@ -831,169 +413,132 @@
                       ? 'PARTIAL'
                       : 'PENDING'
                 }}
-
               </span>
-
             </td>
 
-
-            <!-- Action -->
+            <!-- ROLE-BASED ACTION -->
             <td>
-
               <button
                 type="button"
                 class="pay-btn"
-                (click)="
-                  repayment.paymentStatus === 'PAID'
-                    ? editPaidEmi(repayment)
-                    : payEmi(repayment)
-                ">
+                (click)="repayment.paymentStatus === 'PAID'
+                  ? editPaidEmi(repayment)
+                  : payEmi(repayment)">
 
                 {{
                   repayment.paymentStatus === 'PAID'
-                    ? 'Edit Payment'
-                    : 'Pay EMI'
+                    ? (isUser ? 'Request Payment Edit' : 'Edit Payment')
+                    : (isUser ? 'Request EMI Payment' : 'Pay EMI')
                 }}
 
               </button>
-
             </td>
 
           </tr>
-
         </tbody>
 
       </table>
-
     </div>
 
-
-    <!-- ===================================================
-         EMPTY SCHEDULE
-    ==================================================== -->
-    <div
-      class="empty-state"
-      *ngIf="repaymentList.length === 0">
-
-      <div class="empty-icon">
-        📋
-      </div>
-
-      <h4>
-        No repayment records found
-      </h4>
-
-      <p>
-        No repayment schedule is available for this loan.
-      </p>
-
+    <!-- EMPTY SCHEDULE -->
+    <div class="empty-state" *ngIf="repaymentList.length === 0">
+      <div class="empty-icon">📋</div>
+      <h4>No repayment records found</h4>
+      <p>No repayment schedule is available for this loan.</p>
     </div>
 
   </div>
 
-
-  <!-- =====================================================
-       INITIAL EMPTY STATE
-  ====================================================== -->
-  <div
-    class="initial-state"
-    *ngIf="!selectedLoan && !loading">
-
-    <div class="initial-icon">
-      💰
-    </div>
-
-    <h3>
-      Select a Loan
-    </h3>
-
+  <!-- INITIAL EMPTY STATE -->
+  <div class="initial-state" *ngIf="!selectedLoan && !loading">
+    <div class="initial-icon">💰</div>
+    <h3>Select a Loan</h3>
     <p>
       Select CMRC, VO / ALF, Village, Group, Woman and Loan
       to view the repayment schedule.
     </p>
-
   </div>
 
-
-  <!-- =====================================================
-       PAYMENT MODAL
-  ====================================================== -->
+  <!-- PAYMENT / APPROVAL REQUEST MODAL -->
   <div
     class="payment-modal-backdrop"
     *ngIf="showPaymentModal"
     (click)="closePaymentModal()">
 
-
     <div
       class="payment-modal"
       (click)="$event.stopPropagation()">
 
-
-      <!-- Modal Header -->
+      <!-- MODAL HEADER -->
       <div class="payment-modal-header">
 
         <div>
-
           <span class="modal-label">
-            EMI Payment
+            {{ isUser ? 'Payment Approval Request' : 'EMI Payment' }}
           </span>
 
           <h3>
-            Installment #
-            {{ selectedRepayment?.installmentNo }}
+            Installment #{{ selectedRepayment?.installmentNo }}
           </h3>
-
         </div>
-
 
         <button
           type="button"
           class="modal-close"
           (click)="closePaymentModal()">
-
           ×
-
         </button>
 
       </div>
 
-
-      <!-- Modal Body -->
+      <!-- MODAL BODY -->
       <div class="payment-modal-body">
 
-
-        <!-- Scheduled Amount -->
         <div class="payment-info-card">
-
-          <span>
-            Scheduled Amount
-          </span>
-
+          <span>Scheduled Amount</span>
           <strong>
-
             ₹{{
               (selectedRepayment?.scheduledAmount || 0)
-              | number:'1.2-2'
+                | number:'1.2-2'
             }}
-
           </strong>
-
         </div>
 
-
-        <!-- Paid Amount -->
+        <!-- PAID AMOUNT -->
         <div class="form-group">
-
-          <label>
-            Paid Amount
-          </label>
+          <label>Paid Amount</label>
 
           <div class="input-group">
+            <span class="input-group-text">₹</span>
+<div class="mb-3" *ngIf="selectedRepayment">
+  <label>Scheduled EMI Amount</label>
+  <input
+    type="number"
+    class="form-control"
+    [value]="selectedRepayment.scheduledAmount || 0"
+    readonly
+  />
+</div>
 
-            <span class="input-group-text">
-              ₹
-            </span>
+<div class="mb-3" *ngIf="selectedRepayment">
+  <label>Already Paid Amount</label>
+  <input
+    type="number"
+    class="form-control"
+    [value]="selectedRepayment.paidAmount || 0"
+    readonly
+  />
+</div>
 
+<div class="mb-3" *ngIf="selectedRepayment">
+  <label><strong>Remaining EMI Amount</strong></label>
+ <input
+    type="number"
+    class="form-control"
+    [value]="getRemainingEmiAmount(selectedRepayment)"
+    readonly
+  />
+</div>
             <input
               type="number"
               class="form-control"
@@ -1001,24 +546,15 @@
               min="0"
               step="0.01"
               placeholder="Enter paid amount">
-
           </div>
-
         </div>
 
-
-        <!-- Penalty -->
+        <!-- PENALTY -->
         <div class="form-group">
-
-          <label>
-            Penalty Amount
-          </label>
+          <label>Penalty Amount</label>
 
           <div class="input-group">
-
-            <span class="input-group-text">
-              ₹
-            </span>
+            <span class="input-group-text">₹</span>
 
             <input
               type="number"
@@ -1027,46 +563,31 @@
               min="0"
               step="0.01"
               placeholder="Enter penalty amount">
-
           </div>
-
         </div>
 
-
-        <!-- Regular Repayment -->
+        <!-- REGULAR REPAYMENT -->
         <div class="checkbox-card">
-
           <label>
-
             <input
               type="checkbox"
               [(ngModel)]="regularRepayment">
 
-            <span>
-              Regular Repayment
-            </span>
-
+            <span>Regular Repayment</span>
           </label>
-
         </div>
 
-
-        <!-- Current Status -->
+        <!-- CURRENT STATUS -->
         <div class="current-status">
-
-          <span>
-            Current Status
-          </span>
+          <span>Current Status</span>
 
           <span
             class="status-badge"
             [ngClass]="{
               'status-paid':
                 selectedRepayment?.paymentStatus === 'PAID',
-
               'status-partial':
                 selectedRepayment?.paymentStatus === 'PARTIAL',
-
               'status-pending':
                 !selectedRepayment?.paymentStatus ||
                 selectedRepayment?.paymentStatus === 'PENDING'
@@ -1081,25 +602,19 @@
             }}
 
           </span>
-
         </div>
 
       </div>
 
-
-      <!-- Modal Footer -->
+      <!-- MODAL FOOTER -->
       <div class="payment-modal-footer">
-
 
         <button
           type="button"
           class="btn-secondary"
           (click)="closePaymentModal()">
-
           Cancel
-
         </button>
-
 
         <button
           type="button"
@@ -1107,9 +622,13 @@
           (click)="confirmPayment()">
 
           {{
-            selectedRepayment?.paymentStatus === 'PAID'
-              ? 'Update Payment'
-              : 'Confirm Payment'
+            isUser
+              ? (selectedRepayment?.paymentStatus === 'PAID'
+                  ? 'Submit Edit Request'
+                  : 'Submit Approval Request')
+              : (selectedRepayment?.paymentStatus === 'PAID'
+                  ? 'Update Payment'
+                  : 'Confirm Payment')
           }}
 
         </button>
@@ -1117,7 +636,6 @@
       </div>
 
     </div>
-
   </div>
 
 </div>

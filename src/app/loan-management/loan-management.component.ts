@@ -30,6 +30,7 @@ import {
 
 import {
   Loan,
+  LoanApprovalRequest,
   LoanImage,
   LoanService
 } from '../services/loan.service';
@@ -1206,162 +1207,130 @@ loadCmrcList(): void {
   // SAVE LOAN
   // =========================================================
 
-  saveLoan(): void {
+ 
+saveLoan(): void {
+  this.calculateDisbursedAmount();
+  this.calculateEmi();
 
-    this.calculateDisbursedAmount();
-    this.calculateEmi();
+  // Keep display values synchronized
+  this.newLoan.cmrcName =
+    this.getCmrcNameById(this.newLoan.cmrcId);
 
+  this.newLoan.voAlfName =
+    this.getVoAlfNameById(this.newLoan.voAlfId);
 
-    // Keep display values synchronized
-    this.newLoan.cmrcName =
-      this.getCmrcNameById(
-        this.newLoan.cmrcId
-      );
+  this.newLoan.villageName =
+    this.getVillageNameByVoAlfId(this.newLoan.voAlfId);
 
-    this.newLoan.voAlfName =
-      this.getVoAlfNameById(
-        this.newLoan.voAlfId
-      );
+  const group = this.groupList.find(
+    item => Number(item.id) === Number(this.newLoan.groupId)
+  );
 
-    this.newLoan.villageName =
-      this.getVillageNameByVoAlfId(
-        this.newLoan.voAlfId
-      );
+  this.newLoan.groupName = group?.groupName || '';
 
+  const woman = this.womenList.find(
+    item => Number(item.id) === Number(this.newLoan.womanId)
+  );
 
-    const group =
-      this.groupList.find(
-        item =>
-          Number(item.id) ===
-          Number(this.newLoan.groupId)
-      );
+  this.newLoan.womanName = woman?.womanName || '';
 
-    this.newLoan.groupName =
-      group?.groupName || '';
+  // =======================================================
+  // UPDATE LOAN
+  // =======================================================
 
-
-    const woman =
-      this.womenList.find(
-        item =>
-          Number(item.id) ===
-          Number(this.newLoan.womanId)
-      );
-
-    this.newLoan.womanName =
-      woman?.womanName || '';
-
-
-    // =======================================================
-    // UPDATE
-    // =======================================================
-
-    if (
-      this.isEditMode &&
-      this.editingLoanId
-    ) {
-
-      this.loanService.update(
-        this.editingLoanId,
-        this.newLoan
-      ).subscribe({
-
-        next: () => {
-
-          this.closeForm();
-
-          this.loadAllLoans();
-
-        },
-
-        error: (error: any) => {
-
-          console.error(
-            'Error updating loan:',
-            error
-          );
-
-          alert(
-            'Failed to update loan.'
-          );
-
-        }
-
-      });
-
-      return;
-    }
-
-
-    // =======================================================
-    // CREATE
-    // =======================================================
-
-    this.loanService.create(
+  if (this.isEditMode && this.editingLoanId) {
+    this.loanService.update(
+      this.editingLoanId,
       this.newLoan
     ).subscribe({
-
-      next: (createdLoan: Loan) => {
-
-        const loanId =
-          Number(createdLoan?.id);
-
-
-        if (!loanId) {
-
+      next: (response) => {
+        if ('requestType' in response) {
           alert(
-            'Loan created but Loan ID was not returned.'
+            `Loan ${response.requestType.toLowerCase()} approval request submitted successfully.`
           );
-
-          this.closeForm();
-          this.loadAllLoans();
-
-          return;
-        }
-
-
-        if (
-          this.selectedImageFiles.length > 0
-        ) {
-
-          this.uploadLoanImages(
-            loanId,
-            () =>
-              this.generateLoanSchedules(
-                loanId
-              )
-          );
-
         } else {
-
-          this.generateLoanSchedules(
-            loanId
-          );
-
+          alert('Loan updated successfully.');
         }
-
 
         this.closeForm();
-
         this.loadAllLoans();
-
       },
-
       error: (error: any) => {
-
-        console.error(
-          'Error creating loan:',
-          error
-        );
+        console.error('Error updating loan:', error);
 
         alert(
-          'Failed to create loan.'
+          error?.error?.message ||
+          'Failed to update loan or submit approval request.'
         );
-
       }
-
     });
 
+    return;
   }
+
+  // =======================================================
+  // CREATE LOAN
+  // =======================================================
+
+  this.loanService.create(this.newLoan).subscribe({
+    next: (response) => {
+
+      // USER response: approval request
+      if ('requestType' in response) {
+        const request: LoanApprovalRequest = response;
+
+        alert(
+          `Loan approval request submitted successfully. Request ID: ${request.id}. Status: ${request.status}.`
+        );
+
+        if (this.selectedImageFiles.length > 0) {
+          alert(
+            'Note: The selected images are not attached to the pending approval request. Image upload for pending requests needs separate handling.'
+          );
+        }
+
+        // Do not generate schedules for a pending request.
+        this.closeForm();
+        this.loadAllLoans();
+        return;
+      }
+
+      // ADMIN response: actual created loan
+      const createdLoan: Loan = response;
+      const loanId = Number(createdLoan.id);
+
+      if (!loanId) {
+        alert('Loan was created, but the Loan ID was not returned.');
+        this.closeForm();
+        this.loadAllLoans();
+        return;
+      }
+
+      // Upload images and generate schedules for direct creation.
+      if (this.selectedImageFiles.length > 0) {
+        this.uploadLoanImages(
+          loanId,
+          () => this.generateLoanSchedules(loanId)
+        );
+      } else {
+        this.generateLoanSchedules(loanId);
+      }
+
+      alert('Loan created successfully.');
+      this.closeForm();
+      this.loadAllLoans();
+    },
+
+    error: (error: any) => {
+      console.error('Error creating loan:', error);
+
+      alert(
+        error?.error?.message ||
+        'Failed to create loan or submit approval request.'
+      );
+    }
+  });
+}
 
 
   // =========================================================

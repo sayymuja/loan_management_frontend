@@ -92,6 +92,16 @@
       <i class="bi bi-robot"></i>
       <span>AI Chat</span>
     </a>
+    <!-- Super Admin Menu -->
+<div *ngIf="isSuperAdmin" class="menu-divider"></div>
+
+<a
+  *ngIf="isSuperAdmin"
+  routerLink="/super-admin/users"
+  routerLinkActive="active">
+  <i class="bi bi-person-gear"></i>
+  <span>User Management</span>
+</a>
   </nav>
 
 </aside>

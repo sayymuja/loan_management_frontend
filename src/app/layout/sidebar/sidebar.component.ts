@@ -8,6 +8,9 @@ import { Component, OnInit } from '@angular/core';
 export class SidebarComponent implements OnInit {
 
   constructor() { }
+  isSuperAdmin =
+  localStorage.getItem('role')?.replace(/^ROLE_/i, '').toUpperCase()
+  === 'SUPER_ADMIN';
 
   ngOnInit(): void {
   }

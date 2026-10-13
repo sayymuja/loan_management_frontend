@@ -23,6 +23,7 @@ export class CmrcComponent implements OnInit {
   isEditMode = false;
   isSaving = false;
   deletingId: number | null = null;
+  isAdmin = false;
 
 
   // =====================================================
@@ -73,12 +74,28 @@ export class CmrcComponent implements OnInit {
   // INIT
   // =====================================================
 
-  ngOnInit(): void {
+ngOnInit(): void {
+  this.loadCurrentUserDetails();
 
-    this.loadCurrentUserDetails();
+  // Get role from logged-in user object
+  const userData = localStorage.getItem('user');
 
-    this.loadCmrc();
+  if (userData) {
+    try {
+      const user = JSON.parse(userData);
+
+      this.isAdmin =
+        String(user.role || user.userRole || '')
+          .toUpperCase() === 'ADMIN';
+
+    } catch (error) {
+      console.error('Unable to read user role:', error);
+      this.isAdmin = false;
+    }
   }
+
+  this.loadCmrc();
+}
 
 
   // =====================================================

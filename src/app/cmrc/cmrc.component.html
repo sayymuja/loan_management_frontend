@@ -398,9 +398,9 @@
               Status
             </th>
 
-            <th class="text-center">
-              Actions
-            </th>
+           <th class="text-center" *ngIf="isAdmin">
+  Actions
+</th>
 
           </tr>
 
@@ -520,47 +520,37 @@
 
             <!-- ACTIONS -->
 
-            <td class="text-center">
+           <td class="text-center" *ngIf="isAdmin">
+  <div class="action-buttons">
 
-              <div class="action-buttons">
+    <button
+      type="button"
+      class="btn btn-sm btn-outline-primary"
+      title="Edit CMRC Balance"
+      (click)="openEditForm(cmrc)">
+      <i class="bi bi-pencil"></i>
+    </button>
 
-                <!-- EDIT -->
+    <button
+      type="button"
+      class="btn btn-sm btn-outline-danger"
+      title="Delete CMRC Balance"
+      (click)="deleteCmrc(cmrc.id)"
+      [disabled]="deletingId === cmrc.id">
 
-                <button
-                  type="button"
-                  class="btn btn-sm btn-outline-primary"
-                  title="Edit CMRC Balance"
-                  (click)="openEditForm(cmrc)">
+      <span
+        *ngIf="deletingId === cmrc.id"
+        class="spinner-border spinner-border-sm">
+      </span>
 
-                  <i class="bi bi-pencil"></i>
+      <i
+        *ngIf="deletingId !== cmrc.id"
+        class="bi bi-trash">
+      </i>
+    </button>
 
-                </button>
-
-
-                <!-- DELETE -->
-
-                <button
-                  type="button"
-                  class="btn btn-sm btn-outline-danger"
-                  title="Delete CMRC Balance"
-                  (click)="deleteCmrc(cmrc.id)"
-                  [disabled]="deletingId === cmrc.id">
-
-                  <span
-                    *ngIf="deletingId === cmrc.id"
-                    class="spinner-border spinner-border-sm">
-                  </span>
-
-                  <i
-                    *ngIf="deletingId !== cmrc.id"
-                    class="bi bi-trash">
-                  </i>
-
-                </button>
-
-              </div>
-
-            </td>
+  </div>
+</td>
 
           </tr>
 
@@ -573,8 +563,7 @@
             *ngIf="filteredCmrcList.length === 0">
 
             <td
-              colspan="9"
-              class="no-records">
+             [attr.colspan]="isAdmin ? 9 : 8" class="no-records">
 
               <div>
 

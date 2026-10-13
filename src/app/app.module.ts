@@ -29,6 +29,8 @@ import { CommonModule } from '@angular/common';
 import { BankBalanceComponent } from './bank-balance/bank-balance.component';
 import { GroupComponent } from './group/group.component';
 import { AiChatComponent } from './ai-chat/ai-chat.component';
+import { UserManagementComponent } from './super-admin/user-management/user-management.component';
+import { ApprovalRequestsComponent } from './approval-requests/approval-requests.component';
 
 @NgModule({
   declarations: [
@@ -51,7 +53,9 @@ import { AiChatComponent } from './ai-chat/ai-chat.component';
     WomenComponent,
     BankBalanceComponent,
     GroupComponent,
-    AiChatComponent
+    AiChatComponent,
+    UserManagementComponent,
+    ApprovalRequestsComponent
 
   ],
   imports: [

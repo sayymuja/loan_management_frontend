@@ -19,10 +19,25 @@
   <div class="topbar-right">
 
     <!-- Notification -->
-    <button class="icon-button">
-      <i class="bi bi-bell"></i>
-      <span class="notification-dot"></span>
-    </button>
+    
+<button
+  type="button"
+  class="icon-button notification-button"
+  title="Pending approval requests"
+  aria-label="Pending approval requests"
+  (click)="openApprovalRequests()">
+
+  <i class="bi bi-bell"></i>
+
+  <span
+    class="notification-count"
+    *ngIf="isAdmin && pendingRequestCount > 0">
+    {{ pendingRequestCount > 99 ? '99+' : pendingRequestCount }}
+  </span>
+
+</button>
+
+
 <!-- Language Dropdown -->
 <div class="language-selector">
 

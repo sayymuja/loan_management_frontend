@@ -1,0 +1,105 @@
+<div class="user-management-container">
+
+  <div class="page-header">
+    <div>
+      <h2>User Management</h2>
+      <p>Manage registered users and assign roles.</p>
+    </div>
+
+    <button
+      type="button"
+      class="btn-refresh"
+      (click)="loadUsers()"
+      [disabled]="loading">
+      {{ loading ? 'Loading...' : 'Refresh Users' }}
+    </button>
+  </div>
+
+  <div class="summary-card">
+    <div class="summary-label">Total Registered Users</div>
+    <div class="summary-value">{{ users.length }}</div>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="loading" class="loading-message">
+    Loading users...
+  </div>
+
+  <div class="table-container" *ngIf="!loading">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>CMRC</th>
+          <th>Current Role</th>
+          <th>Change Role</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td>{{ user.id }}</td>
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.cmrcName || 'Not Assigned' }}</td>
+
+          <td>
+            <span
+              class="role-badge"
+              [ngClass]="{
+                'role-admin': user.role === 'ADMIN',
+                'role-super-admin': user.role === 'SUPER_ADMIN',
+                'role-user': user.role === 'USER'
+              }">
+              {{ user.role }}
+            </span>
+          </td>
+
+          <td>
+            <select
+              #roleSelect
+              class="role-select"
+              [disabled]="
+                updatingUserId === user.id ||
+                user.id === +((currentUserId))
+              "
+              [value]="user.role === 'USER' ? 'ADMIN' : user.role">
+              <option value="ADMIN">ADMIN</option>
+              <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+            </select>
+          </td>
+
+          <td>
+            <button
+              type="button"
+              class="btn-update"
+              [disabled]="
+                updatingUserId === user.id ||
+                user.id === +((currentUserId))
+              "
+              (click)="updateRole(user, roleSelect.value)">
+              {{ updatingUserId === user.id ? 'Updating...' : 'Update Role' }}
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="users.length === 0">
+          <td colspan="7" class="empty-message">
+            No registered users found.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>

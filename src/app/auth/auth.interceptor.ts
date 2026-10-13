@@ -1,3 +1,4 @@
+
 import { Injectable } from '@angular/core';
 import {
   HttpInterceptor,
@@ -17,9 +18,16 @@ export class AuthInterceptor implements HttpInterceptor {
 
     const token = localStorage.getItem('token');
 
-    console.log('AuthInterceptor token:', token);
+    console.log(
+      'Request:',
+      request.url,
+      '| JWT exists:',
+      !!token,
+      '| Invalid token value:',
+      token === 'ADMIN'
+    );
 
-    if (token) {
+    if (token && token !== 'ADMIN') {
       request = request.clone({
         setHeaders: {
           Authorization: `Bearer ${token}`

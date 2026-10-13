@@ -1,3 +1,4 @@
+
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
@@ -11,7 +12,6 @@ export class LoginComponent {
 
   email = '';
   password = '';
-
   errorMessage = '';
 
   constructor(
@@ -19,32 +19,55 @@ export class LoginComponent {
     private router: Router
   ) {}
 
-  login() {
+  login(): void {
 
     this.errorMessage = '';
 
     const user = {
-      email: this.email,
+      email: this.email.trim(),
       password: this.password
     };
 
     this.authService.login(user).subscribe({
-     next: (response) => {
 
-  localStorage.setItem('token', response.token);
-    localStorage.setItem('user', JSON.stringify(response));
+      next: (response: any) => {
 
+        // Validate JWT received from backend
+        if (!response || !response.token) {
+          this.errorMessage =
+            'Login failed: JWT token was not received from the server.';
+          return;
+        }
 
-  this.router.navigate(['/dashboard']);
+        // Save actual JWT token
+        localStorage.setItem('token', response.token);
 
-},
+        // Save user details
+        localStorage.setItem('user', JSON.stringify(response));
+
+        // Save role separately
+        if (response.role) {
+          localStorage.setItem(
+            'role',
+            response.role.toString().replace(/^ROLE_/i, '').toUpperCase()
+          );
+        }
+
+        console.log('Login successful');
+        console.log('JWT token received:', !!response.token);
+        console.log('User role:', response.role);
+
+        // Navigate to dashboard
+        this.router.navigate(['/dashboard']);
+
+      },
 
       error: (error) => {
 
-        console.error(error);
+        console.error('Login failed:', error);
 
         this.errorMessage =
-          'Invalid email or password';
+          error?.error?.message || 'Invalid email or password';
 
       }
 

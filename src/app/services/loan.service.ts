@@ -1,7 +1,7 @@
+
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
 
 // =========================================================
 // LOAN INTERFACE
@@ -25,10 +25,7 @@ export interface Loan {
 
   sanctionedAmount?: number;
   processingFee?: number;
-
-  // ADD THIS
   totalAmount?: number;
-
   loanAmount?: number;
 
   loanPurpose?: string;
@@ -40,34 +37,54 @@ export interface Loan {
   monthlyEmi?: number;
 
   loanStatus?: string;
-
   totalInterestReceived?: number;
 }
+export interface LoanApprovalRequest {
+  id: number;
+  requestType: 'CREATE' | 'UPDATE' | 'DELETE' | string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | string;
+  loanId: number | null;
+  requestData?: string;
+  requestedByUserId?: number;
+  requestedByName?: string;
+  cmrcId?: number;
+  createdAt?: string;
+  reviewedAt?: string;
+  adminRemarks?: string;
+}
 
+// =========================================================
+// LOAN APPROVAL REQUEST INTERFACE
+// =========================================================
+
+export interface LoanApprovalRequest {
+  id: number;
+  requestType: 'CREATE' | 'UPDATE' | 'DELETE' | string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | string;
+  loanId: number | null;
+  requestData?: string;
+  requestedByUserId?: number;
+  requestedByName?: string;
+  cmrcId?: number;
+  createdAt?: string;
+  reviewedAt?: string;
+  adminRemarks?: string;
+}
 
 // =========================================================
 // LOAN IMAGE INTERFACE
 // =========================================================
 
 export interface LoanImage {
-
   id?: number;
-
   loanId?: number;
-
   fileName?: string;
-
   contentType?: string;
-
   fileSize?: number;
-
   viewUrl?: string;
-
   downloadUrl?: string;
-
   uploadedAt?: string;
 }
-
 
 // =========================================================
 // SERVICE
@@ -78,160 +95,119 @@ export interface LoanImage {
 })
 export class LoanService {
 
-  private apiUrl =
-    'http://localhost:8080/api/loan';
+  private apiUrl = 'http://localhost:8080/api/loan';
 
-  private imageApiUrl =
-    'http://localhost:8080/api/loan-images';
+  private imageApiUrl = 'http://localhost:8080/api/loan-images';
 
-
-  constructor(
-    private http: HttpClient
-  ) {}
-
+  constructor(private http: HttpClient) {}
 
   // =========================================================
   // GET ALL
   // =========================================================
 
   getAll(): Observable<Loan[]> {
-
-    return this.http.get<Loan[]>(
-      this.apiUrl
-    );
+    return this.http.get<Loan[]>(this.apiUrl);
   }
-
 
   // =========================================================
   // GET BY ID
   // =========================================================
 
-  getById(
-    id: number
-  ): Observable<Loan> {
-
-    return this.http.get<Loan>(
-      `${this.apiUrl}/${id}`
-    );
+  getById(id: number): Observable<Loan> {
+    return this.http.get<Loan>(`${this.apiUrl}/${id}`);
   }
-
 
   // =========================================================
   // GET LOANS BY WOMAN
   // =========================================================
 
-  getByWomanId(
-    womanId: number
-  ): Observable<Loan[]> {
-
-    return this.http.get<Loan[]>(
-      `${this.apiUrl}/woman/${womanId}`
-    );
+  getByWomanId(womanId: number): Observable<Loan[]> {
+    return this.http.get<Loan[]>(`${this.apiUrl}/woman/${womanId}`);
   }
-
 
   // =========================================================
   // CREATE
+  // USER: ApprovalRequest
+  // ADMIN: Loan
   // =========================================================
 
-  create(
-    loan: Loan
-  ): Observable<Loan> {
-
-    return this.http.post<Loan>(
+  create(loan: Loan): Observable<Loan | LoanApprovalRequest> {
+    return this.http.post<Loan | LoanApprovalRequest>(
       this.apiUrl,
       loan
     );
   }
 
-
   // =========================================================
   // UPDATE
+  // USER: ApprovalRequest
+  // ADMIN: Loan
   // =========================================================
 
   update(
     id: number,
     loan: Loan
-  ): Observable<Loan> {
-
-    return this.http.put<Loan>(
+  ): Observable<Loan | LoanApprovalRequest> {
+    return this.http.put<Loan | LoanApprovalRequest>(
       `${this.apiUrl}/${id}`,
       loan
     );
   }
 
-
   // =========================================================
   // DELETE
+  // USER: ApprovalRequest
+  // ADMIN: Success message
   // =========================================================
 
-  delete(
-    id: number
-  ): Observable<void> {
-
-    return this.http.delete<void>(
-      `${this.apiUrl}/${id}`
+  delete(id: number): Observable<string | LoanApprovalRequest> {
+    return this.http.delete<string | LoanApprovalRequest>(
+      `${this.apiUrl}/${id}`,
+      { responseType: 'json' }
     );
   }
-
 
   // =========================================================
   // GENERATE CL SCHEDULE
   // =========================================================
 
-  generateClSchedule(
-    loanId: number
-  ): Observable<any[]> {
-
+  generateClSchedule(loanId: number): Observable<any[]> {
     return this.http.post<any[]>(
       `http://localhost:8080/api/cl-schedule/generate/${loanId}`,
       {}
     );
   }
 
-
   // =========================================================
   // GENERATE REPAYMENT
   // =========================================================
 
-  generateRepayment(
-    loanId: number
-  ): Observable<any[]> {
-
+  generateRepayment(loanId: number): Observable<any[]> {
     return this.http.post<any[]>(
       `http://localhost:8080/api/repayment/generate/${loanId}`,
       {}
     );
   }
 
-
   // =========================================================
   // GET LOANS BY VO / ALF
   // =========================================================
 
-  getByVoAlfId(
-    voAlfId: number
-  ): Observable<Loan[]> {
-
+  getByVoAlfId(voAlfId: number): Observable<Loan[]> {
     return this.http.get<Loan[]>(
       `${this.apiUrl}/vo-alf/${voAlfId}`
     );
   }
 
-
   // =========================================================
   // GET LOANS BY GROUP
   // =========================================================
 
-  getByGroupId(
-    groupId: number
-  ): Observable<Loan[]> {
-
+  getByGroupId(groupId: number): Observable<Loan[]> {
     return this.http.get<Loan[]>(
       `${this.apiUrl}/group/${groupId}`
     );
   }
-
 
   // =========================================================
   // LOAN IMAGE - UPLOAD
@@ -241,20 +217,11 @@ export class LoanService {
     loanId: number,
     files: File[]
   ): Observable<LoanImage[]> {
+    const formData = new FormData();
 
-    const formData =
-      new FormData();
-
-    files.forEach(
-      (file: File) => {
-
-        formData.append(
-          'files',
-          file
-        );
-
-      }
-    );
+    files.forEach((file: File) => {
+      formData.append('files', file);
+    });
 
     return this.http.post<LoanImage[]>(
       `${this.imageApiUrl}/upload/${loanId}`,
@@ -262,53 +229,37 @@ export class LoanService {
     );
   }
 
-
   // =========================================================
   // LOAN IMAGE - GET BY LOAN
   // =========================================================
 
-  getImagesByLoan(
-    loanId: number
-  ): Observable<LoanImage[]> {
-
+  getImagesByLoan(loanId: number): Observable<LoanImage[]> {
     return this.http.get<LoanImage[]>(
       `${this.imageApiUrl}/loan/${loanId}`
     );
   }
 
-
   // =========================================================
   // LOAN IMAGE - VIEW URL
   // =========================================================
 
-  getImageViewUrl(
-    imageId: number
-  ): string {
-
+  getImageViewUrl(imageId: number): string {
     return `${this.imageApiUrl}/view/${imageId}`;
   }
-
 
   // =========================================================
   // LOAN IMAGE - DOWNLOAD URL
   // =========================================================
 
-  getImageDownloadUrl(
-    imageId: number
-  ): string {
-
+  getImageDownloadUrl(imageId: number): string {
     return `${this.imageApiUrl}/download/${imageId}`;
   }
-
 
   // =========================================================
   // LOAN IMAGE - DELETE
   // =========================================================
 
-  deleteImage(
-    imageId: number
-  ): Observable<any> {
-
+  deleteImage(imageId: number): Observable<any> {
     return this.http.delete<any>(
       `${this.imageApiUrl}/${imageId}`
     );

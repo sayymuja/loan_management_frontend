@@ -99,4 +99,39 @@ editPaidEmi(
     {}
   );
 }
+// Add inside the existing RepaymentService class
+
+private approvalApiUrl = 'http://localhost:8080/api/loan-approval-requests';
+
+submitPayEmiRequest(
+  repaymentId: number,
+  paidAmount: number,
+  penaltyAmount: number,
+  regularRepayment: boolean
+): Observable<any> {
+  return this.http.post(
+    `${this.approvalApiUrl}/repayment/pay`,
+    {
+      repaymentId,
+      paidAmount,
+      penaltyAmount,
+      regularRepayment
+    }
+  );
+}
+
+submitEditPaidEmiRequest(
+  repaymentId: number,
+  paidAmount: number,
+  penaltyAmount: number
+): Observable<any> {
+  return this.http.post(
+    `${this.approvalApiUrl}/repayment/edit`,
+    {
+      repaymentId,
+      paidAmount,
+      penaltyAmount
+    }
+  );
+}
 }

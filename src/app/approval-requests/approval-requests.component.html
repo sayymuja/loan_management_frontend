@@ -1,0 +1,1029 @@
+
+<div class="approval-page">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div>
+      <h2>Request Approval Management</h2>
+      <p>Review loan and repayment requests submitted by users.</p>
+    </div>
+
+    <button
+      type="button"
+      class="btn-refresh"
+      (click)="loadRequests()"
+      [disabled]="loading">
+      <span class="refresh-icon">↻</span>
+      {{ loading ? 'Loading...' : 'Refresh' }}
+    </button>
+  </div>
+
+  <!-- ALERTS -->
+  <div class="alert-box alert-error" *ngIf="errorMessage">
+    <span>⚠</span>
+    {{ errorMessage }}
+  </div>
+
+  <div class="alert-box alert-success" *ngIf="successMessage">
+    <span>✓</span>
+    {{ successMessage }}
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="summary-card">
+    <div class="summary-icon">📋</div>
+    <div class="summary-content">
+      <span class="summary-label">Total Pending Requests</span>
+      <h3>{{ requests.length }}</h3>
+      <p>Requests waiting for admin review</p>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="loader"></div>
+    <p>Loading approval requests...</p>
+  </div>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- LOAN APPROVAL TABLE -->
+    <div class="table-card">
+
+      <div class="table-header">
+        <div>
+          <h3>Loan Approval Requests</h3>
+          <p>Review loan creation, update and delete requests.</p>
+        </div>
+
+        <span class="request-count">
+          {{ loanRequests.length }} Requests
+        </span>
+      </div>
+
+      <div class="empty-state" *ngIf="loanRequests.length === 0">
+        <div class="empty-icon">📭</div>
+        <h3>No Pending Loan Requests</h3>
+        <p>New loan approval requests will appear here.</p>
+      </div>
+
+      <div class="table-responsive" *ngIf="loanRequests.length > 0">
+        <table class="approval-table">
+          <thead>
+            <tr>
+              <th>Request ID</th>
+              <th>Request Type</th>
+              <th>Applicant / Woman</th>
+              <th>Requested By</th>
+              <th>Sanctioned Amount</th>
+              <th>Request Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let request of loanRequests">
+
+              <td>
+                <span class="request-id">#{{ request.id }}</span>
+              </td>
+
+              <td>
+                <span
+                  class="type-badge"
+                  [ngClass]="{
+                    'type-create': request.requestType === 'CREATE',
+                    'type-update': request.requestType === 'UPDATE',
+                    'type-delete': request.requestType === 'DELETE'
+                  }">
+                  {{ getRequestTypeLabel(request) }}
+                </span>
+              </td>
+
+              <td>
+                <button
+                  type="button"
+                  class="applicant-link"
+                  (click)="openDetailsPopup(request)">
+
+                  <span class="applicant-avatar">
+                    {{
+                      (getLoanValue(request, 'womanName') || 'W')
+                        .toString().charAt(0)
+                    }}
+                  </span>
+
+                  <span class="applicant-info">
+                    <strong>{{ getLoanValue(request, 'womanName') }}</strong>
+                    <small>View loan details ↗</small>
+                  </span>
+                </button>
+              </td>
+
+              <td>
+                <span class="requested-by">
+                  {{ request.requestedByName || 'Unknown User' }}
+                </span>
+                <small class="sub-text">
+                  User ID: {{ request.requestedByUserId }}
+                </small>
+              </td>
+
+              <td class="amount-cell">
+                ₹{{ formatAmount(getLoanValue(request, 'sanctionedAmount')) }}
+              </td>
+
+              <td>
+                <span class="date-text">
+                  {{
+                    request.createdAt
+                      ? (request.createdAt | date:'dd MMM yyyy')
+                      : '-'
+                  }}
+                </span>
+                <small class="sub-text">
+                  {{
+                    request.createdAt
+                      ? (request.createdAt | date:'hh:mm a')
+                      : ''
+                  }}
+                </small>
+              </td>
+
+              <td>
+                <span
+                  class="status-badge"
+                  [ngClass]="{
+                    'status-pending': request.status === 'PENDING',
+                    'status-approved': request.status === 'APPROVED',
+                    'status-rejected': request.status === 'REJECTED'
+                  }">
+                  <span class="status-dot"></span>
+                  {{ request.status }}
+                </span>
+              </td>
+
+              <td>
+                <button
+                  type="button"
+                  class="btn-refresh"
+                  (click)="openDetailsPopup(request)">
+                  View Details
+                </button>
+              </td>
+
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- REPAYMENT APPROVAL TABLE -->
+    <div class="table-card">
+
+      <div class="table-header">
+        <div>
+          <h3>Repayment Approval Requests</h3>
+          <p>Review EMI payment and paid EMI edit requests.</p>
+        </div>
+
+        <span class="request-count">
+          {{ repaymentRequests.length }} Requests
+        </span>
+      </div>
+
+      <div class="empty-state" *ngIf="repaymentRequests.length === 0">
+        <div class="empty-icon">💳</div>
+        <h3>No Pending Repayment Requests</h3>
+        <p>Pay EMI and Edit Payment requests will appear here.</p>
+      </div>
+
+      <div class="table-responsive" *ngIf="repaymentRequests.length > 0">
+        <table class="approval-table">
+          <thead>
+            <tr>
+              <th>Request ID</th>
+              <th>Request Type</th>
+              <th>Loan ID</th>
+              <th>Installment</th>
+              <th>Requested By</th>
+              <th>Requested Paid Amount</th>
+              <th>Penalty</th>
+              <th>Request Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let request of repaymentRequests">
+
+              <td>
+                <span class="request-id">#{{ request.id }}</span>
+              </td>
+
+              <td>
+                <span
+                  class="type-badge"
+                  [ngClass]="{
+                    'type-create': !isEditPaymentRequest(request),
+                    'type-update': isEditPaymentRequest(request)
+                  }">
+                  {{ getRequestTypeLabel(request) }}
+                </span>
+              </td>
+
+              <td>{{ request.loanId ?? '-' }}</td>
+
+              <td>
+                {{
+                  request.repaymentDetails?.installmentNo ??
+                  getLoanValue(request, 'installmentNo')
+                }}
+              </td>
+
+              <td>
+                <span class="requested-by">
+                  {{ request.requestedByName || 'Unknown User' }}
+                </span>
+                <small class="sub-text">
+                  User ID: {{ request.requestedByUserId }}
+                </small>
+              </td>
+
+              <td class="amount-cell">
+                ₹{{ getRequestedPaidAmount(request) }}
+              </td>
+
+              <td class="amount-cell">
+                ₹{{ getRequestedPenaltyAmount(request) }}
+              </td>
+
+              <td>
+                <span class="date-text">
+                  {{
+                    request.createdAt
+                      ? (request.createdAt | date:'dd MMM yyyy')
+                      : '-'
+                  }}
+                </span>
+                <small class="sub-text">
+                  {{
+                    request.createdAt
+                      ? (request.createdAt | date:'hh:mm a')
+                      : ''
+                  }}
+                </small>
+              </td>
+
+              <td>
+                <span
+                  class="status-badge"
+                  [ngClass]="{
+                    'status-pending': request.status === 'PENDING',
+                    'status-approved': request.status === 'APPROVED',
+                    'status-rejected': request.status === 'REJECTED'
+                  }">
+                  <span class="status-dot"></span>
+                  {{ request.status }}
+                </span>
+              </td>
+
+              <td>
+                <button
+                  type="button"
+                  class="btn-refresh"
+                  (click)="openDetailsPopup(request)">
+                  View Details
+                </button>
+              </td>
+
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- NO REQUESTS -->
+    <div class="empty-state" *ngIf="requests.length === 0">
+      <div class="empty-icon">📭</div>
+      <h3>No Pending Requests</h3>
+      <p>New loan and repayment approval requests will appear here.</p>
+
+      <button
+        type="button"
+        class="btn-refresh"
+        (click)="loadRequests()">
+        Refresh Requests
+      </button>
+    </div>
+
+  </ng-container>
+
+  <!-- DETAILS POPUP -->
+  <div
+    class="modal-backdrop"
+    *ngIf="showDetailsPopup && selectedRequest"
+    (click)="closeDetailsPopup()">
+
+    <div
+      class="details-modal"
+      role="dialog"
+      aria-modal="true"
+      (click)="$event.stopPropagation()">
+
+      <!-- POPUP HEADER -->
+      <div class="modal-header">
+
+        <div class="modal-title-group">
+          <div class="modal-title-icon">
+            {{ isRepaymentRequest(selectedRequest!) ? '💳' : '📄' }}
+          </div>
+
+          <div>
+            <h2>
+              {{
+                isRepaymentRequest(selectedRequest!)
+                  ? 'Repayment Request Details'
+                  : 'Loan Request Details'
+              }}
+            </h2>
+
+            <p>
+              Request #{{ selectedRequest!.id }}
+              <span class="header-separator">•</span>
+              {{ getRequestTypeLabel(selectedRequest!) }}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="close-button"
+          aria-label="Close"
+          (click)="closeDetailsPopup()">
+          &times;
+        </button>
+
+      </div>
+
+      <!-- POPUP BODY -->
+      <div class="modal-body">
+
+        <!-- REQUEST OVERVIEW -->
+        <div class="request-overview">
+
+          <div class="overview-item">
+            <span class="overview-label">Request Status</span>
+            <span
+              class="status-badge"
+              [ngClass]="{
+                'status-pending': selectedRequest!.status === 'PENDING',
+                'status-approved': selectedRequest!.status === 'APPROVED',
+                'status-rejected': selectedRequest!.status === 'REJECTED'
+              }">
+              <span class="status-dot"></span>
+              {{ selectedRequest!.status }}
+            </span>
+          </div>
+
+          <div class="overview-item">
+            <span class="overview-label">Submitted By</span>
+            <strong>{{ selectedRequest!.requestedByName || '-' }}</strong>
+          </div>
+
+          <div class="overview-item">
+            <span class="overview-label">Submitted On</span>
+            <strong>
+              {{
+                selectedRequest!.createdAt
+                  ? (selectedRequest!.createdAt | date:'dd MMM yyyy, hh:mm a')
+                  : '-'
+              }}
+            </strong>
+          </div>
+
+        </div>
+
+        <!-- REPAYMENT DETAILS -->
+        <ng-container *ngIf="isRepaymentRequest(selectedRequest!)">
+
+          <section class="detail-section">
+
+            <div class="section-heading">
+              <span class="section-icon">💳</span>
+              <div>
+                <h3>
+                  {{
+                    isEditPaymentRequest(selectedRequest!)
+                      ? 'Edit Paid EMI Request'
+                      : 'Pay EMI Request'
+                  }}
+                </h3>
+                <p>Existing repayment record and proposed payment</p>
+              </div>
+            </div>
+
+            <div class="financial-highlight">
+
+              <div>
+                <span>Original Scheduled EMI</span>
+                <strong class="highlight-amount">
+                  ₹{{ formatAmount(selectedRequest?.repaymentDetails?.scheduledAmount) }}
+                </strong>
+              </div>
+
+              <div>
+                <span>Currently Paid</span>
+                <strong>
+                  ₹{{ formatAmount(selectedRequest?.repaymentDetails?.currentPaidAmount) }}
+                </strong>
+              </div>
+
+              <div>
+                <span>Requested Total Paid</span>
+                <strong class="highlight-amount">
+                  ₹{{ formatAmount(selectedRequest?.repaymentDetails?.requestedPaidAmount) }}
+                </strong>
+              </div>
+
+              <div>
+                <span>Requested Penalty</span>
+                <strong>
+                  ₹{{ formatAmount(selectedRequest?.repaymentDetails?.requestedPenaltyAmount) }}
+                </strong>
+              </div>
+
+            </div>
+
+            <div class="detail-grid">
+
+              <div class="detail-item">
+                <span>Approval Request ID</span>
+                <strong>{{ selectedRequest?.id }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Repayment Record ID</span>
+                <strong>
+                  {{ selectedRequest?.repaymentDetails?.repaymentId ?? getRepaymentId(selectedRequest) }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Loan ID</span>
+                <strong>{{ selectedRequest?.loanId ?? '-' }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Installment Number</span>
+                <strong>
+                  {{ selectedRequest?.repaymentDetails?.installmentNo ?? '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Installment Due Date</span>
+                <strong>
+                  {{
+                    selectedRequest?.repaymentDetails?.installmentDate
+                      ? (selectedRequest?.repaymentDetails?.installmentDate | date:'dd MMM yyyy')
+                      : '-'
+                  }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Payment Date</span>
+                <strong>
+                  {{
+                    selectedRequest?.repaymentDetails?.repaymentDate
+                      ? (selectedRequest?.repaymentDetails?.repaymentDate | date:'dd MMM yyyy')
+                      : 'Not paid yet'
+                  }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Principal Amount</span>
+                <strong>
+                  ₹{{ formatAmount(selectedRequest?.repaymentDetails?.principalAmount) }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Interest Amount</span>
+                <strong>
+                  ₹{{ formatAmount(selectedRequest?.repaymentDetails?.interestAmount) }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Current Penalty</span>
+                <strong>
+                  ₹{{ formatAmount(selectedRequest?.repaymentDetails?.currentPenaltyAmount) }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Requested Regular Repayment</span>
+                <strong>
+                  {{
+                    selectedRequest?.repaymentDetails?.requestedRegularRepayment == null
+                      ? '-'
+                      : (selectedRequest?.repaymentDetails?.requestedRegularRepayment ? 'Yes' : 'No')
+                  }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Current Payment Status</span>
+                <strong>
+                  {{ selectedRequest?.repaymentDetails?.paymentStatus ?? '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>CMRC ID</span>
+                <strong>{{ selectedRequest?.cmrcId ?? '-' }}</strong>
+              </div>
+
+              <div class="detail-item detail-item-full">
+                <span>Repayment Remark</span>
+                <strong>
+                  {{ selectedRequest?.repaymentDetails?.remark || '-' }}
+                </strong>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- REMAINING AMOUNT -->
+          <section class="detail-section">
+
+            <div class="section-heading">
+              <span class="section-icon">🧮</span>
+              <div>
+                <h3>EMI Balance Calculation</h3>
+                <p>Balance before the request and projected balance after approval</p>
+              </div>
+            </div>
+
+            <div class="financial-highlight">
+
+              <div>
+                <span>Remaining Before Request</span>
+                <strong>
+                  ₹{{ formatAmount(selectedRequest?.repaymentDetails?.remainingBeforeRequest) }}
+                </strong>
+              </div>
+
+              <div>
+                <span>Remaining After Approval</span>
+                <strong class="highlight-amount">
+                  ₹{{ formatAmount(selectedRequest?.repaymentDetails?.remainingAfterRequest) }}
+                </strong>
+              </div>
+
+            </div>
+
+            <p class="sub-text">
+              Requested paid amount is the total paid amount for this installment,
+              not an additional payment.
+            </p>
+
+          </section>
+
+          <!-- LINKED LOAN AND ORGANIZATION -->
+          <section class="detail-section">
+
+            <div class="section-heading">
+              <span class="section-icon">🏢</span>
+              <div>
+                <h3>Linked Loan & Organization Details</h3>
+                <p>Borrower and organization information associated with this repayment</p>
+              </div>
+            </div>
+
+            <div class="detail-grid">
+
+              <div class="detail-item">
+                <span>Loan ID</span>
+                <strong>
+                  {{ selectedRequest?.linkedLoanDetails?.id ?? selectedRequest?.loanId ?? '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Woman / Borrower Name</span>
+                <strong>
+                  {{ selectedRequest?.linkedLoanDetails?.womanName || '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Husband Name</span>
+                <strong>
+                  {{ selectedRequest?.linkedLoanDetails?.husbandName || '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Mobile Number</span>
+                <strong>
+                  {{ selectedRequest?.linkedLoanDetails?.mobileNo || '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>CMRC Name</span>
+                <strong>
+                  {{ selectedRequest?.linkedLoanDetails?.cmrcName || '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>CMRC ID</span>
+                <strong>
+                  {{ selectedRequest?.linkedLoanDetails?.cmrcId ?? selectedRequest?.cmrcId ?? '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>VO / ALF Name</span>
+                <strong>
+                  {{ selectedRequest?.linkedLoanDetails?.voAlfName || '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Village Name</span>
+                <strong>
+                  {{ selectedRequest?.linkedLoanDetails?.villageName || '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Group Name</span>
+                <strong>
+                  {{ selectedRequest?.linkedLoanDetails?.groupName || '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Group ID</span>
+                <strong>
+                  {{ selectedRequest?.linkedLoanDetails?.groupId ?? '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Sanctioned Amount</span>
+                <strong>
+                  ₹{{ formatAmount(selectedRequest?.linkedLoanDetails?.sanctionedAmount) }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Processing Fee</span>
+                <strong>
+                  ₹{{ formatAmount(selectedRequest?.linkedLoanDetails?.processingFee) }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Monthly EMI</span>
+                <strong>
+                  ₹{{ formatAmount(selectedRequest?.linkedLoanDetails?.monthlyEmi) }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Interest Rate</span>
+                <strong>
+                  {{
+                    selectedRequest?.linkedLoanDetails?.interestRate != null
+                      ? selectedRequest?.linkedLoanDetails?.interestRate + '%'
+                      : '-'
+                  }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Interest Type</span>
+                <strong>
+                  {{ selectedRequest?.linkedLoanDetails?.interestType || '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Repayment Period</span>
+                <strong>
+                  {{
+                    selectedRequest?.linkedLoanDetails?.repaymentPeriodMonths != null
+                      ? selectedRequest?.linkedLoanDetails?.repaymentPeriodMonths + ' Months'
+                      : '-'
+                  }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Loan Purpose</span>
+                <strong>
+                  {{ selectedRequest?.linkedLoanDetails?.loanPurpose || '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Loan Given Date</span>
+                <strong>
+                  {{
+                    selectedRequest?.linkedLoanDetails?.loanGivenDate
+                      ? (selectedRequest?.linkedLoanDetails?.loanGivenDate | date:'dd MMM yyyy')
+                      : '-'
+                  }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Loan Status</span>
+                <strong>
+                  {{ selectedRequest?.linkedLoanDetails?.loanStatus || '-' }}
+                </strong>
+              </div>
+
+              <div class="detail-item detail-item-full">
+                <span>Borrower Address</span>
+                <strong>
+                  {{ selectedRequest?.linkedLoanDetails?.address || '-' }}
+                </strong>
+              </div>
+
+            </div>
+          </section>
+
+        </ng-container>
+
+        <!-- LOAN DETAILS POPUP -->
+        <ng-container *ngIf="!isRepaymentRequest(selectedRequest!)">
+
+          <!-- APPLICANT DETAILS -->
+          <section class="detail-section">
+
+            <div class="section-heading">
+              <span class="section-icon">👤</span>
+              <div>
+                <h3>Applicant Details</h3>
+                <p>Personal information of the applicant</p>
+              </div>
+            </div>
+
+            <div class="detail-grid">
+
+              <div class="detail-item">
+                <span>Woman / Applicant Name</span>
+                <strong>{{ getLoanValue(selectedRequest, 'womanName') }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Husband Name</span>
+                <strong>{{ getLoanValue(selectedRequest, 'husbandName') }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Mobile Number</span>
+                <strong>{{ getLoanValue(selectedRequest, 'mobileNo') }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Woman ID</span>
+                <strong>{{ getLoanValue(selectedRequest, 'womanId') }}</strong>
+              </div>
+
+              <div class="detail-item detail-item-full">
+                <span>Address</span>
+                <strong>{{ getLoanValue(selectedRequest, 'address') }}</strong>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- ORGANIZATION DETAILS -->
+          <section class="detail-section">
+
+            <div class="section-heading">
+              <span class="section-icon">🏢</span>
+              <div>
+                <h3>Organization Details</h3>
+                <p>CMRC, VO/ALF and group information</p>
+              </div>
+            </div>
+
+            <div class="detail-grid">
+
+              <div class="detail-item">
+                <span>CMRC Name</span>
+                <strong>{{ getLoanValue(selectedRequest, 'cmrcName') }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>CMRC ID</span>
+                <strong>{{ getLoanValue(selectedRequest, 'cmrcId') }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>VO / ALF Name</span>
+                <strong>{{ getLoanValue(selectedRequest, 'voAlfName') }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Village Name</span>
+                <strong>{{ getLoanValue(selectedRequest, 'villageName') }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Group Name</span>
+                <strong>{{ getLoanValue(selectedRequest, 'groupName') }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Group ID</span>
+                <strong>{{ getLoanValue(selectedRequest, 'groupId') }}</strong>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- LOAN FINANCIAL DETAILS -->
+          <section class="detail-section">
+
+            <div class="section-heading">
+              <span class="section-icon">💰</span>
+              <div>
+                <h3>Loan Details</h3>
+                <p>Requested amount and loan information</p>
+              </div>
+            </div>
+
+            <div class="financial-highlight">
+
+              <div>
+                <span>Sanctioned Amount</span>
+                <strong class="highlight-amount">
+                  ₹{{ formatAmount(getLoanValue(selectedRequest, 'sanctionedAmount')) }}
+                </strong>
+              </div>
+
+              <div>
+                <span>Processing Fee</span>
+                <strong>
+                  ₹{{ formatAmount(getLoanValue(selectedRequest, 'processingFee')) }}
+                </strong>
+              </div>
+
+              <div>
+                <span>Disbursed / Net Amount</span>
+                <strong>
+                  ₹{{
+                    formatAmount(
+                      getLoanValue(selectedRequest, 'disbursedAmount') !== '-'
+                        ? getLoanValue(selectedRequest, 'disbursedAmount')
+                        : getLoanValue(selectedRequest, 'loanAmount')
+                    )
+                  }}
+                </strong>
+              </div>
+
+            </div>
+
+            <div class="detail-grid">
+
+              <div class="detail-item">
+                <span>Loan Purpose</span>
+                <strong>{{ getLoanValue(selectedRequest, 'loanPurpose') }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Loan Given Date</span>
+                <strong>
+                  {{
+                    getLoanValue(selectedRequest, 'loanGivenDate') !== '-'
+                      ? (getLoanValue(selectedRequest, 'loanGivenDate') | date:'dd MMM yyyy')
+                      : '-'
+                  }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Loan Status</span>
+                <strong>{{ getLoanValue(selectedRequest, 'loanStatus') }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Existing Loan ID</span>
+                <strong>{{ selectedRequest?.loanId ?? '-' }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Repayment Period</span>
+                <strong>
+                  {{
+                    getLoanValue(selectedRequest, 'repaymentPeriodMonths') !== '-'
+                      ? getLoanValue(selectedRequest, 'repaymentPeriodMonths') + ' Months'
+                      : '-'
+                  }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Interest Rate</span>
+                <strong>
+                  {{
+                    getLoanValue(selectedRequest, 'interestRate') !== '-'
+                      ? getLoanValue(selectedRequest, 'interestRate') + '%'
+                      : '-'
+                  }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Interest Type</span>
+                <strong>{{ getLoanValue(selectedRequest, 'interestType') }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Monthly EMI</span>
+                <strong>
+                  ₹{{ formatAmount(getLoanValue(selectedRequest, 'monthlyEmi')) }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Total Interest Received</span>
+                <strong>
+                  ₹{{ formatAmount(getLoanValue(selectedRequest, 'totalInterestReceived')) }}
+                </strong>
+              </div>
+
+            </div>
+          </section>
+
+        </ng-container>
+
+        <!-- ORIGINAL REQUEST DATA -->
+        <details class="raw-data">
+          <summary>View original submitted request data</summary>
+          <pre>{{ selectedRequest?.requestData }}</pre>
+        </details>
+
+      </div>
+
+      <!-- MODAL FOOTER -->
+      <div class="modal-footer">
+
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="closeDetailsPopup()">
+          Close
+        </button>
+
+        <ng-container *ngIf="selectedRequest?.status === 'PENDING'">
+
+          <button
+            type="button"
+            class="btn-reject"
+            [disabled]="processingRequestId === selectedRequest?.id"
+            (click)="rejectRequest(selectedRequest!)">
+
+            {{
+              processingRequestId === selectedRequest?.id
+                ? 'Processing...'
+                : 'Reject Request'
+            }}
+
+          </button>
+
+          <button
+            type="button"
+            class="btn-approve"
+            [disabled]="processingRequestId === selectedRequest?.id"
+            (click)="approveRequest(selectedRequest!)">
+
+            {{
+              processingRequestId === selectedRequest?.id
+                ? 'Processing...'
+                : '✓ Approve Request'
+            }}
+
+          </button>
+
+        </ng-container>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>
