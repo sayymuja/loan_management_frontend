@@ -1,0 +1,62 @@
+
+<div class="ai-chat-container">
+  <div class="ai-chat-header">
+    <div>
+      <h3>Loan Management AI</h3>
+      <small>Your personal loan management assistant</small>
+    </div>
+    <span class="ai-status">Local AI</span>
+  </div>
+
+  <div class="ai-chat-messages">
+    <div
+      *ngFor="let message of messages"
+      class="message-row"
+      [class.user-row]="message.role === 'user'">
+
+      <div
+        class="message-bubble"
+        [class.user-bubble]="message.role === 'user'">
+
+        <strong>
+          {{ message.role === 'user' ? 'You' : 'AI Assistant' }}
+        </strong>
+
+        <p>{{ message.content }}</p>
+      </div>
+    </div>
+
+    <div class="message-row" *ngIf="loading">
+      <div class="message-bubble">
+        <strong>AI Assistant</strong>
+        <p>Thinking...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="ai-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <div class="ai-chat-input">
+    <textarea
+      [(ngModel)]="question"
+     (keydown.enter)="handleEnter($any($event))"
+      placeholder="Ask your question..."
+      rows="2"
+      maxlength="2000"
+      [disabled]="loading">
+    </textarea>
+
+    <button
+      type="button"
+      (click)="sendMessage()"
+      [disabled]="loading || !question.trim()">
+      {{ loading ? 'Please wait...' : 'Send' }}
+    </button>
+  </div>
+
+  <small class="ai-disclaimer">
+    Please verify financial figures against application records.
+  </small>
+</div>

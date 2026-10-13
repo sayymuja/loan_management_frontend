@@ -28,6 +28,7 @@ import { WomenComponent } from './women/women.component';
 import { CommonModule } from '@angular/common';
 import { BankBalanceComponent } from './bank-balance/bank-balance.component';
 import { GroupComponent } from './group/group.component';
+import { AiChatComponent } from './ai-chat/ai-chat.component';
 
 @NgModule({
   declarations: [
@@ -49,7 +50,8 @@ import { GroupComponent } from './group/group.component';
     VillageComponent,
     WomenComponent,
     BankBalanceComponent,
-    GroupComponent
+    GroupComponent,
+    AiChatComponent
 
   ],
   imports: [

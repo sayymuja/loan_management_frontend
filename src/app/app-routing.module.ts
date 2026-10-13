@@ -18,6 +18,7 @@ import { ReportComponent } from './report/report.component';
 import { VillageComponent } from './village/village.component';
 import { GroupComponent } from './group/group.component';
 import { WomenComponent } from './women/women.component';
+import { AiChatComponent } from './ai-chat/ai-chat.component';
 
 const routes: Routes = [
 
@@ -114,17 +115,20 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
 
+  
   {
     path: 'women',
     component: WomenComponent,
     canActivate: [AuthGuard]
   },
 
+  {
+    path: 'ai-chat',
+    component: AiChatComponent,
+    canActivate: [AuthGuard]
+  },
 
-  // ==========================================
   // DEFAULT
-  // ==========================================
-
   {
     path: '',
     redirectTo: '/login',
@@ -135,6 +139,7 @@ const routes: Routes = [
     path: '**',
     redirectTo: '/login'
   }
+
 
 ];
 
