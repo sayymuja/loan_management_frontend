@@ -1,551 +1,514 @@
-<div class="container-fluid">
+<div class="container-fluid vo-alf-page">
 
   <!-- PAGE HEADER -->
-  <div class="page-header d-flex justify-content-between align-items-center mb-4">
-
-    <div>
-      <h2 class="mb-1">VO / ALF Management</h2>
-      <p class="text-muted mb-0">
-        CMRC wise VO / ALF details
-      </p>
-    </div>
-
-    <!-- ADD: ADMIN ONLY -->
-    <button
-      *ngIf="isAdmin"
-      type="button"
-      class="btn btn-primary"
-      [disabled]="!selectedCmrcId"
-      (click)="openAddForm()">
-
-      <i class="bi bi-plus-lg me-1"></i>
-      Add VO / ALF
-
-    </button>
-
-  </div>
-
-
-  <!-- CMRC SELECTION -->
-  <div class="card shadow-sm mb-4">
-
-    <div class="card-header bg-light">
-      <h5 class="mb-0">
-        <i class="bi bi-building me-2"></i>
-        Select CMRC
-      </h5>
-    </div>
-
-    <div class="card-body">
-      <div class="row g-3 align-items-end">
-
-        <div class="col-md-4">
-          <label class="form-label fw-semibold">CMRC</label>
-
-          <select
-            class="form-select"
-            [(ngModel)]="selectedCmrcId"
-            (change)="loadVoAlfByCmrc()">
-
-            <option [ngValue]="null">-- Select CMRC --</option>
-
-            <option
-              *ngFor="let cmrc of cmrcList"
-              [ngValue]="cmrc.id">
-              {{ cmrc.cmrcName }}
-            </option>
-
-          </select>
-        </div>
-
-        <div class="col-md-4">
-          <label class="form-label fw-semibold">District</label>
-
-          <input
-            type="text"
-            class="form-control"
-            [value]="getSelectedCmrcDistrict()"
-            readonly>
-        </div>
-
-        <div class="col-md-4">
-          <label class="form-label fw-semibold">Taluka</label>
-
-          <input
-            type="text"
-            class="form-control"
-            [value]="getSelectedCmrcTaluka()"
-            readonly>
-        </div>
-
+  <div class="page-header">
+    <div class="page-heading">
+      <div class="page-icon">
+        <i class="bi bi-diagram-3"></i>
       </div>
+
+      <div>
+        <h2 class="page-title">VO / ALF Management</h2>
+        <p class="page-subtitle">
+          Manage village organizations, account details and fund records
+        </p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button
+        type="button"
+        class="btn btn-outline-primary"
+        (click)="refreshVoAlf()"
+        [disabled]="isLoading || isSaving">
+        <i class="bi bi-arrow-clockwise"></i>
+        Refresh
+      </button>
+
+      <button
+        *ngIf="isAdmin"
+        type="button"
+        class="btn btn-primary"
+        (click)="openAddForm()">
+        <i class="bi bi-plus-lg"></i>
+        Add VO / ALF
+      </button>
     </div>
   </div>
 
-
-  <!-- BALANCE SUMMARY -->
-  <div class="row g-3 mb-4" *ngIf="selectedCmrcId">
-
-    <!-- CMRC TOTAL -->
-    <div class="col-md-4">
-      <div class="card shadow-sm balance-card">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start">
-
-            <div>
-              <div class="summary-label">CMRC Total Balance</div>
-
-              <div class="summary-value text-primary">
-                ₹ {{ cmrcBalance | number:'1.2-2' }}
-              </div>
-
-              <small class="text-muted">Total CMRC Amount</small>
-            </div>
-
-            <div class="summary-icon bg-primary-subtle text-primary">
-              <i class="bi bi-wallet2"></i>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TOTAL RECEIVED -->
-    <div class="col-md-4">
-      <div class="card shadow-sm balance-card">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start">
-
-            <div>
-              <div class="summary-label">Total VO / ALF Received</div>
-
-              <div class="summary-value text-success">
-                ₹ {{ totalReceivedFund | number:'1.2-2' }}
-              </div>
-            </div>
-
-            <div class="summary-icon bg-success-subtle text-success">
-              <i class="bi bi-arrow-down-circle"></i>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- LEFT BALANCE -->
-    <div class="col-md-4">
-      <div class="card shadow-sm balance-card">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start">
-
-            <div>
-              <div class="summary-label">CMRC Left Balance</div>
-
-              <div
-                class="summary-value"
-                [ngClass]="{
-                  'text-danger': cmrcLeftBalance < 0,
-                  'text-success': cmrcLeftBalance >= 0
-                }">
-                ₹ {{ cmrcLeftBalance | number:'1.2-2' }}
-              </div>
-
-              <small *ngIf="cmrcLeftBalance < 0" class="text-danger">
-                <i class="bi bi-exclamation-triangle me-1"></i>
-                Received amount exceeds CMRC balance
-              </small>
-            </div>
-
-            <div
-              class="summary-icon"
-              [ngClass]="
-                cmrcLeftBalance < 0
-                  ? 'bg-danger-subtle text-danger'
-                  : 'bg-success-subtle text-success'
-              ">
-              <i class="bi bi-bank"></i>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-
-  <!-- ADD / EDIT FORM: ADMIN ONLY -->
+  <!-- ALERTS -->
   <div
-    class="card shadow-sm mb-4"
-    *ngIf="showForm && isAdmin">
+    class="alert alert-success"
+    *ngIf="successMessage">
+    <i class="bi bi-check-circle-fill"></i>
+    {{ successMessage }}
 
-    <div class="card-header bg-primary text-white">
-      <h5 class="mb-0">
+    <button
+      type="button"
+      class="btn-close"
+      aria-label="Close"
+      (click)="successMessage = ''">
+    </button>
+  </div>
 
-        <i
-          class="bi me-2"
-          [ngClass]="isEditMode ? 'bi-pencil-square' : 'bi-plus-circle'">
-        </i>
+  <div
+    class="alert alert-danger"
+    *ngIf="errorMessage">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    {{ errorMessage }}
 
-        {{ isEditMode ? 'Edit VO / ALF' : 'Add VO / ALF' }}
+    <button
+      type="button"
+      class="btn-close"
+      aria-label="Close"
+      (click)="errorMessage = ''">
+    </button>
+  </div>
 
-      </h5>
+  <!-- CMRC AND VO / ALF FILTERS -->
+  <div class="section-card filter-section">
+    <div class="section-heading">
+      <div>
+        <h5>Organization Filters</h5>
+        <p>Select a CMRC and optionally filter by VO / ALF.</p>
+      </div>
+      <i class="bi bi-funnel"></i>
     </div>
 
-    <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label for="cmrcFilter" class="form-label">
+          CMRC
+        </label>
+
+        <select
+          id="cmrcFilter"
+          name="cmrcFilter"
+          class="form-select"
+          [(ngModel)]="selectedCmrcId"
+          (ngModelChange)="onCmrcChange()"
+          [disabled]="!isAdmin || isLoading">
+
+          <option [ngValue]="null">Select CMRC</option>
+
+          <option
+            *ngFor="let cmrc of cmrcList"
+            [ngValue]="cmrc.id">
+            {{ cmrc.cmrcName }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label for="voAlfFilter" class="form-label">
+          VO / ALF
+        </label>
+
+        <select
+          id="voAlfFilter"
+          name="voAlfFilter"
+          class="form-select"
+          [(ngModel)]="selectedVoAlfId"
+          (ngModelChange)="onVoAlfChange()"
+          [disabled]="!selectedCmrcId || isLoading">
+
+          <option [ngValue]="null">All VO / ALF</option>
+
+          <option
+            *ngFor="let item of voAlfList"
+            [ngValue]="item.id">
+            {{ item.voAlfName }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div class="summary-grid">
+
+    <div class="summary-card">
+      <div class="summary-icon organizations-icon">
+        <i class="bi bi-diagram-3"></i>
+      </div>
+      <div class="summary-content">
+        <span class="summary-label">Total VO / ALF</span>
+        <h3>{{ totalVoAlf }}</h3>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon funds-icon">
+        <i class="bi bi-wallet2"></i>
+      </div>
+      <div class="summary-content">
+        <span class="summary-label">Total Recorded Balance</span>
+        <h3>{{ formatCurrency(totalRecordedFunds) }}</h3>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon villages-icon">
+        <i class="bi bi-geo-alt"></i>
+      </div>
+      <div class="summary-content">
+        <span class="summary-label">Villages Covered</span>
+        <h3>{{ totalVillages }}</h3>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ADD / EDIT FORM -->
+  <div class="section-card form-section" *ngIf="showForm">
+
+    <div class="section-heading">
+      <div>
+        <h5>
+          {{ isEditMode ? 'Edit VO / ALF' : 'Add VO / ALF' }}
+        </h5>
+        <p>
+          {{ isEditMode
+            ? 'Update organization details.'
+            : 'Enter the new organization details.' }}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="btn-close"
+        aria-label="Close form"
+        (click)="closeForm()">
+      </button>
+    </div>
+
+    <form
+      #voAlfForm="ngForm"
+      (ngSubmit)="saveVoAlf()">
 
       <div class="row g-3">
 
         <!-- CMRC -->
         <div class="col-md-6">
-          <label class="form-label fw-semibold">CMRC Name</label>
+          <label for="formCmrc" class="form-label">
+            CMRC <span class="text-danger">*</span>
+          </label>
 
           <input
+            id="formCmrc"
+            name="formCmrc"
             type="text"
             class="form-control"
-            [value]="getSelectedCmrcName()"
+            [value]="selectedCmrcName"
             readonly>
         </div>
 
-        <!-- DISTRICT -->
-        <div class="col-md-3">
-          <label class="form-label fw-semibold">District</label>
+        <!-- VO / ALF NAME -->
+        <div class="col-md-6">
+          <label for="voAlfName" class="form-label">
+            VO / ALF Name <span class="text-danger">*</span>
+          </label>
 
           <input
+            id="voAlfName"
+            name="voAlfName"
             type="text"
             class="form-control"
-            [value]="getSelectedCmrcDistrict()"
-            readonly>
-        </div>
+            [(ngModel)]="newVoAlf.voAlfName"
+            placeholder="Enter VO / ALF name"
+            maxlength="150"
+            required
+            #voAlfNameControl="ngModel">
 
-        <!-- TALUKA -->
-        <div class="col-md-3">
-          <label class="form-label fw-semibold">Taluka</label>
-
-          <input
-            type="text"
-            class="form-control"
-            [value]="getSelectedCmrcTaluka()"
-            readonly>
+          <small
+            class="field-error"
+            *ngIf="voAlfNameControl.invalid &&
+                   voAlfNameControl.touched">
+            Please enter the VO / ALF name.
+          </small>
         </div>
 
         <!-- VILLAGE -->
         <div class="col-md-6">
-          <label class="form-label fw-semibold">
-            Village Name <span class="text-danger">*</span>
+          <label for="villageName" class="form-label">
+            Village <span class="text-danger">*</span>
           </label>
 
           <select
+            id="villageName"
+            name="villageName"
             class="form-select"
             [(ngModel)]="newVoAlf.villageName"
-            name="villageName"
-            [disabled]="!selectedCmrcId">
+            required
+            #villageControl="ngModel">
 
-            <option value="">-- Select Village --</option>
+            <option value="">Select Village</option>
 
             <option
               *ngFor="let village of villages"
               [value]="village">
               {{ village }}
             </option>
-
           </select>
 
           <small
-            *ngIf="selectedCmrcId && villages.length === 0"
-            class="text-danger">
-            No villages found for {{ getSelectedCmrcTaluka() }}.
+            class="field-error"
+            *ngIf="villageControl.invalid &&
+                   villageControl.touched">
+            Please select a village.
           </small>
-        </div>
-
-        <!-- VO / ALF NAME -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">
-            VO / ALF Name <span class="text-danger">*</span>
-          </label>
-
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Enter VO / ALF name"
-            [(ngModel)]="newVoAlf.voAlfName"
-            name="voAlfName">
         </div>
 
         <!-- ACCOUNT NUMBER -->
         <div class="col-md-6">
-          <label class="form-label fw-semibold">Account Number</label>
+          <label for="accountNo" class="form-label">
+            Account Number <span class="text-danger">*</span>
+          </label>
 
           <input
+            id="accountNo"
+            name="accountNo"
             type="text"
             class="form-control"
-            placeholder="Enter account number"
             [(ngModel)]="newVoAlf.accountNo"
-            name="accountNo">
+            placeholder="Enter bank account number"
+            maxlength="50"
+            required
+            [readonly]="isAccountNumberLocked"
+            [class.readonly-field]="isAccountNumberLocked"
+            #accountControl="ngModel">
+
+          <small
+            class="form-help"
+            *ngIf="isAccountNumberLocked">
+            Account number cannot be changed because this organization
+            has a recorded balance.
+          </small>
+
+          <small
+            class="field-error"
+            *ngIf="accountControl.invalid &&
+                   accountControl.touched">
+            Please enter the account number.
+          </small>
         </div>
 
-        <!-- RECEIVED FUND -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Received Fund (₹)</label>
+        <!-- CURRENT BALANCE -->
+        <div class="col-md-6" *ngIf="isEditMode">
+          <label for="currentBalance" class="form-label">
+            Current Recorded Balance
+          </label>
 
-          <div class="input-group">
-            <span class="input-group-text">₹</span>
+          <input
+            id="currentBalance"
+            name="currentBalance"
+            type="text"
+            class="form-control readonly-field"
+            [value]="formatCurrency(newVoAlf.receivedFund)"
+            readonly>
 
-            <input
-              type="number"
-              class="form-control"
-              placeholder="Enter received fund"
-              [(ngModel)]="newVoAlf.receivedFund"
-              name="receivedFund"
-              min="0"
-              step="0.01">
-          </div>
-        </div>
-
-        <!-- AMOUNT IN WORDS -->
-        <div class="col-12">
-          <div
-            class="amount-words-box"
-            *ngIf="newVoAlf.receivedFund && newVoAlf.receivedFund > 0">
-
-            <div class="amount-words-label">
-              <i class="bi bi-card-text me-1"></i>
-              Received Fund (in words)
-            </div>
-
-            <div class="amount-words-value">
-              {{ getReceivedFundInWords() }}
-            </div>
-
-          </div>
-        </div>
-
-        <!-- BALANCE AFTER ENTRY -->
-        <div
-          class="col-12"
-          *ngIf="
-            newVoAlf.receivedFund !== null &&
-            newVoAlf.receivedFund !== undefined &&
-            newVoAlf.receivedFund > 0
-          ">
-
-          <div
-            class="alert mb-0"
-            [ngClass]="
-              getBalanceAfterCurrentEntry() < 0
-                ? 'alert-danger'
-                : 'alert-success'
-            ">
-
-            <div class="d-flex justify-content-between align-items-center">
-
-              <div>
-                <strong>CMRC Balance After This Entry:</strong>
-
-                <span class="ms-2">
-                  ₹ {{ getBalanceAfterCurrentEntry() | number:'1.2-2' }}
-                </span>
-              </div>
-
-              <i
-                class="bi"
-                [ngClass]="
-                  getBalanceAfterCurrentEntry() < 0
-                    ? 'bi-exclamation-triangle'
-                    : 'bi-check-circle'
-                ">
-              </i>
-
-            </div>
-          </div>
+          <small class="form-help">
+            The existing balance is maintained separately from organization
+            detail updates.
+          </small>
         </div>
 
       </div>
 
       <!-- FORM ACTIONS -->
-      <div class="d-flex justify-content-end gap-2 mt-4">
-
+      <div class="form-actions">
         <button
           type="button"
-          class="btn btn-secondary"
-          [disabled]="isSaving"
-          (click)="closeForm()">
-
-          <i class="bi bi-x-circle me-1"></i>
+          class="btn btn-outline-secondary"
+          (click)="closeForm()"
+          [disabled]="isSaving">
           Cancel
         </button>
 
         <button
-          type="button"
-          class="btn btn-success"
-          [disabled]="isSaving"
-          (click)="saveVoAlf()">
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="isSaving || voAlfForm.invalid">
 
           <span
             *ngIf="isSaving"
-            class="spinner-border spinner-border-sm me-1">
+            class="spinner-border spinner-border-sm me-2">
           </span>
 
           <i
             *ngIf="!isSaving"
-            class="bi me-1"
-            [ngClass]="isEditMode ? 'bi-check-circle' : 'bi-save'">
+            class="bi"
+            [ngClass]="isEditMode ? 'bi-check-lg' : 'bi-plus-lg'">
           </i>
 
-          {{ isEditMode ? 'Update' : 'Save' }}
+          {{ isSaving
+            ? 'Saving...'
+            : (isEditMode ? 'Update VO / ALF' : 'Save VO / ALF') }}
         </button>
-
       </div>
-    </div>
+
+    </form>
   </div>
 
+  <!-- VO / ALF TABLE -->
+  <div class="section-card table-section">
 
-  <!-- VO / ALF LIST -->
-  <div class="card shadow-sm">
-
-    <div class="card-header d-flex justify-content-between align-items-center">
-
+    <div class="table-header">
       <div>
-        <h5 class="mb-0">VO / ALF List</h5>
-
-        <small *ngIf="selectedCmrcId" class="text-muted">
-          {{ getSelectedCmrcName() }} - {{ getSelectedCmrcTaluka() }}
-        </small>
+        <h5>VO / ALF Directory</h5>
+        <p>
+          View and manage registered village organizations.
+        </p>
       </div>
 
-      <span class="badge bg-primary">
-        Total Records: {{ voAlfList.length }}
+      <div class="table-search">
+        <i class="bi bi-search"></i>
+
+        <input
+          type="text"
+          name="searchText"
+          class="form-control"
+          [(ngModel)]="searchText"
+          placeholder="Search name, village or account..."
+          aria-label="Search VO / ALF records">
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="loading-state" *ngIf="isLoading">
+      <span class="spinner-border text-primary"></span>
+      <p>Loading VO / ALF records...</p>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-responsive" *ngIf="!isLoading">
+      <table class="table align-middle">
+
+        <thead>
+          <tr>
+            <th>Sr. No.</th>
+            <th>VO / ALF Name</th>
+            <th>Village</th>
+            <th>Account Number</th>
+            <th class="text-end">Recorded Balance</th>
+            <th *ngIf="isAdmin" class="text-center">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let item of filteredVoAlfList; let i = index">
+
+            <td>{{ i + 1 }}</td>
+
+            <td>
+              <div class="organization-name">
+                <span class="table-icon">
+                  <i class="bi bi-diagram-3"></i>
+                </span>
+                <span>{{ item.voAlfName }}</span>
+              </div>
+            </td>
+
+            <td>
+              <span class="village-name">
+                <i class="bi bi-geo-alt"></i>
+                {{ item.villageName || '-' }}
+              </span>
+            </td>
+
+            <td>
+              {{ item.accountNo || '-' }}
+            </td>
+
+            <td class="text-end balance-cell">
+              {{ formatCurrency(item.receivedFund) }}
+            </td>
+
+            <td *ngIf="isAdmin" class="text-center">
+              <div class="action-buttons">
+
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-primary"
+                  title="Edit VO / ALF"
+                  aria-label="Edit VO / ALF"
+                  (click)="openEditForm(item)">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger"
+                  title="Delete VO / ALF"
+                  aria-label="Delete VO / ALF"
+                  (click)="deleteVoAlf(item.id)"
+                  [disabled]="isDeleting">
+                  <i class="bi bi-trash"></i>
+                </button>
+
+              </div>
+            </td>
+
+          </tr>
+
+          <!-- EMPTY STATE -->
+          <tr *ngIf="filteredVoAlfList.length === 0">
+            <td
+              [attr.colspan]="isAdmin ? 6 : 5"
+              class="text-center">
+
+              <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+
+                <h6>No VO / ALF records found</h6>
+
+                <p>
+                  {{
+                    searchText
+                      ? 'Try a different search term.'
+                      : 'No organizations are available for the selected filters.'
+                  }}
+                </p>
+              </div>
+
+            </td>
+          </tr>
+        </tbody>
+
+        <!-- TABLE SUMMARY -->
+        <tfoot *ngIf="filteredVoAlfList.length > 0">
+          <tr>
+            <td
+              [attr.colspan]="isAdmin ? 4 : 4"
+              class="table-total-label">
+              Total Recorded Balance
+            </td>
+
+            <td class="text-end table-total-value">
+              {{ formatCurrency(totalRecordedFunds) }}
+            </td>
+
+            <td *ngIf="isAdmin"></td>
+          </tr>
+        </tfoot>
+
+      </table>
+    </div>
+
+    <div class="table-footer" *ngIf="!isLoading">
+      <span>
+        Showing {{ filteredVoAlfList.length }} of
+        {{ selectedVoAlfRecords.length }} records
       </span>
-
     </div>
 
-    <div class="card-body p-0">
-      <div class="table-responsive">
+  </div>
 
-        <table class="table table-hover table-bordered align-middle mb-0">
-
-          <thead class="table-light">
-            <tr>
-              <th style="width: 70px;">#</th>
-              <th>Village Name</th>
-              <th>VO / ALF Name</th>
-              <th>Account Number</th>
-              <th class="text-end">Received Fund</th>
-
-              <!-- ACTIONS: ADMIN ONLY -->
-              <th
-                *ngIf="isAdmin"
-                class="text-center"
-                style="width: 150px;">
-                Actions
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            <!-- DATA -->
-            <tr *ngFor="let voAlf of voAlfList; let i = index">
-
-              <td>{{ i + 1 }}</td>
-
-              <td class="fw-semibold">
-                {{ voAlf.villageName || '-' }}
-              </td>
-
-              <td>{{ voAlf.voAlfName || '-' }}</td>
-
-              <td>{{ voAlf.accountNo || '-' }}</td>
-
-              <td class="text-end fw-semibold">
-                ₹ {{ voAlf.receivedFund || 0 | number:'1.2-2' }}
-              </td>
-
-              <!-- EDIT / DELETE: ADMIN ONLY -->
-              <td *ngIf="isAdmin" class="text-center">
-
-                <div class="d-flex justify-content-center gap-2">
-
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-primary"
-                    title="Edit"
-                    (click)="openEditForm(voAlf)">
-
-                    <i class="bi bi-pencil-square"></i>
-                  </button>
-
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-danger"
-                    title="Delete"
-                    [disabled]="deletingId === voAlf.id"
-                    (click)="deleteVoAlf(voAlf.id!)">
-
-                    <span
-                      *ngIf="deletingId === voAlf.id"
-                      class="spinner-border spinner-border-sm">
-                    </span>
-
-                    <i
-                      *ngIf="deletingId !== voAlf.id"
-                      class="bi bi-trash">
-                    </i>
-                  </button>
-
-                </div>
-              </td>
-
-            </tr>
-
-            <!-- NO RECORD -->
-            <tr *ngIf="selectedCmrcId && voAlfList.length === 0">
-              <td
-                [attr.colspan]="isAdmin ? 6 : 5"
-                class="text-center py-5 text-muted">
-
-                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-
-                No VO / ALF records found for selected CMRC.
-              </td>
-            </tr>
-
-            <!-- NO CMRC -->
-            <tr *ngIf="selectedCmrcId === null">
-              <td
-                [attr.colspan]="isAdmin ? 6 : 5"
-                class="text-center py-5 text-muted">
-
-                <i class="bi bi-building fs-1 d-block mb-2"></i>
-
-                Please select CMRC to view VO / ALF records.
-              </td>
-            </tr>
-
-          </tbody>
-
-          <!-- TOTAL -->
-          <tfoot *ngIf="selectedCmrcId && voAlfList.length > 0">
-            <tr class="table-light">
-
-              <td colspan="4" class="text-end fw-bold">
-                Total Received:
-              </td>
-
-              <td class="text-end fw-bold text-success">
-                ₹ {{ totalReceivedFund | number:'1.2-2' }}
-              </td>
-
-              <td *ngIf="isAdmin"></td>
-
-            </tr>
-          </tfoot>
-
-        </table>
-      </div>
-    </div>
+  <!-- FOOTNOTE -->
+  <div class="page-footnote">
+    <i class="bi bi-info-circle"></i>
+    Recorded balances are displayed for reference. Editing organization
+    details does not directly modify its balance.
   </div>
 
 </div>

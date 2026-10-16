@@ -1,16 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 
-import {
-  VoAlfService,
-  VoAlf
-} from '../services/vo-alf.service';
-
-import {
-  CmrcService,
-  Cmrc
-} from '../services/cmrc.service';
+import { VoAlfService, VoAlf } from '../services/vo-alf.service';
+import { CmrcService } from '../services/cmrc.service';
 
 @Component({
   selector: 'app-vo-alf',
@@ -20,452 +11,600 @@ import {
 export class VoAlfComponent implements OnInit {
 
   // =====================================================
-  // ROLE / PERMISSIONS
+  // USER / ROLE
   // =====================================================
 
   isAdmin = false;
+  currentUserCmrcId: number | null = null;
 
   // =====================================================
   // CMRC
   // =====================================================
 
-  cmrcList: Cmrc[] = [];
-
+  cmrcList: any[] = [];
   selectedCmrcId: number | null = null;
-
-  // =====================================================
-  // AUTOMATIC CMRC DETAILS
-  // =====================================================
-
   selectedCmrcName = '';
-  selectedDistrict = '';
-  selectedTaluka = '';
 
   // =====================================================
   // VO / ALF
   // =====================================================
 
   voAlfList: VoAlf[] = [];
+  selectedVoAlfId: number | null = null;
 
-  newVoAlf: VoAlf = {
-    cmrcId: 0,
-    villageName: '',
-    voAlfName: '',
-    accountNo: '',
-    receivedFund: 0
-  };
-
-  // =====================================================
-  // FORM STATE
-  // =====================================================
+  newVoAlf: VoAlf = this.createEmptyVoAlf();
 
   showForm = false;
   isEditMode = false;
+  editingVoAlfId: number | null = null;
+
+  // =====================================================
+  // SEARCH / STATUS
+  // =====================================================
+
+  searchText = '';
+
   isLoading = false;
   isSaving = false;
-  deletingId: number | null = null;
+  isDeleting = false;
+
+  errorMessage = '';
+  successMessage = '';
 
   // =====================================================
-  // CMRC BALANCE
+  // VILLAGE LIST
   // =====================================================
 
-  cmrcBalance = 0;
-  totalReceivedFund = 0;
-  cmrcLeftBalance = 0;
-
-  // =====================================================
-  // EDIT SUPPORT
-  // =====================================================
-
-  originalReceivedFund = 0;
-
-  // =====================================================
-  // VILLAGES
-  // =====================================================
-
-  villages: string[] = [];
-
-  // =====================================================
-  // VILLAGE MASTER
-  // =====================================================
-
-  villageMap: { [key: string]: string[] } = {
-    'Sonpeth': [
-      'Sonpeth',
-      'Sonkhed',
-      'Dahikhed',
-      'Vita Khurd',
-      'Lasina',
-      'Dudhgaon',
-      'Vanisangam',
-      'Waghalgaon',
-      'Shelgaon M.',
-      'Shelgaon H.',
-      'Bhaucha Tanda',
-      'Thadi Pimpalgaon',
-      'Wadi Pimpalgaon',
-      'Gaganpipri',
-      'Golegaon',
-      'Thadi Ukkadgaon',
-      'Shirshi Bk.',
-      'Shiroli',
-      'Lohigram',
-      'Lohigram Tanda',
-      'Sakharam Tanda',
-      'Gavli Pimppri',
-      'Kapatpimpri',
-      'Nimgaon',
-      'Dighol E.',
-      'Dhar Dighol',
-      'Revatanda',
-      'Awalgaon',
-      'Bhisegaon',
-      'Mohala',
-      'Korntek',
-      'Pohandul',
-      'Vandan',
-      'Tivthana',
-      'Pohandul Tanda',
-      'Dhamoni',
-      'Bondargaon',
-      'Kothala',
-      'Kothala Tanda',
-      'Chukar Pimpri',
-      'Kanhegaon',
-      'Khadka',
-      'Dhobadi Tanda',
-      'Naikota',
-      'Ukkadgaon M.',
-      'Wadi Naikota',
-      'Karam',
-      'Narwadi',
-      'Saykhed',
-      'Devinagar',
-      'Munshiram Tanda',
-      'Tukaitanda',
-      'Wadgaon',
-      'Margalwadi',
-      'Nila',
-      'Waitagwadi',
-      'Ukhali Bk.',
-      'Paradhwadi',
-      'Buktarwadi',
-      'Ukhali Tanda'
-    ]
-  };
-
-  // =====================================================
-  // CONSTRUCTOR
-  // =====================================================
+  villages: string[] = [
+    'Sonpeth',
+    'Sonkhed',
+    'Dahikhed',
+    'Vita Khurd',
+    'Lasina',
+    'Dudhgaon',
+    'Vanisangam',
+    'Waghalgaon',
+    'Shelgaon M.',
+    'Shelgaon H.',
+    'Bhaucha Tanda',
+    'Thadi Pimpalgaon',
+    'Wadi Pimpalgaon',
+    'Gaganpipri',
+    'Golegaon',
+    'Thadi Ukkadgaon',
+    'Shirshi Bk.',
+    'Shiroli',
+    'Lohigram',
+    'Lohigram Tanda',
+    'Sakharam Tanda',
+    'Gavli Pimppri',
+    'Kapatpimpri',
+    'Nimgaon',
+    'Dighol E.',
+    'Dhar Dighol',
+    'Revatanda',
+    'Awalgaon',
+    'Bhisegaon',
+    'Mohala',
+    'Korntek',
+    'Pohandul',
+    'Vandan',
+    'Tivthana',
+    'Pohandul Tanda',
+    'Dhamoni',
+    'Bondargaon',
+    'Kothala',
+    'Kothala Tanda',
+    'Chukar Pimpri',
+    'Kanhegaon',
+    'Khadka',
+    'Dhobadi Tanda',
+    'Naikota',
+    'Ukkadgaon M.',
+    'Wadi Naikota',
+    'Karam',
+    'Narwadi',
+    'Saykhed',
+    'Devinagar',
+    'Munshiram Tanda',
+    'Tukaitanda',
+    'Wadgaon',
+    'Margalwadi',
+    'Nila',
+    'Waitagwadi',
+    'Ukhali Bk.',
+    'Paradhwadi',
+    'Buktarwadi',
+    'Ukhali Tanda'
+  ];
 
   constructor(
-    private cmrcService: CmrcService,
-    private voAlfService: VoAlfService
+    private voAlfService: VoAlfService,
+    private cmrcService: CmrcService
   ) {}
 
   // =====================================================
-  // ON INIT
+  // INITIALIZATION
   // =====================================================
 
   ngOnInit(): void {
-    this.loadUserRole();
-    this.loadCmrc();
+    this.loadCurrentUser();
+    this.loadCmrcList();
   }
 
   // =====================================================
-  // LOAD LOGGED-IN USER ROLE
+  // CURRENT USER
   // =====================================================
 
-  private loadUserRole(): void {
-    const userData = localStorage.getItem('user');
-
-    if (!userData) {
-      this.isAdmin = false;
-      return;
-    }
-
+  loadCurrentUser(): void {
     try {
-      const user = JSON.parse(userData);
+      const storedUser = localStorage.getItem('user');
+
+      if (!storedUser) {
+        this.isAdmin = false;
+        this.currentUserCmrcId = null;
+        return;
+      }
+
+      const user = JSON.parse(storedUser);
 
       const role = String(
-        user.role || user.userRole || ''
-      ).trim().toUpperCase();
+        user.role || localStorage.getItem('role') || ''
+      ).toUpperCase();
 
-      this.isAdmin = role === 'ADMIN';
+      this.isAdmin =
+        role === 'ADMIN' ||
+        role === 'SUPER_ADMIN';
 
-      // USER cannot keep an Add/Edit form open.
-      if (!this.isAdmin) {
-        this.showForm = false;
-        this.isEditMode = false;
-      }
+      const cmrcId = Number(user.cmrcId);
+
+      this.currentUserCmrcId =
+        Number.isFinite(cmrcId) && cmrcId > 0
+          ? cmrcId
+          : null;
+
     } catch (error) {
-      console.error('Unable to read user role:', error);
+      console.error('Unable to read current user:', error);
+
       this.isAdmin = false;
-      this.showForm = false;
-      this.isEditMode = false;
+      this.currentUserCmrcId = null;
     }
   }
 
   // =====================================================
-  // LOAD CMRC
+  // LOAD CMRC LIST
   // =====================================================
 
-  loadCmrc(): void {
-    this.isLoading = true;
+  loadCmrcList(): void {
+    this.errorMessage = '';
 
     this.cmrcService.getAll().subscribe({
-      next: (data: Cmrc[]) => {
-        this.cmrcList = data || [];
+      next: (response: any[]) => {
+        this.cmrcList = response || [];
 
-        if (this.cmrcList.length > 0) {
-          const userData = localStorage.getItem('user');
-          let userCmrcId: number | null = null;
+        if (this.isAdmin) {
+          if (this.cmrcList.length > 0) {
+            const exists = this.cmrcList.some(
+              cmrc => Number(cmrc.id) === Number(this.selectedCmrcId)
+            );
 
-          if (userData) {
-            try {
-              const user = JSON.parse(userData);
-              const id = Number(user.cmrcId);
-
-              if (Number.isFinite(id) && id > 0) {
-                userCmrcId = id;
-              }
-            } catch (error) {
-              console.error('Unable to read user CMRC:', error);
+            if (!exists) {
+              this.selectedCmrcId = Number(this.cmrcList[0].id);
             }
-          }
 
-          // USER defaults to their own CMRC when it is available.
-          // ADMIN defaults to the first CMRC.
-          const defaultCmrc = !this.isAdmin && userCmrcId !== null
-            ? this.cmrcList.find(cmrc => Number(cmrc.id) === userCmrcId)
-            : undefined;
-
-          const cmrc = defaultCmrc || this.cmrcList[0];
-
-          this.selectedCmrcId = cmrc.id ?? null;
-          this.selectedCmrcName = cmrc.cmrcName || '';
-          this.selectedDistrict = cmrc.district || '';
-          this.selectedTaluka = cmrc.taluka || '';
-          this.cmrcBalance = Number(cmrc.totalFund || 0);
-
-          this.loadVillagesBySelectedTaluka();
-
-          if (this.selectedCmrcId !== null) {
+            this.updateSelectedCmrcDetails();
             this.loadVoAlfByCmrc();
+          } else {
+            this.selectedCmrcId = null;
+            this.selectedCmrcName = '';
+            this.voAlfList = [];
           }
+
+          return;
+        }
+
+        // Non-admin users can access their assigned CMRC.
+        if (this.currentUserCmrcId !== null) {
+          const assignedCmrc = this.cmrcList.find(
+            cmrc =>
+              Number(cmrc.id) === Number(this.currentUserCmrcId)
+          );
+
+          this.selectedCmrcId = this.currentUserCmrcId;
+
+          this.selectedCmrcName =
+            assignedCmrc?.cmrcName || '';
+
+          this.loadVoAlfByCmrc();
         } else {
           this.selectedCmrcId = null;
           this.selectedCmrcName = '';
-          this.selectedDistrict = '';
-          this.selectedTaluka = '';
-          this.cmrcBalance = 0;
           this.voAlfList = [];
-          this.totalReceivedFund = 0;
-          this.cmrcLeftBalance = 0;
-          this.villages = [];
+          this.errorMessage =
+            'No CMRC is assigned to the current user.';
         }
-
-        this.isLoading = false;
       },
 
-      error: (error) => {
-        console.error('CMRC API Error:', error);
+      error: (error: any) => {
+        console.error('Error loading CMRC list:', error);
 
-        this.isLoading = false;
         this.cmrcList = [];
-        this.selectedCmrcId = null;
-        this.selectedCmrcName = '';
-        this.selectedDistrict = '';
-        this.selectedTaluka = '';
-        this.cmrcBalance = 0;
-        this.voAlfList = [];
-        this.totalReceivedFund = 0;
-        this.cmrcLeftBalance = 0;
-        this.villages = [];
-
-        alert('Unable to load CMRC data.');
+        this.errorMessage = 'Unable to load CMRC records.';
       }
     });
   }
 
   // =====================================================
-  // LOAD ALL VO / ALF
+  // CMRC CHANGE
   // =====================================================
 
-  loadAllVoAlf(): void {
-    if (
-      this.selectedCmrcId === null ||
-      this.selectedCmrcId === undefined
-    ) {
-      this.voAlfList = [];
-      this.totalReceivedFund = 0;
-      return;
-    }
+  onCmrcChange(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
 
+    this.closeForm();
+    this.searchText = '';
+    this.selectedVoAlfId = null;
+
+    this.updateSelectedCmrcDetails();
     this.loadVoAlfByCmrc();
   }
 
+  updateSelectedCmrcDetails(): void {
+    const selectedCmrc = this.cmrcList.find(
+      cmrc => Number(cmrc.id) === Number(this.selectedCmrcId)
+    );
+
+    this.selectedCmrcName =
+      selectedCmrc?.cmrcName || '';
+  }
+
   // =====================================================
-  // LOAD VO / ALF BY CMRC
+  // LOAD VO / ALF RECORDS
   // =====================================================
 
   loadVoAlfByCmrc(): void {
-    if (
-      this.selectedCmrcId === null ||
-      this.selectedCmrcId === undefined
-    ) {
+    if (!this.selectedCmrcId) {
       this.voAlfList = [];
-      this.cmrcBalance = 0;
-      this.totalReceivedFund = 0;
-      this.cmrcLeftBalance = 0;
-      this.villages = [];
-      this.closeForm();
+      this.isLoading = false;
       return;
     }
-
-    const selectedCmrc = this.getSelectedCmrc();
-
-    if (selectedCmrc) {
-      this.selectedCmrcName = selectedCmrc.cmrcName || '';
-      this.selectedDistrict = selectedCmrc.district || '';
-      this.selectedTaluka = selectedCmrc.taluka || '';
-    }
-
-    this.cmrcBalance = Number(selectedCmrc?.totalFund || 0);
-
-    this.loadVillagesBySelectedTaluka();
 
     this.isLoading = true;
 
     this.voAlfService
-      .getByCmrcId(this.selectedCmrcId)
+      .getByCmrcId(Number(this.selectedCmrcId))
       .subscribe({
-        next: (data: VoAlf[]) => {
-          this.voAlfList = data || [];
+        next: (response: VoAlf[]) => {
+          this.voAlfList = response || [];
 
-          console.log('VO / ALF Data:', this.voAlfList);
+          // Keep the selected record only if it still exists.
+          if (
+            this.selectedVoAlfId !== null &&
+            !this.voAlfList.some(
+              item => Number(item.id) ===
+                Number(this.selectedVoAlfId)
+            )
+          ) {
+            this.selectedVoAlfId = null;
+          }
 
-          this.calculateTotalReceivedFund();
           this.isLoading = false;
         },
 
-        error: (error) => {
-          console.error('VO / ALF API Error:', error);
+        error: (error: any) => {
+          console.error('Error loading VO / ALF:', error);
 
           this.voAlfList = [];
-          this.totalReceivedFund = 0;
-          this.calculateLeftBalance();
           this.isLoading = false;
-
-          alert('Unable to load VO / ALF data.');
+          this.errorMessage =
+            'Unable to load VO / ALF records.';
         }
       });
   }
 
   // =====================================================
-  // LOAD VILLAGES BY SELECTED TALUKA
+  // VO / ALF FILTER
   // =====================================================
 
-  loadVillagesBySelectedTaluka(): void {
-    const taluka =
-      this.selectedTaluka || this.getSelectedCmrcTaluka();
+  onVoAlfChange(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
 
-    if (!taluka || taluka === '-') {
-      this.villages = [];
-      return;
+  get selectedVoAlfRecords(): VoAlf[] {
+    if (this.selectedVoAlfId === null) {
+      return this.voAlfList;
     }
 
-    this.villages = this.villageMap[taluka] || [];
+    return this.voAlfList.filter(
+      item =>
+        Number(item.id) === Number(this.selectedVoAlfId)
+    );
+  }
 
-    if (
-      this.newVoAlf.villageName &&
-      !this.villages.includes(this.newVoAlf.villageName)
-    ) {
-      this.villages = [
-        this.newVoAlf.villageName,
-        ...this.villages
-      ];
+  get filteredVoAlfList(): VoAlf[] {
+    const search = this.searchText
+      .trim()
+      .toLowerCase();
+
+    if (!search) {
+      return this.selectedVoAlfRecords;
     }
+
+  return this.selectedVoAlfRecords.filter(item => {
+  return [
+    item.voAlfName,
+    item.villageName,
+    item.accountNo
+  ].some(value =>
+    String(value ?? '').toLowerCase().includes(search)
+  );
+});
   }
 
   // =====================================================
-  // CALCULATE TOTAL RECEIVED
+  // SUMMARY
   // =====================================================
 
-  calculateTotalReceivedFund(): void {
-    this.totalReceivedFund = this.voAlfList.reduce(
-      (total: number, item: VoAlf) => {
-        return total + Number(item.receivedFund || 0);
-      },
+  get totalVoAlf(): number {
+    return this.selectedVoAlfRecords.length;
+  }
+
+  get totalVillages(): number {
+    return new Set(
+      this.selectedVoAlfRecords
+        .map(item => String(item.villageName || '').trim())
+        .filter(village => village.length > 0)
+    ).size;
+  }
+
+  get totalRecordedFunds(): number {
+    return this.selectedVoAlfRecords.reduce(
+      (total, item) =>
+        total + this.toAmount(item.receivedFund),
       0
     );
+  }
 
-    this.calculateLeftBalance();
+  get voAlfTotalBalance(): number {
+    return this.totalRecordedFunds;
   }
 
   // =====================================================
-  // CALCULATE LEFT BALANCE
+  // ACCOUNT NUMBER LOCK
   // =====================================================
 
-  calculateLeftBalance(): void {
-    this.cmrcLeftBalance =
-      Number(this.cmrcBalance || 0) -
-      Number(this.totalReceivedFund || 0);
+  get isAccountNumberLocked(): boolean {
+    return (
+      this.isEditMode &&
+      this.toAmount(this.newVoAlf.receivedFund) > 0
+    );
   }
 
   // =====================================================
-  // OPEN ADD FORM - ADMIN ONLY
+  // OPEN ADD FORM
   // =====================================================
 
   openAddForm(): void {
-    if (!this.isAdmin) {
-      alert('Access denied. Only ADMIN can add VO / ALF.');
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    if (!this.selectedCmrcId) {
+      this.errorMessage = 'Please select a CMRC first.';
       return;
     }
 
-    if (
-      this.selectedCmrcId === null ||
-      this.selectedCmrcId === undefined
-    ) {
-      alert('CMRC information is not available.');
-      return;
-    }
-
-    this.newVoAlf = {
-      cmrcId: this.selectedCmrcId,
-      villageName: '',
-      voAlfName: '',
-      accountNo: '',
-      receivedFund: 0
-    };
-
-    this.originalReceivedFund = 0;
     this.isEditMode = false;
-    this.showForm = true;
+    this.editingVoAlfId = null;
 
-    this.loadVillagesBySelectedTaluka();
+    this.newVoAlf = this.createEmptyVoAlf();
+    this.newVoAlf.cmrcId = Number(this.selectedCmrcId);
+
+    this.showForm = true;
   }
 
   // =====================================================
-  // OPEN EDIT FORM - ADMIN ONLY
+  // OPEN EDIT FORM
   // =====================================================
 
-  openEditForm(voAlf: VoAlf): void {
-    if (!this.isAdmin) {
-      alert('Access denied. Only ADMIN can edit VO / ALF.');
+  openEditForm(item: VoAlf): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.isEditMode = true;
+    this.editingVoAlfId = Number(item.id);
+
+    // Copy the selected record into the form.
+    // Do not directly mutate the table record.
+   this.newVoAlf = {
+  id: item.id,
+  cmrcId: Number(item.cmrcId),
+  voAlfName: item.voAlfName || '',
+  villageName: item.villageName || '',
+  accountNo: item.accountNo || '',
+  receivedFund: this.toAmount(item.receivedFund)
+};
+
+    this.showForm = true;
+  }
+
+  // =====================================================
+  // SAVE / UPDATE VO / ALF
+  // =====================================================
+
+  saveVoAlf(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    if (this.isSaving) {
       return;
     }
 
-    this.newVoAlf = {
-      ...voAlf,
-      cmrcId: this.selectedCmrcId ?? voAlf.cmrcId
-    };
+    if (!this.selectedCmrcId) {
+      this.errorMessage = 'Please select a CMRC.';
+      return;
+    }
 
-    this.originalReceivedFund = Number(voAlf.receivedFund || 0);
-    this.isEditMode = true;
-    this.showForm = true;
+    const voAlfName = String(
+      this.newVoAlf.voAlfName || ''
+    ).trim();
 
-    this.loadVillagesBySelectedTaluka();
+    const villageName = String(
+      this.newVoAlf.villageName || ''
+    ).trim();
+
+    const accountNo = String(
+      this.newVoAlf.accountNo || ''
+    ).trim();
+
+    if (!voAlfName) {
+      this.errorMessage = 'Please enter the VO / ALF name.';
+      return;
+    }
+
+    if (!villageName) {
+      this.errorMessage = 'Please select a village.';
+      return;
+    }
+
+    if (!accountNo) {
+      this.errorMessage = 'Please enter the account number.';
+      return;
+    }
+
+    const wasEditMode = this.isEditMode;
+    const currentId = this.editingVoAlfId;
+
+    const existingRecord = wasEditMode
+      ? this.voAlfList.find(
+          item => Number(item.id) === Number(currentId)
+        )
+      : undefined;
+
+    if (wasEditMode && !existingRecord) {
+      this.errorMessage =
+        'The selected VO / ALF record could not be found.';
+      return;
+    }
+
+    // Protect the existing account number in the UI logic
+    // when a balance has already been recorded.
+    if (
+      wasEditMode &&
+      existingRecord &&
+      this.toAmount(existingRecord.receivedFund) > 0
+    ) {
+      this.newVoAlf.accountNo =
+        existingRecord.accountNo || '';
+    }
+
+    const payload: VoAlf = {
+  id: wasEditMode ? currentId ?? undefined : undefined,
+  cmrcId: Number(this.selectedCmrcId),
+  voAlfName,
+  villageName,
+  accountNo: String(this.newVoAlf.accountNo || '').trim(),
+  receivedFund: wasEditMode && existingRecord
+    ? this.toAmount(existingRecord.receivedFund)
+    : 0
+};
+
+    this.isSaving = true;
+
+    const request = wasEditMode && currentId !== null
+      ? this.voAlfService.update(currentId, payload)
+      : this.voAlfService.create(payload);
+
+    request.subscribe({
+      next: () => {
+        this.isSaving = false;
+
+        this.showForm = false;
+        this.isEditMode = false;
+        this.editingVoAlfId = null;
+        this.newVoAlf = this.createEmptyVoAlf();
+
+        this.searchText = '';
+        this.selectedVoAlfId = null;
+
+        this.successMessage = wasEditMode
+          ? 'VO / ALF updated successfully.'
+          : 'VO / ALF added successfully.';
+
+        // Reload from backend so the table and summary
+        // show the saved values rather than stale data.
+        this.loadVoAlfByCmrc();
+      },
+
+      error: (error: any) => {
+        console.error('Error saving VO / ALF:', error);
+
+        this.isSaving = false;
+
+        this.errorMessage =
+          error?.error?.message ||
+          error?.error ||
+          (wasEditMode
+            ? 'Unable to update VO / ALF.'
+            : 'Unable to add VO / ALF.');
+      }
+    });
+  }
+
+  // =====================================================
+  // DELETE VO / ALF
+  // =====================================================
+
+  deleteVoAlf(id: number | undefined): void {
+    if (!id || this.isDeleting) {
+      return;
+    }
+
+    const item = this.voAlfList.find(
+      record => Number(record.id) === Number(id)
+    );
+
+    if (!item) {
+      this.errorMessage = 'VO / ALF record not found.';
+      return;
+    }
+
+    if (!confirm(
+      `Are you sure you want to delete "${item.voAlfName}"?`
+    )) {
+      return;
+    }
+
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.isDeleting = true;
+
+    this.voAlfService.delete(id).subscribe({
+      next: () => {
+        this.isDeleting = false;
+
+        this.successMessage =
+          'VO / ALF deleted successfully.';
+
+        if (Number(this.selectedVoAlfId) === Number(id)) {
+          this.selectedVoAlfId = null;
+        }
+
+        this.loadVoAlfByCmrc();
+      },
+
+      error: (error: any) => {
+        console.error('Error deleting VO / ALF:', error);
+
+        this.isDeleting = false;
+
+        this.errorMessage =
+          error?.error?.message ||
+          error?.error ||
+          'Unable to delete VO / ALF.';
+      }
+    });
   }
 
   // =====================================================
@@ -475,397 +614,49 @@ export class VoAlfComponent implements OnInit {
   closeForm(): void {
     this.showForm = false;
     this.isEditMode = false;
-    this.originalReceivedFund = 0;
-
-    this.newVoAlf = {
-      cmrcId: this.selectedCmrcId ?? 0,
-      villageName: '',
-      voAlfName: '',
-      accountNo: '',
-      receivedFund: 0
-    };
+    this.editingVoAlfId = null;
+    this.newVoAlf = this.createEmptyVoAlf();
   }
 
   // =====================================================
-  // SAVE / UPDATE - ADMIN ONLY
+  // REFRESH
   // =====================================================
 
-  saveVoAlf(): void {
-    if (!this.isAdmin) {
-      alert('Access denied. Only ADMIN can add or update VO / ALF.');
-      return;
-    }
+  refreshVoAlf(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
 
-    if (!this.selectedCmrcId || this.selectedCmrcId <= 0) {
-      alert('CMRC information is not available.');
-      return;
-    }
-
-    this.newVoAlf.cmrcId = this.selectedCmrcId;
-
-    if (
-      !this.newVoAlf.villageName ||
-      !this.newVoAlf.villageName.trim()
-    ) {
-      alert('Please select village.');
-      return;
-    }
-
-    if (
-      !this.newVoAlf.voAlfName ||
-      !this.newVoAlf.voAlfName.trim()
-    ) {
-      alert('Please enter VO / ALF name.');
-      return;
-    }
-
-    const receivedFund = Number(this.newVoAlf.receivedFund || 0);
-
-    if (!Number.isFinite(receivedFund) || receivedFund < 0) {
-      alert('Received Fund cannot be negative or invalid.');
-      return;
-    }
-
-    let availableBalance = Number(this.cmrcBalance || 0);
-
-    if (this.isEditMode) {
-      availableBalance =
-        Number(this.cmrcBalance || 0) -
-        (
-          Number(this.totalReceivedFund || 0) -
-          Number(this.originalReceivedFund || 0)
-        );
-    } else {
-      availableBalance =
-        Number(this.cmrcBalance || 0) -
-        Number(this.totalReceivedFund || 0);
-    }
-
-    if (receivedFund > availableBalance) {
-      alert(
-        'Received Fund cannot be greater than available CMRC balance.\n\n' +
-        'Available Balance: ₹ ' +
-        availableBalance.toFixed(2)
-      );
-      return;
-    }
-
-    this.newVoAlf.voAlfName = this.newVoAlf.voAlfName.trim();
-    this.newVoAlf.villageName = this.newVoAlf.villageName.trim();
-
-    this.newVoAlf.accountNo = this.newVoAlf.accountNo
-      ? this.newVoAlf.accountNo.trim()
-      : '';
-
-    this.newVoAlf.receivedFund = receivedFund;
-
-    // UPDATE
-    if (this.isEditMode && this.newVoAlf.id) {
-      this.isSaving = true;
-
-      this.voAlfService
-        .update(this.newVoAlf.id, this.newVoAlf)
-        .subscribe({
-          next: () => {
-            this.isSaving = false;
-
-            alert('VO / ALF updated successfully.');
-
-            this.closeForm();
-            this.loadVoAlfByCmrc();
-          },
-
-          error: (error) => {
-            console.error('Update VO / ALF Error:', error);
-
-            this.isSaving = false;
-
-            alert('Unable to update VO / ALF.');
-          }
-        });
-
-      return;
-    }
-
-    // CREATE
-    this.isSaving = true;
-
-    this.voAlfService
-      .create(this.newVoAlf)
-      .subscribe({
-        next: () => {
-          this.isSaving = false;
-
-          alert('VO / ALF added successfully.');
-
-          this.closeForm();
-          this.loadVoAlfByCmrc();
-        },
-
-        error: (error) => {
-          console.error('Create VO / ALF Error:', error);
-
-          this.isSaving = false;
-
-          alert('Unable to create VO / ALF.');
-        }
-      });
+    this.loadCmrcList();
   }
 
   // =====================================================
-  // DELETE - ADMIN ONLY
+  // CREATE EMPTY MODEL
   // =====================================================
 
-  deleteVoAlf(id: number): void {
-    if (!this.isAdmin) {
-      alert('Access denied. Only ADMIN can delete VO / ALF.');
-      return;
-    }
+  createEmptyVoAlf(): VoAlf {
+  return {
+    cmrcId: Number(this.selectedCmrcId || 0),
+    voAlfName: '',
+    villageName: '',
+    accountNo: '',
+    receivedFund: 0
+  };
+}
+  // =====================================================
+  // HELPERS
+  // =====================================================
 
-    if (
-      !confirm('Are you sure you want to delete this VO / ALF?')
-    ) {
-      return;
-    }
+  toAmount(value: unknown): number {
+    const amount = Number(value || 0);
 
-    this.deletingId = id;
-
-    this.voAlfService
-      .delete(id)
-      .subscribe({
-        next: () => {
-          this.deletingId = null;
-
-          alert('VO / ALF deleted successfully.');
-
-          this.loadVoAlfByCmrc();
-        },
-
-        error: (error) => {
-          console.error('Delete VO / ALF Error:', error);
-
-          this.deletingId = null;
-
-          alert('Unable to delete VO / ALF.');
-        }
-      });
+    return Number.isFinite(amount) ? amount : 0;
   }
 
-  // =====================================================
-  // GET SELECTED CMRC
-  // =====================================================
-
-  getSelectedCmrc(): Cmrc | undefined {
-    return this.cmrcList.find(
-      c => c.id === this.selectedCmrcId
-    );
-  }
-
-  // =====================================================
-  // CMRC NAME
-  // =====================================================
-
-  getSelectedCmrcName(): string {
-    if (this.selectedCmrcName) {
-      return this.selectedCmrcName;
-    }
-
-    const cmrc = this.getSelectedCmrc();
-
-    return cmrc?.cmrcName || '-';
-  }
-
-  // =====================================================
-  // DISTRICT
-  // =====================================================
-
-  getSelectedCmrcDistrict(): string {
-    if (this.selectedDistrict) {
-      return this.selectedDistrict;
-    }
-
-    const cmrc = this.getSelectedCmrc();
-
-    return cmrc?.district || '-';
-  }
-
-  // =====================================================
-  // TALUKA
-  // =====================================================
-
-  getSelectedCmrcTaluka(): string {
-    if (this.selectedTaluka) {
-      return this.selectedTaluka;
-    }
-
-    const cmrc = this.getSelectedCmrc();
-
-    return cmrc?.taluka || '-';
-  }
-
-  // =====================================================
-  // RECEIVED FUND IN WORDS
-  // =====================================================
-
-  getReceivedFundInWords(): string {
-    const amount = Number(this.newVoAlf.receivedFund || 0);
-
-    if (!amount || amount <= 0) {
-      return '';
-    }
-
-    return this.numberToWordsIndian(amount);
-  }
-
-  // =====================================================
-  // BALANCE AFTER CURRENT ENTRY
-  // =====================================================
-
-  getBalanceAfterCurrentEntry(): number {
-    const enteredAmount = Number(this.newVoAlf.receivedFund || 0);
-
-    if (this.isEditMode) {
-      return (
-        Number(this.cmrcBalance || 0) -
-        (
-          Number(this.totalReceivedFund || 0) -
-          Number(this.originalReceivedFund || 0)
-        ) -
-        enteredAmount
-      );
-    }
-
-    return (
-      Number(this.cmrcBalance || 0) -
-      Number(this.totalReceivedFund || 0) -
-      enteredAmount
-    );
-  }
-
-  // =====================================================
-  // AMOUNT TO INDIAN WORDS
-  // =====================================================
-
-  private numberToWordsIndian(num: number): string {
-    if (!num || num <= 0) {
-      return '';
-    }
-
-    num = Math.floor(num);
-
-    const ones: string[] = [
-      '',
-      'One',
-      'Two',
-      'Three',
-      'Four',
-      'Five',
-      'Six',
-      'Seven',
-      'Eight',
-      'Nine',
-      'Ten',
-      'Eleven',
-      'Twelve',
-      'Thirteen',
-      'Fourteen',
-      'Fifteen',
-      'Sixteen',
-      'Seventeen',
-      'Eighteen',
-      'Nineteen'
-    ];
-
-    const tens: string[] = [
-      '',
-      '',
-      'Twenty',
-      'Thirty',
-      'Forty',
-      'Fifty',
-      'Sixty',
-      'Seventy',
-      'Eighty',
-      'Ninety'
-    ];
-
-    const twoDigitWords = (n: number): string => {
-      if (n < 20) {
-        return ones[n];
-      }
-
-      const ten = Math.floor(n / 10);
-      const one = n % 10;
-
-      return tens[ten] + (one > 0 ? ' ' + ones[one] : '');
-    };
-
-    const convertBelowThousand = (n: number): string => {
-      let result = '';
-
-      if (n >= 100) {
-        result =
-          ones[Math.floor(n / 100)] +
-          ' Hundred';
-
-        n = n % 100;
-
-        if (n > 0) {
-          result += ' ' + twoDigitWords(n);
-        }
-      } else if (n > 0) {
-        result = twoDigitWords(n);
-      }
-
-      return result;
-    };
-
-    let result = '';
-
-    // CRORE
-    if (num >= 10000000) {
-      const crore = Math.floor(num / 10000000);
-
-      result += convertBelowThousand(crore) + ' Crore';
-
-      num = num % 10000000;
-
-      if (num > 0) {
-        result += ' ';
-      }
-    }
-
-    // LAKH
-    if (num >= 100000) {
-      const lakh = Math.floor(num / 100000);
-
-      result += convertBelowThousand(lakh) + ' Lakh';
-
-      num = num % 100000;
-
-      if (num > 0) {
-        result += ' ';
-      }
-    }
-
-    // THOUSAND
-    if (num >= 1000) {
-      const thousand = Math.floor(num / 1000);
-
-      result += convertBelowThousand(thousand) + ' Thousand';
-
-      num = num % 1000;
-
-      if (num > 0) {
-        result += ' ';
-      }
-    }
-
-    // REMAINING
-    if (num > 0) {
-      result += convertBelowThousand(num);
-    }
-
-    return result.trim() + ' Rupees Only';
+  formatCurrency(value: unknown): string {
+    return this.toAmount(value).toLocaleString('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 2
+    });
   }
 }

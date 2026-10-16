@@ -4,17 +4,11 @@ import { Observable } from 'rxjs';
 
 export interface VoAlf {
   id?: number;
-
   cmrcId: number;
-
   voAlfName: string;
-
-  // Village information
   villageId?: number;
   villageName?: string;
-
   accountNo?: string;
-
   receivedFund?: number;
 }
 
@@ -23,28 +17,33 @@ export interface VoAlf {
 })
 export class VoAlfService {
 
-  private apiUrl = 'http://localhost:8080/api/vo-alf';
+  private readonly apiUrl = 'http://localhost:8080/api/vo-alf';
 
   constructor(private http: HttpClient) {}
 
+  // GET: All VO / ALF records
   getAll(): Observable<VoAlf[]> {
     return this.http.get<VoAlf[]>(this.apiUrl);
   }
 
+  // GET: VO / ALF by ID
   getById(id: number): Observable<VoAlf> {
     return this.http.get<VoAlf>(`${this.apiUrl}/${id}`);
   }
 
+  // GET: VO / ALF by CMRC ID
   getByCmrcId(cmrcId: number): Observable<VoAlf[]> {
     return this.http.get<VoAlf[]>(
       `${this.apiUrl}/cmrc/${cmrcId}`
     );
   }
 
+  // POST: Add VO / ALF
   create(voAlf: VoAlf): Observable<VoAlf> {
     return this.http.post<VoAlf>(this.apiUrl, voAlf);
   }
 
+  // PUT: Update VO / ALF
   update(id: number, voAlf: VoAlf): Observable<VoAlf> {
     return this.http.put<VoAlf>(
       `${this.apiUrl}/${id}`,
@@ -52,15 +51,11 @@ export class VoAlfService {
     );
   }
 
-delete(id: number): Observable<string> {
-  return this.http.delete(
-    `${this.apiUrl}/${id}`,
-    {
-      responseType: 'text'
-    }
-  );
-}
-
-
-  
+  // DELETE: Delete VO / ALF
+  delete(id: number): Observable<string> {
+    return this.http.delete(
+      `${this.apiUrl}/${id}`,
+      { responseType: 'text' }
+    );
+  }
 }

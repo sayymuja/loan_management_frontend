@@ -1,0 +1,88 @@
+.loan-repayment-page {
+  padding: 20px;
+  background: #f5f7fb;
+  min-height: 100vh;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  margin: 0 0 6px;
+  color: #1e293b;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.page-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.tab-container {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  margin-bottom: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex: 1;
+  padding: 13px 20px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-button i {
+  font-size: 19px;
+}
+
+.tab-button:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.tab-button.active {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.2);
+}
+
+.tab-content {
+  background: #ffffff;
+  border-radius: 12px;
+}
+
+@media (max-width: 576px) {
+  .loan-repayment-page {
+    padding: 12px;
+  }
+
+  .page-header h2 {
+    font-size: 22px;
+  }
+
+  .tab-button {
+    padding: 12px 8px;
+    font-size: 14px;
+  }
+}

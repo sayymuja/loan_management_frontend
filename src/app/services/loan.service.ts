@@ -37,20 +37,11 @@ export interface Loan {
   monthlyEmi?: number;
 
   loanStatus?: string;
+
+  // Cash / Bank disbursement
+  paymentMode?: 'CASH' | 'BANK';
+
   totalInterestReceived?: number;
-}
-export interface LoanApprovalRequest {
-  id: number;
-  requestType: 'CREATE' | 'UPDATE' | 'DELETE' | string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | string;
-  loanId: number | null;
-  requestData?: string;
-  requestedByUserId?: number;
-  requestedByName?: string;
-  cmrcId?: number;
-  createdAt?: string;
-  reviewedAt?: string;
-  adminRemarks?: string;
 }
 
 // =========================================================
@@ -61,10 +52,13 @@ export interface LoanApprovalRequest {
   id: number;
   requestType: 'CREATE' | 'UPDATE' | 'DELETE' | string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | string;
+
   loanId: number | null;
   requestData?: string;
+
   requestedByUserId?: number;
   requestedByName?: string;
+
   cmrcId?: number;
   createdAt?: string;
   reviewedAt?: string;
@@ -122,45 +116,82 @@ export class LoanService {
   // =========================================================
 
   getByWomanId(womanId: number): Observable<Loan[]> {
-    return this.http.get<Loan[]>(`${this.apiUrl}/woman/${womanId}`);
+    return this.http.get<Loan[]>(
+      `${this.apiUrl}/woman/${womanId}`
+    );
   }
 
   // =========================================================
   // CREATE
-  // USER: ApprovalRequest
-  // ADMIN: Loan
+  // USER: Approval Request
+  // ADMIN: Direct Loan Creation
   // =========================================================
 
   create(loan: Loan): Observable<Loan | LoanApprovalRequest> {
+    const payload: Loan = {
+      ...loan,
+      paymentMode: this.normalizePaymentMode(loan.paymentMode)
+    };
+
     return this.http.post<Loan | LoanApprovalRequest>(
       this.apiUrl,
-      loan
+      payload
     );
   }
 
   // =========================================================
   // UPDATE
-  // USER: ApprovalRequest
-  // ADMIN: Loan
+  // USER: Approval Request
+  // ADMIN: Direct Update
   // =========================================================
 
   update(
     id: number,
     loan: Loan
   ): Observable<Loan | LoanApprovalRequest> {
+
+    const payload: Loan = {
+      ...loan,
+      paymentMode: this.normalizePaymentMode(loan.paymentMode)
+    };
+
     return this.http.put<Loan | LoanApprovalRequest>(
       `${this.apiUrl}/${id}`,
-      loan
+      payload
     );
   }
 
   // =========================================================
-  // DELETE
-  // USER: ApprovalRequest
-  // ADMIN: Success message
+  // NORMALIZE PAYMENT MODE
   // =========================================================
 
-  delete(id: number): Observable<string | LoanApprovalRequest> {
+  private normalizePaymentMode(
+    paymentMode?: string
+  ): 'CASH' | 'BANK' {
+
+    const mode = String(paymentMode || 'CASH')
+      .trim()
+      .toUpperCase();
+
+    if (mode !== 'CASH' && mode !== 'BANK') {
+      throw new Error(
+        'Payment mode must be CASH or BANK.'
+      );
+    }
+
+    return mode;
+  }
+
+  // =========================================================
+  // DELETE
+  // USER: Approval Request
+  // ADMIN: Direct Delete
+  // =========================================================
+
+  delete(
+    id: number
+  ): Observable<string | LoanApprovalRequest> {
+
     return this.http.delete<string | LoanApprovalRequest>(
       `${this.apiUrl}/${id}`,
       { responseType: 'json' }
@@ -217,6 +248,7 @@ export class LoanService {
     loanId: number,
     files: File[]
   ): Observable<LoanImage[]> {
+
     const formData = new FormData();
 
     files.forEach((file: File) => {

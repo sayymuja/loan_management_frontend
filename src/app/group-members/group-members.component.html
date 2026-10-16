@@ -1,0 +1,1085 @@
+<div class="group-members-page">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header d-flex align-items-center gap-3 mb-4">
+    <div class="header-icon">
+      <i class="bi bi-diagram-3-fill"></i>
+    </div>
+
+    <div>
+      <h2 class="mb-1">VO / ALF, Groups &amp; Members</h2>
+      <p class="text-muted mb-0">
+        Manage your organization through CMRC → VO / ALF → Group → Members
+      </p>
+    </div>
+  </div>
+
+  <!-- HIERARCHY SUMMARY -->
+  <div class="card section-card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">CMRC</label>
+          <input
+            type="text"
+            class="form-control"
+            [value]="groupCmrcName || 'Loading CMRC...'"
+            readonly>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">District</label>
+          <input
+            type="text"
+            class="form-control"
+            [value]="groupDistrict || '-'"
+            readonly>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Taluka</label>
+          <input
+            type="text"
+            class="form-control"
+            [value]="groupTaluka || '-'"
+            readonly>
+        </div>
+
+      </div>
+
+      <div class="hierarchy-summary mt-3">
+        <span>
+          <i class="bi bi-building me-1"></i>
+          {{ groupCmrcName || 'CMRC' }}
+        </span>
+
+        <i class="bi bi-chevron-right"></i>
+
+        <span>
+          <i class="bi bi-people me-1"></i>
+          {{ groupVoAlfName || 'Select VO / ALF' }}
+        </span>
+
+        <i class="bi bi-chevron-right"></i>
+
+        <span>
+          <i class="bi bi-diagram-2 me-1"></i>
+          {{ selectedMemberGroupName || 'Select Group' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <ul class="nav nav-tabs management-tabs mb-4">
+
+    <li class="nav-item">
+      <button
+        type="button"
+        class="nav-link"
+        [class.active]="activeTab === 'groups'"
+        (click)="selectTab('groups')">
+
+        <i class="bi bi-diagram-2-fill me-2"></i>
+        Groups
+
+        <span class="tab-count">
+          {{ totalGroups }}
+        </span>
+      </button>
+    </li>
+
+    <li class="nav-item">
+      <button
+        type="button"
+        class="nav-link"
+        [class.active]="activeTab === 'members'"
+        (click)="selectTab('members')">
+
+        <i class="bi bi-person-vcard-fill me-2"></i>
+        Members
+
+        <span class="tab-count">
+          {{ totalWomen }}
+        </span>
+      </button>
+    </li>
+
+  </ul>
+
+  <!-- =====================================================
+       GROUPS TAB
+  ====================================================== -->
+  <section *ngIf="activeTab === 'groups'">
+
+    <!-- GROUP ERROR -->
+    <div
+      *ngIf="groupError"
+      class="alert alert-danger alert-dismissible"
+      role="alert">
+
+      {{ groupError }}
+
+      <button
+        type="button"
+        class="btn-close"
+        aria-label="Close"
+        (click)="groupError = ''">
+      </button>
+    </div>
+
+    <!-- GROUP SUCCESS -->
+    <div
+      *ngIf="groupSuccess"
+      class="alert alert-success alert-dismissible"
+      role="alert">
+
+      {{ groupSuccess }}
+
+      <button
+        type="button"
+        class="btn-close"
+        aria-label="Close"
+        (click)="groupSuccess = ''">
+      </button>
+    </div>
+
+    <!-- GROUP HEADER -->
+    <div
+      class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+
+      <div>
+        <h4 class="section-title mb-1">Group Management</h4>
+        <p class="text-muted mb-0">
+          Select a VO / ALF to view and manage its groups.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="groupVoAlfId == null || isSavingGroup"
+        (click)="openAddGroup()">
+
+        <i class="bi bi-plus-lg me-1"></i>
+        Add Group
+      </button>
+    </div>
+
+    <!-- GROUP SUMMARY -->
+    <div class="summary-card mb-4">
+
+      <div class="summary-icon">
+        <i class="bi bi-diagram-2-fill"></i>
+      </div>
+
+      <div>
+        <div class="text-muted small">Total Groups</div>
+        <h3 class="mb-0">{{ totalGroups }}</h3>
+      </div>
+
+    </div>
+
+    <!-- GROUP FILTERS -->
+    <div class="card section-card mb-4">
+
+      <div class="card-body">
+
+        <div class="row g-3 align-items-end">
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">CMRC</label>
+
+            <select
+              class="form-select"
+              [(ngModel)]="groupCmrcId"
+              (ngModelChange)="onGroupCmrcChange()">
+
+              <option [ngValue]="null">Select CMRC</option>
+
+              <option
+                *ngFor="let cmrc of cmrcList"
+                [ngValue]="cmrc.id">
+
+                {{ cmrc.cmrcName }}
+              </option>
+
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">VO / ALF</label>
+
+            <select
+              class="form-select"
+              [(ngModel)]="groupVoAlfId"
+              [disabled]="groupCmrcId == null"
+              (ngModelChange)="onGroupVoAlfChange()">
+
+              <option [ngValue]="null">All VO / ALF</option>
+
+              <option
+                *ngFor="let vo of groupVoAlfList"
+                [ngValue]="vo.id">
+
+                {{ vo.voAlfName }}
+              </option>
+
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Village</label>
+
+            <input
+              type="text"
+              class="form-control"
+              [value]="groupVillageName || '-'"
+              readonly
+              placeholder="Selected VO / ALF village">
+          </div>
+
+        </div>
+
+        <div
+          class="hierarchy-summary mt-3"
+          *ngIf="groupCmrcId != null">
+
+          <span>
+            <i class="bi bi-building me-1"></i>
+            {{ groupCmrcName }}
+          </span>
+
+          <i
+            class="bi bi-chevron-right"
+            *ngIf="groupVoAlfId != null">
+          </i>
+
+          <span *ngIf="groupVoAlfId != null">
+            <i class="bi bi-people me-1"></i>
+            {{ groupVoAlfName }}
+          </span>
+
+          <i
+            class="bi bi-chevron-right"
+            *ngIf="groupVoAlfId != null">
+          </i>
+
+          <span *ngIf="groupVoAlfId != null">
+            <i class="bi bi-geo-alt me-1"></i>
+            {{ groupVillageName || '-' }}
+          </span>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ADD / EDIT GROUP FORM -->
+    <div
+      class="card section-card mb-4"
+      *ngIf="showGroupForm">
+
+      <div
+        class="card-header d-flex justify-content-between align-items-center">
+
+        <div>
+          <h5 class="mb-1">
+            {{ isEditGroup ? 'Edit Group' : 'Add Group' }}
+          </h5>
+
+          <small class="text-muted">
+            Enter group information.
+          </small>
+        </div>
+
+        <button
+          type="button"
+          class="btn-close"
+          aria-label="Close"
+          [disabled]="isSavingGroup"
+          (click)="closeGroupForm()">
+        </button>
+
+      </div>
+
+      <div class="card-body">
+
+        <div class="row g-3">
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">CMRC</label>
+            <input
+              type="text"
+              class="form-control"
+              [value]="groupCmrcName"
+              readonly>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">VO / ALF</label>
+            <input
+              type="text"
+              class="form-control"
+              [value]="groupVoAlfName"
+              readonly>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Village</label>
+            <input
+              type="text"
+              class="form-control"
+              [value]="groupVillageName"
+              readonly>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              Group Name <span class="text-danger">*</span>
+            </label>
+
+            <input
+              type="text"
+              class="form-control"
+              name="groupName"
+              [(ngModel)]="newGroup.groupName"
+              placeholder="Enter group name"
+              maxlength="150">
+          </div>
+
+        </div>
+
+      </div>
+
+      <div
+        class="card-footer bg-white d-flex justify-content-end gap-2">
+
+        <button
+          type="button"
+          class="btn btn-light"
+          [disabled]="isSavingGroup"
+          (click)="closeGroupForm()">
+
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="
+            isSavingGroup ||
+            !newGroup.groupName?.trim() ||
+            groupVoAlfId == null
+          "
+          (click)="saveGroup()">
+
+          <span
+            *ngIf="isSavingGroup"
+            class="spinner-border spinner-border-sm me-1">
+          </span>
+
+          <i
+            *ngIf="!isSavingGroup"
+            class="bi bi-save me-1">
+          </i>
+
+          {{
+            isSavingGroup
+              ? 'Saving...'
+              : (isEditGroup ? 'Update Group' : 'Save Group')
+          }}
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- GROUP TABLE -->
+    <div class="card section-card">
+
+      <div
+        class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+        <div>
+          <h5 class="mb-1">Group List</h5>
+
+          <small class="text-muted">
+            {{
+              groupVoAlfId != null
+                ? 'Groups under selected VO / ALF'
+                : 'Groups under selected CMRC'
+            }}
+          </small>
+        </div>
+
+        <span class="record-count">
+          {{ filteredGroupList.length }} Records
+        </span>
+
+      </div>
+
+      <div
+        *ngIf="loadingGroups"
+        class="text-center py-4">
+
+        <span
+          class="spinner-border spinner-border-sm me-2">
+        </span>
+
+        Loading groups...
+      </div>
+
+      <div
+        class="table-responsive"
+        *ngIf="!loadingGroups">
+
+        <table
+          class="table table-hover table-bordered align-middle mb-0">
+
+          <thead class="table-light">
+            <tr>
+              <th style="width:70px">Sr No</th>
+              <th>Group Name</th>
+              <th>Village</th>
+              <th>VO / ALF</th>
+              <th>CMRC</th>
+              <th class="text-center" style="width:150px">
+                Actions
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <tr
+              *ngFor="let group of filteredGroupList; let i = index">
+
+              <td>{{ i + 1 }}</td>
+
+              <td>
+                <strong>{{ group.groupName || '-' }}</strong>
+              </td>
+
+              <td>{{ group.villageName || '-' }}</td>
+              <td>{{ group.voAlfName || '-' }}</td>
+              <td>{{ group.cmrcName || groupCmrcName || '-' }}</td>
+
+              <td class="text-center">
+
+                <div class="d-flex justify-content-center gap-2">
+
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    title="Edit Group"
+                    (click)="editGroup(group)">
+
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    title="Delete Group"
+                    [disabled]="deletingGroupId === group.id"
+                    (click)="deleteGroup(group)">
+
+                    <span
+                      *ngIf="deletingGroupId === group.id"
+                      class="spinner-border spinner-border-sm">
+                    </span>
+
+                    <i
+                      *ngIf="deletingGroupId !== group.id"
+                      class="bi bi-trash">
+                    </i>
+                  </button>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+            <tr *ngIf="filteredGroupList.length === 0">
+
+              <td colspan="6" class="text-center py-5 text-muted">
+
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+
+                <h6>No Groups Found</h6>
+
+                <p class="mb-0">
+                  Select a VO / ALF or add a group to get started.
+                </p>
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- =====================================================
+       MEMBERS TAB
+  ====================================================== -->
+  <section *ngIf="activeTab === 'members'">
+
+    <!-- MEMBER ERROR -->
+    <div
+      *ngIf="memberError"
+      class="alert alert-danger alert-dismissible"
+      role="alert">
+
+      {{ memberError }}
+
+      <button
+        type="button"
+        class="btn-close"
+        aria-label="Close"
+        (click)="memberError = ''">
+      </button>
+
+    </div>
+
+    <!-- MEMBER SUCCESS -->
+    <div
+      *ngIf="memberSuccess"
+      class="alert alert-success alert-dismissible"
+      role="alert">
+
+      {{ memberSuccess }}
+
+      <button
+        type="button"
+        class="btn-close"
+        aria-label="Close"
+        (click)="memberSuccess = ''">
+      </button>
+
+    </div>
+
+    <!-- MEMBER HEADER -->
+    <div
+      class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+
+      <div>
+        <h4 class="section-title mb-1">Members Management</h4>
+
+        <p class="text-muted mb-0">
+          Manage women registered under each group.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="memberGroupId == null || isSavingMember"
+        (click)="openAddMember()">
+
+        <i class="bi bi-person-plus me-1"></i>
+        Add Member
+      </button>
+
+    </div>
+
+    <!-- MEMBER SUMMARY -->
+    <div class="summary-card mb-4">
+
+      <div class="summary-icon green">
+        <i class="bi bi-person-vcard-fill"></i>
+      </div>
+
+      <div>
+        <div class="text-muted small">Total Members</div>
+        <h3 class="mb-0">{{ totalWomen }}</h3>
+      </div>
+
+    </div>
+
+    <!-- MEMBER FILTERS -->
+    <div class="card section-card mb-4">
+
+      <div class="card-body">
+
+        <div class="row g-3">
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">CMRC</label>
+
+            <select
+              class="form-select"
+              [(ngModel)]="memberCmrcId"
+              (ngModelChange)="onMemberCmrcChange()">
+
+              <option [ngValue]="null">Select CMRC</option>
+
+              <option
+                *ngFor="let cmrc of cmrcList"
+                [ngValue]="cmrc.id">
+
+                {{ cmrc.cmrcName }}
+              </option>
+
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">VO / ALF</label>
+
+            <select
+              class="form-select"
+              [(ngModel)]="memberVoAlfId"
+              (ngModelChange)="onMemberVoAlfChange()"
+              [disabled]="memberCmrcId == null">
+
+              <option [ngValue]="null">All VO / ALF</option>
+
+              <option
+                *ngFor="let vo of memberVoAlfList"
+                [ngValue]="vo.id">
+
+                {{ vo.voAlfName }}
+              </option>
+
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Village</label>
+
+            <input
+              type="text"
+              class="form-control"
+              [value]="memberVillageName"
+              readonly>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Group</label>
+
+            <select
+              class="form-select"
+              [(ngModel)]="memberGroupId"
+              (ngModelChange)="onMemberGroupChange()"
+              [disabled]="memberVoAlfId == null">
+
+              <option [ngValue]="null">All Groups</option>
+
+              <option
+                *ngFor="let group of memberGroupList"
+                [ngValue]="group.id">
+
+                {{ group.groupName }}
+              </option>
+
+            </select>
+          </div>
+
+          <div class="col-md-7">
+            <label class="form-label fw-semibold">Search Member</label>
+
+            <div class="input-group">
+
+              <span class="input-group-text">
+                <i class="bi bi-search"></i>
+              </span>
+
+              <input
+                type="text"
+                class="form-control"
+                [(ngModel)]="searchText"
+                placeholder="Search name, husband, mobile, group or village...">
+
+              <button
+                *ngIf="searchText"
+                type="button"
+                class="btn btn-outline-secondary"
+                (click)="searchText = ''">
+
+                <i class="bi bi-x-lg"></i>
+              </button>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- MEMBER HIERARCHY -->
+        <div class="hierarchy-summary mt-3">
+
+          <span>
+            <i class="bi bi-building me-1"></i>
+            {{ memberCmrcName }}
+          </span>
+
+          <i
+            class="bi bi-chevron-right"
+            *ngIf="memberVoAlfId != null">
+          </i>
+
+          <span *ngIf="memberVoAlfId != null">
+            <i class="bi bi-people me-1"></i>
+            {{ memberVoAlfName }}
+          </span>
+
+          <i
+            class="bi bi-chevron-right"
+            *ngIf="memberGroupId != null">
+          </i>
+
+          <span *ngIf="memberGroupId != null">
+            <i class="bi bi-diagram-2 me-1"></i>
+            {{ selectedMemberGroupName }}
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ADD / EDIT MEMBER FORM -->
+    <div
+      class="card section-card mb-4 form-card"
+      *ngIf="showMemberForm">
+
+      <div
+        class="card-header d-flex justify-content-between align-items-center">
+
+        <div>
+          <h5 class="mb-1">
+            {{ isEditMember ? 'Edit Member' : 'Add Member' }}
+          </h5>
+
+          <small class="text-muted">
+            Enter member information.
+          </small>
+        </div>
+
+        <button
+          type="button"
+          class="btn-close"
+          aria-label="Close"
+          [disabled]="isSavingMember"
+          (click)="closeMemberForm()">
+        </button>
+
+      </div>
+
+      <div class="card-body">
+
+        <div class="row g-3">
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">CMRC</label>
+
+            <input
+              type="text"
+              class="form-control"
+              [value]="memberCmrcName"
+              readonly>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">VO / ALF</label>
+
+            <input
+              type="text"
+              class="form-control"
+              [value]="memberVoAlfName"
+              readonly>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Village</label>
+
+            <input
+              type="text"
+              class="form-control"
+              [value]="memberVillageName"
+              readonly>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Group</label>
+
+            <input
+              type="text"
+              class="form-control"
+              [value]="selectedMemberGroupName"
+              readonly>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">
+              Member Name <span class="text-danger">*</span>
+            </label>
+
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="newWomen.womanName"
+              placeholder="Enter member name"
+              maxlength="150">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Husband Name</label>
+
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="newWomen.husbandName"
+              placeholder="Enter husband name"
+              maxlength="150">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Mobile Number</label>
+
+            <input
+              type="tel"
+              class="form-control"
+              [(ngModel)]="newWomen.mobileNo"
+              maxlength="10"
+              placeholder="Enter mobile number">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Status</label>
+
+            <select
+              class="form-select"
+              [(ngModel)]="newWomen.status">
+
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="INACTIVE">INACTIVE</option>
+
+            </select>
+          </div>
+
+          <div class="col-md-8">
+            <label class="form-label fw-semibold">Address</label>
+
+            <textarea
+              class="form-control"
+              rows="2"
+              [(ngModel)]="newWomen.address"
+              placeholder="Enter address">
+            </textarea>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div
+        class="card-footer bg-white d-flex justify-content-end gap-2">
+
+        <button
+          type="button"
+          class="btn btn-light"
+          [disabled]="isSavingMember"
+          (click)="closeMemberForm()">
+
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="
+            isSavingMember ||
+            !newWomen.womanName?.trim() ||
+            memberGroupId == null
+          "
+          (click)="saveMember()">
+
+          <span
+            *ngIf="isSavingMember"
+            class="spinner-border spinner-border-sm me-1">
+          </span>
+
+          <i
+            *ngIf="!isSavingMember"
+            class="bi bi-save me-1">
+          </i>
+
+          {{
+            isSavingMember
+              ? 'Saving...'
+              : (isEditMember ? 'Update Member' : 'Save Member')
+          }}
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- MEMBERS TABLE -->
+    <div class="card section-card">
+
+      <div
+        class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+        <div>
+          <h5 class="mb-1">Members List</h5>
+
+          <small class="text-muted">
+            {{
+              memberGroupId != null
+                ? 'Members under selected group'
+                : 'Members matching selected filters'
+            }}
+          </small>
+        </div>
+
+        <span class="record-count">
+          {{ totalWomen }} Members
+        </span>
+
+      </div>
+
+      <div
+        *ngIf="loadingMembers"
+        class="text-center py-4">
+
+        <span
+          class="spinner-border spinner-border-sm me-2">
+        </span>
+
+        Loading members...
+      </div>
+
+      <div
+        *ngIf="!loadingMembers && filteredWomenList.length === 0"
+        class="text-center py-5 text-muted">
+
+        <i class="bi bi-people fs-1 d-block"></i>
+
+        <h5 class="mt-3">No Members Found</h5>
+
+        <p class="mb-0">
+          {{
+            searchText
+              ? 'No members match your search.'
+              : 'No members are available for the selected filters.'
+          }}
+        </p>
+
+      </div>
+
+      <div
+        class="table-responsive"
+        *ngIf="!loadingMembers && filteredWomenList.length > 0">
+
+        <table
+          class="table table-hover table-bordered align-middle mb-0">
+
+          <thead class="table-light">
+            <tr>
+              <th class="text-center" style="width:70px">Sr No</th>
+              <th>Member Name</th>
+              <th>Husband Name</th>
+              <th>Mobile</th>
+              <th>Group</th>
+              <th>Village</th>
+              <th class="text-center">Status</th>
+              <th class="text-center" style="width:120px">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <tr
+              *ngFor="let woman of filteredWomenList; let i = index">
+
+              <td class="text-center">{{ i + 1 }}</td>
+
+              <td>
+                <strong>{{ woman.womanName || '-' }}</strong>
+              </td>
+
+              <td>{{ woman.husbandName || '-' }}</td>
+              <td>{{ woman.mobileNo || '-' }}</td>
+              <td>{{ woman.groupName || '-' }}</td>
+              <td>{{ woman.villageName || '-' }}</td>
+
+              <td class="text-center">
+
+                <span
+                  class="badge"
+                  [ngClass]="
+                    woman.status === 'ACTIVE'
+                      ? 'bg-success'
+                      : woman.status === 'INACTIVE'
+                        ? 'bg-secondary'
+                        : 'bg-light text-dark'
+                  ">
+
+                  {{ woman.status || 'N/A' }}
+                </span>
+
+              </td>
+
+              <td class="text-center">
+
+                <div class="d-flex justify-content-center gap-2">
+
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    title="Edit Member"
+                    (click)="editMember(woman)">
+
+                    <i class="bi bi-pencil"></i>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    title="Delete Member"
+                    [disabled]="
+                      woman.id == null ||
+                      deletingMemberId === woman.id
+                    "
+                    (click)="deleteMember(woman.id!)">
+
+                    <span
+                      *ngIf="deletingMemberId === woman.id"
+                      class="spinner-border spinner-border-sm">
+                    </span>
+
+                    <i
+                      *ngIf="deletingMemberId !== woman.id"
+                      class="bi bi-trash">
+                    </i>
+                  </button>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</div>

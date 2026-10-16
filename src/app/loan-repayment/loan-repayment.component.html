@@ -1,0 +1,44 @@
+<div class="loan-repayment-page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h2>Loan &amp; Repayment</h2>
+      <p>Manage loans and track repayment transactions.</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-container">
+    <button
+      type="button"
+      class="tab-button"
+      [class.active]="activeTab === 'loan'"
+      (click)="selectTab('loan')">
+
+      <i class="bi bi-cash-stack"></i>
+      <span>Loan</span>
+    </button>
+
+    <button
+      type="button"
+      class="tab-button"
+      [class.active]="activeTab === 'repayment'"
+      (click)="selectTab('repayment')">
+
+      <i class="bi bi-wallet2"></i>
+      <span>Repayment</span>
+    </button>
+  </div>
+
+  <!-- Loan Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'loan'">
+    <app-loan-management></app-loan-management>
+  </div>
+
+  <!-- Repayment Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'repayment'">
+    <app-repayment-management></app-repayment-management>
+  </div>
+
+</div>

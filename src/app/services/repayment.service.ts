@@ -1,10 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Repayment {
   id?: number;
-
   loanId: number;
 
   principalAmount?: number;
@@ -18,9 +17,9 @@ export interface Repayment {
   remark?: string;
   paidAmount?: number;
   installmentNo?: number;
-installmentDate?: string;
-scheduledAmount?: number;
-paymentStatus?: string;
+  installmentDate?: string;
+  scheduledAmount?: number;
+  paymentStatus?: string;
 }
 
 @Injectable({
@@ -30,6 +29,9 @@ export class RepaymentService {
 
   private apiUrl = 'http://localhost:8080/api/repayment';
 
+  private approvalApiUrl =
+    'http://localhost:8080/api/loan-approval-requests';
+
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<Repayment[]> {
@@ -37,9 +39,7 @@ export class RepaymentService {
   }
 
   getById(id: number): Observable<Repayment> {
-    return this.http.get<Repayment>(
-      `${this.apiUrl}/${id}`
-    );
+    return this.http.get<Repayment>(`${this.apiUrl}/${id}`);
   }
 
   getByLoanId(loanId: number): Observable<Repayment[]> {
@@ -70,68 +70,75 @@ export class RepaymentService {
       `${this.apiUrl}/${id}`
     );
   }
+
   generateSchedule(loanId: number): Observable<Repayment[]> {
-  return this.http.post<Repayment[]>(
-    `${this.apiUrl}/generate/${loanId}`,
-    {}
-  );
-}
-payEmi(
-  repaymentId: number,
-  paidAmount: number,
-  penaltyAmount: number,
-  regularRepayment: boolean
-): Observable<Repayment> {
+    return this.http.post<Repayment[]>(
+      `${this.apiUrl}/generate/${loanId}`,
+      {}
+    );
+  }
 
-  return this.http.post<Repayment>(
-    `${this.apiUrl}/pay/${repaymentId}?paidAmount=${paidAmount}&penaltyAmount=${penaltyAmount}&regularRepayment=${regularRepayment}`,
-    {}
-  );
-}
-editPaidEmi(
-  repaymentId: number,
-  paidAmount: number,
-  penaltyAmount: number
-): Observable<Repayment> {
+  // ADMIN: Direct EMI payment.
+  // Keep paymentEventId unchanged when retrying the same payment.
+  payEmi(
+    repaymentId: number,
+    paidAmount: number,
+    penaltyAmount: number,
+    regularRepayment: boolean,
+    paymentEventId: string
+  ): Observable<Repayment> {
 
-  return this.http.put<Repayment>(
-    `${this.apiUrl}/edit-paid/${repaymentId}?paidAmount=${paidAmount}&penaltyAmount=${penaltyAmount}`,
-    {}
-  );
-}
-// Add inside the existing RepaymentService class
+    const params = new HttpParams()
+      .set('paidAmount', String(paidAmount))
+      .set('penaltyAmount', String(penaltyAmount))
+      .set('regularRepayment', String(regularRepayment))
+      .set('paymentEventId', paymentEventId);
 
-private approvalApiUrl = 'http://localhost:8080/api/loan-approval-requests';
+    return this.http.post<Repayment>(
+      `${this.apiUrl}/pay/${repaymentId}`,
+      {},
+      { params }
+    );
+  }
 
-submitPayEmiRequest(
-  repaymentId: number,
-  paidAmount: number,
-  penaltyAmount: number,
-  regularRepayment: boolean
-): Observable<any> {
-  return this.http.post(
-    `${this.approvalApiUrl}/repayment/pay`,
-    {
-      repaymentId,
-      paidAmount,
-      penaltyAmount,
-      regularRepayment
-    }
-  );
-}
+  // Paid EMI editing is disabled until an approved
+  // correction/refund workflow is implemented.
+  editPaidEmi(
+    repaymentId: number,
+    paidAmount: number,
+    penaltyAmount: number
+  ): Observable<Repayment> {
+    throw new Error(
+      'Paid EMI editing is disabled. An approved correction/refund workflow is required.'
+    );
+  }
 
-submitEditPaidEmiRequest(
-  repaymentId: number,
-  paidAmount: number,
-  penaltyAmount: number
-): Observable<any> {
-  return this.http.post(
-    `${this.approvalApiUrl}/repayment/edit`,
-    {
-      repaymentId,
-      paidAmount,
-      penaltyAmount
-    }
-  );
-}
+  // USER: Submit EMI payment request for ADMIN approval.
+  submitPayEmiRequest(
+    repaymentId: number,
+    paidAmount: number,
+    penaltyAmount: number,
+    regularRepayment: boolean
+  ): Observable<any> {
+    return this.http.post(
+      `${this.approvalApiUrl}/repayment/pay`,
+      {
+        repaymentId,
+        paidAmount,
+        penaltyAmount,
+        regularRepayment
+      }
+    );
+  }
+
+  // USER: Paid EMI editing is currently disabled.
+  submitEditPaidEmiRequest(
+    repaymentId: number,
+    paidAmount: number,
+    penaltyAmount: number
+  ): Observable<any> {
+    throw new Error(
+      'Paid EMI editing is disabled until an approved correction/refund workflow is implemented.'
+    );
+  }
 }

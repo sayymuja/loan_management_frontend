@@ -1,779 +1,757 @@
-/* =========================================================
-   CMRC PAGE
-========================================================= */
+/* =====================================================
+   CMRC MANAGEMENT PAGE
+===================================================== */
 
-.cmrc-page {
-  padding: 24px;
-  background: #f6f8fb;
-  min-height: 100vh;
+:host {
+  display: block;
+  min-width: 0;
 }
 
+.cmrc-page {
+  min-height: 100%;
+  padding: 24px;
+  background: #f5f7fb;
+  border-radius: 16px;
+  color: #1e293b;
+  box-sizing: border-box;
+}
 
-/* =========================================================
+.cmrc-page * {
+  box-sizing: border-box;
+}
+
+/* =====================================================
    PAGE HEADER
-========================================================= */
+===================================================== */
 
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 18px;
   margin-bottom: 24px;
+  min-width: 0;
 }
 
 .page-title {
   margin: 0;
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2937;
+  color: #172554;
+  font-size: 26px;
+  font-weight: 750;
+  line-height: 1.35;
+  letter-spacing: -0.5px;
 }
 
 .page-subtitle {
-  margin: 6px 0 0;
-  color: #6b7280;
+  margin: 7px 0 0;
+  color: #64748b;
   font-size: 14px;
+  line-height: 1.6;
 }
 
+.page-header > .btn {
+  flex-shrink: 0;
+  min-height: 40px;
+  border-radius: 9px;
+  font-weight: 600;
+}
 
-/* =========================================================
-   SUMMARY CARDS
-========================================================= */
+/* =====================================================
+   ALERT MESSAGES
+===================================================== */
+
+.cmrc-page .alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin-bottom: 20px;
+  padding: 13px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.cmrc-page .alert-danger {
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.cmrc-page .alert-success {
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+/* =====================================================
+   FINANCIAL SUMMARY CARDS
+===================================================== */
 
 .summary-card {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
-  min-height: 110px;
-  padding: 20px;
-
+  height: 100%;
+  min-height: 132px;
+  padding: 22px;
   background: #ffffff;
-
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
-
-  transition: all 0.2s ease;
+  border: 1px solid #e8edf5;
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.035);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .summary-card:hover {
   transform: translateY(-2px);
-
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.065);
 }
 
-
-/* =========================================================
-   SUMMARY ICON
-========================================================= */
-
 .summary-icon {
-  width: 52px;
-  height: 52px;
-  min-width: 52px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  color: #1d4ed8;
+  background: #eff6ff;
   border-radius: 12px;
-
-  font-size: 24px;
+  font-size: 22px;
 }
-
-.summary-icon.blue {
-  background: #e8f1ff;
-  color: #2563eb;
-}
-
-.summary-icon.green {
-  background: #e8f8ef;
-  color: #198754;
-}
-
-
-/* =========================================================
-   SUMMARY CONTENT
-========================================================= */
 
 .summary-content {
   min-width: 0;
+  flex: 1;
 }
 
-.summary-content > span {
+.summary-label {
   display: block;
-
-  margin-bottom: 4px;
-
-  font-size: 13px;
-  font-weight: 600;
-
-  color: #6b7280;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 .summary-content h3 {
   margin: 0;
-
-  font-size: 24px;
-  font-weight: 700;
-
-  color: #111827;
+  color: #0f172a;
+  font-size: clamp(20px, 2vw, 25px);
+  font-weight: 750;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
 
-
-/* =========================================================
-   SUMMARY AMOUNT IN WORDS
-========================================================= */
-
-.summary-content .amount-in-words {
-  display: block;
-
-  margin-top: 7px;
-  padding: 7px 10px;
-
-  border-radius: 6px;
-
-  background: #f8f9fa;
-  border: 1px solid #e5e7eb;
-
-  color: #495057;
-
+.summary-content p {
+  margin: 8px 0 0;
+  color: #94a3b8;
   font-size: 12px;
   line-height: 1.5;
-
-  word-break: break-word;
 }
 
+/* =====================================================
+   COMMON CARDS
+===================================================== */
 
-/* =========================================================
-   FORM CARD
-========================================================= */
-
+.table-card,
 .form-card {
+  min-width: 0;
+  margin-bottom: 24px;
   background: #ffffff;
-
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
-
+  border: 1px solid #e5eaf2;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.035);
   overflow: hidden;
 }
 
-
-/* =========================================================
-   FORM HEADER
-========================================================= */
-
+.table-card-header,
 .form-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-
-  padding: 18px 22px;
-
-  background: #f8fafc;
-
-  border-bottom: 1px solid #e5e7eb;
+  gap: 20px;
+  min-width: 0;
+  padding: 22px 24px;
+  border-bottom: 1px solid #edf1f6;
 }
 
+.table-card-header h4,
 .form-card-header h4 {
   margin: 0;
-
-  font-size: 18px;
+  color: #172554;
+  font-size: 17px;
   font-weight: 700;
-
-  color: #1f2937;
+  line-height: 1.5;
 }
 
-.form-card-header h4 i {
-  margin-right: 8px;
-  color: #2563eb;
-}
-
+.table-card-header p,
 .form-card-header p {
   margin: 5px 0 0;
-
+  color: #64748b;
   font-size: 13px;
-  color: #6b7280;
+  line-height: 1.6;
 }
-
-
-/* =========================================================
-   FORM BODY
-========================================================= */
 
 .form-card-body {
-  padding: 22px;
+  padding: 24px;
 }
 
+/* =====================================================
+   FORM FIELDS
+===================================================== */
 
-/* =========================================================
-   FORM LABEL
-========================================================= */
-
-.form-label {
+.cmrc-page .form-label {
   display: block;
-
-  margin-bottom: 7px;
-
+  margin-bottom: 8px;
+  color: #334155;
   font-size: 13px;
-  font-weight: 600;
-
-  color: #374151;
+  font-weight: 650;
 }
 
-
-/* =========================================================
-   INPUT / SELECT
-========================================================= */
-
-.form-control,
-.form-select {
-  min-height: 42px;
-
-  border: 1px solid #d1d5db;
-  border-radius: 7px;
-
-  font-size: 14px;
-
+.cmrc-page .form-control,
+.cmrc-page .form-select {
+  width: 100%;
+  min-width: 0;
+  min-height: 43px;
+  padding: 10px 12px;
+  color: #1e293b;
+  background-color: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 9px;
+  font-size: 13px;
   box-shadow: none;
-
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
 
-.form-control:focus,
-.form-select:focus {
-  border-color: #2563eb;
-
-  box-shadow:
-    0 0 0 3px rgba(37, 99, 235, 0.10);
+.cmrc-page .form-control:focus,
+.cmrc-page .form-select:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  outline: none;
 }
 
-.form-control::placeholder {
-  color: #9ca3af;
-}
-
-
-/* =========================================================
-   INPUT GROUP
-========================================================= */
-
-.input-group-text {
-  min-height: 42px;
-
+.cmrc-page .form-control[readonly] {
+  color: #64748b;
   background: #f8fafc;
-
-  border: 1px solid #d1d5db;
-
-  color: #374151;
-
-  font-weight: 600;
+  cursor: default;
 }
 
+.cmrc-page .form-control:disabled,
+.cmrc-page .form-select:disabled {
+  background: #f1f5f9;
+  opacity: 0.75;
+}
 
-/* =========================================================
-   AMOUNT IN WORDS - FORM
-========================================================= */
+.cmrc-page .input-group {
+  min-width: 0;
+}
 
-.form-card-body .amount-in-words {
-  min-height: 38px;
+.cmrc-page .input-group-text {
+  min-width: 44px;
+  justify-content: center;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #dbe3ef;
+  border-radius: 9px 0 0 9px;
+  font-size: 15px;
+  font-weight: 700;
+}
 
+.cmrc-page .input-group .form-control {
+  border-radius: 0 9px 9px 0;
+}
+
+.amount-in-words {
+  padding: 12px 14px;
+  color: #1e40af;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 9px;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.amount-in-words strong {
   display: block;
-
-  padding: 8px 10px;
-
-  background: #f8fafc;
-
-  border: 1px solid #e5e7eb;
-  border-left: 3px solid #198754;
-
-  border-radius: 6px;
-
-  font-size: 12px;
-
-  line-height: 1.5;
-
-  word-break: break-word;
+  margin-bottom: 3px;
+  color: #1e3a8a;
 }
 
-.form-card-body .amount-in-words strong {
-  color: #343a40;
-
-  font-weight: 600;
-}
-
-.form-card-body .amount-in-words span {
-  font-weight: 500;
-
-  color: #198754;
-}
-
-
-/* =========================================================
+/* =====================================================
    FORM ACTIONS
-========================================================= */
+===================================================== */
 
 .form-actions {
   display: flex;
-
+  align-items: center;
   justify-content: flex-end;
-  align-items: center;
-
+  flex-wrap: wrap;
   gap: 10px;
-
-  padding-top: 18px;
-
-  border-top: 1px solid #eeeeee;
+  padding-top: 20px;
+  border-top: 1px solid #edf1f6;
 }
 
-.form-actions .btn {
-  min-width: 120px;
-  min-height: 40px;
-
-  font-size: 14px;
-  font-weight: 600;
-}
-
-
-/* =========================================================
-   TABLE CARD
-========================================================= */
-
-.table-card {
-  background: #ffffff;
-
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
-
-  overflow: hidden;
-}
-
-
-/* =========================================================
-   TABLE HEADER
-========================================================= */
-
-.table-card-header {
-  display: flex;
-
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 20px;
-
-  padding: 18px 22px;
-
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.table-card-header h4 {
-  margin: 0;
-
-  font-size: 18px;
-  font-weight: 700;
-
-  color: #1f2937;
-}
-
-.table-card-header p {
-  margin: 4px 0 0;
-
+.cmrc-page .btn {
   font-size: 13px;
-
-  color: #6b7280;
+  font-weight: 600;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
+.cmrc-page .form-actions .btn {
+  min-height: 40px;
+  padding: 9px 17px;
+  border-radius: 9px;
+}
 
-/* =========================================================
-   TABLE TOOLS
-========================================================= */
+.cmrc-page .btn-primary {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.cmrc-page .btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.15);
+}
+
+.cmrc-page .btn-secondary {
+  color: #334155;
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+.cmrc-page .btn-secondary:hover:not(:disabled) {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.cmrc-page .btn-outline-primary {
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+.cmrc-page .btn-outline-primary:hover:not(:disabled) {
+  color: #ffffff;
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.cmrc-page .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* =====================================================
+   TABLE HEADER TOOLS
+===================================================== */
 
 .table-tools {
   display: flex;
-
   align-items: center;
-
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 12px;
+  min-width: 0;
 }
 
-
-/* =========================================================
-   SEARCH
-========================================================= */
-
 .search-box {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 340px);
+  min-width: 220px;
+  min-height: 42px;
+  padding: 0 12px;
+  color: #94a3b8;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
 
-  width: 260px;
+.search-box:focus-within {
+  background: #ffffff;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .search-box i {
-  position: absolute;
-
-  left: 12px;
-  top: 50%;
-
-  transform: translateY(-50%);
-
-  color: #9ca3af;
-
-  font-size: 14px;
-
-  pointer-events: none;
+  flex: 0 0 auto;
+  font-size: 15px;
 }
 
 .search-box input {
   width: 100%;
-  height: 40px;
-
-  padding: 0 12px 0 36px;
-
-  border: 1px solid #d1d5db;
-
-  border-radius: 7px;
-
+  min-width: 0;
+  padding: 10px 0;
+  color: #334155;
+  background: transparent;
+  border: none;
   outline: none;
-
-  font-size: 13px;
-
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  font-size: 12px;
 }
 
-.search-box input:focus {
-  border-color: #2563eb;
-
-  box-shadow:
-    0 0 0 3px rgba(37, 99, 235, 0.10);
+.search-box input::placeholder {
+  color: #94a3b8;
 }
-
-
-/* =========================================================
-   RECORD COUNT
-========================================================= */
 
 .record-count {
-  white-space: nowrap;
-
-  padding: 7px 10px;
-
-  border-radius: 6px;
-
-  background: #f3f4f6;
-
-  color: #4b5563;
-
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 5px 10px;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 650;
+  white-space: nowrap;
 }
 
+/* =====================================================
+   CMRC TABLE
+===================================================== */
 
-/* =========================================================
-   TABLE
-========================================================= */
-
-.table-responsive {
+.cmrc-page .table-responsive {
   width: 100%;
-
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-.table {
-  min-width: 1100px;
-
-  margin-bottom: 0;
-}
-
-
-/* =========================================================
-   TABLE HEADER
-========================================================= */
-
-.table thead th {
-  padding: 13px 14px;
-
-  background: #f8fafc;
-
-  border-bottom: 1px solid #e5e7eb;
-
-  color: #4b5563;
-
-  font-size: 12px;
-  font-weight: 700;
-
-  white-space: nowrap;
-}
-
-
-/* =========================================================
-   TABLE BODY
-========================================================= */
-
-.table tbody td {
-  padding: 14px;
-
-  border-bottom: 1px solid #f0f0f0;
-
-  color: #374151;
-
-  font-size: 13px;
-
+.cmrc-table {
+  width: 100%;
+  min-width: 1050px;
+  margin: 0;
+  border-collapse: separate;
+  border-spacing: 0;
   vertical-align: middle;
 }
 
-.table tbody tr:last-child td {
-  border-bottom: none;
+.cmrc-table thead th {
+  padding: 15px 16px;
+  color: #475569;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.45px;
+  line-height: 1.5;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.table tbody tr:hover {
-  background: #fafbfc;
+.cmrc-table tbody td {
+  padding: 16px;
+  color: #475569;
+  background: #ffffff;
+  border-bottom: 1px solid #edf1f6;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
-.table tbody td strong {
-  color: #1f2937;
+.cmrc-table tbody tr {
+  transition: background-color 0.15s ease;
 }
 
+.cmrc-table tbody tr:hover td {
+  background: #f8fbff;
+}
 
-/* =========================================================
+.cmrc-table tbody tr:last-child td {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cmrc-table tbody td strong {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.account-number {
+  color: #475569;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.balance-amount {
+  color: #166534 !important;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* =====================================================
    STATUS BADGES
-========================================================= */
+===================================================== */
 
 .status-badge {
   display: inline-flex;
-
   align-items: center;
   justify-content: center;
-
   min-width: 78px;
-
   padding: 5px 10px;
-
+  border: 1px solid transparent;
   border-radius: 20px;
-
   font-size: 11px;
-  font-weight: 700;
-
-  text-transform: uppercase;
+  font-weight: 750;
+  line-height: 1.4;
+  white-space: nowrap;
 }
-
-
-/* ACTIVE */
 
 .status-active {
-  background: #e8f8ef;
-
-  color: #198754;
-
-  border: 1px solid #b9e7cb;
+  color: #166534;
+  background: #dcfce7;
+  border-color: #bbf7d0;
 }
-
-
-/* INACTIVE */
 
 .status-inactive {
-  background: #fbeaea;
-
-  color: #dc3545;
-
-  border: 1px solid #f1bfc3;
+  color: #991b1b;
+  background: #fee2e2;
+  border-color: #fecaca;
 }
 
+/* =====================================================
+   TABLE FOOTER
+===================================================== */
 
-/* =========================================================
-   ACTION BUTTONS
-========================================================= */
-
-.action-buttons {
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  gap: 6px;
+.cmrc-table tfoot td {
+  padding: 17px 16px;
+  color: #334155;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: none;
+  font-size: 13px;
 }
 
-.action-buttons .btn {
-  width: 34px;
-  height: 34px;
-
-  display: inline-flex;
-
-  align-items: center;
-  justify-content: center;
-
-  padding: 0;
-
-  border-radius: 6px;
+.cmrc-table tfoot td strong {
+  color: #172554;
+  font-weight: 750;
 }
 
-.action-buttons .btn i {
+.cmrc-table tfoot td:nth-child(2) {
+  color: #166534;
   font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-
-/* =========================================================
-   NO RECORDS
-========================================================= */
+/* =====================================================
+   EMPTY STATE
+===================================================== */
 
 .no-records {
-  height: 180px;
+  padding: 44px 20px !important;
+  text-align: center;
+}
 
-  color: #6b7280;
+.no-records > div {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
 }
 
 .no-records i {
-  display: block;
-
-  margin-bottom: 10px;
-
-  font-size: 36px;
-
-  color: #9ca3af;
+  color: #94a3b8;
+  font-size: 35px;
 }
 
 .no-records p {
+  margin: 0;
+  color: #475569;
   font-size: 14px;
-
-  font-weight: 600;
-
-  color: #6b7280;
+  font-weight: 650;
 }
 
 .no-records small {
   font-size: 12px;
-
-  color: #9ca3af;
 }
 
+/* =====================================================
+   LOADING STATE
+===================================================== */
 
-/* =========================================================
-   BUTTONS
-========================================================= */
+.loading-card {
+  min-height: 220px;
+}
 
-.btn {
-  border-radius: 7px;
+.loading-card .spinner-border {
+  width: 34px;
+  height: 34px;
+}
 
+.loading-card p {
+  color: #64748b;
   font-size: 13px;
-
-  font-weight: 600;
-
-  transition: all 0.2s ease;
 }
 
-.btn-primary {
-  box-shadow: none;
+/* =====================================================
+   CLOSE BUTTON
+===================================================== */
+
+.form-card-header .btn-close {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 9px;
+  border-radius: 7px;
 }
 
-.btn-primary:hover {
-  transform: translateY(-1px);
+.form-card-header .btn-close:hover:not(:disabled) {
+  background-color: #f1f5f9;
 }
 
-.btn-secondary {
-  border: none;
-}
-
-
-/* =========================================================
-   SPINNER
-========================================================= */
-
-.spinner-border-sm {
-  width: 14px;
-  height: 14px;
-
-  border-width: 2px;
-}
-
-
-/* =========================================================
-   RESPONSIVE - TABLET
-========================================================= */
+/* =====================================================
+   RESPONSIVE: TABLET
+===================================================== */
 
 @media (max-width: 992px) {
-
   .cmrc-page {
-    padding: 18px;
+    padding: 20px;
   }
 
-  .page-title {
-    font-size: 24px;
+  .table-card-header,
+  .form-card-header {
+    padding: 20px;
+  }
+
+  .form-card-body {
+    padding: 20px;
+  }
+
+  .summary-card {
+    padding: 18px;
   }
 
   .table-card-header {
     align-items: flex-start;
-
     flex-direction: column;
   }
 
   .table-tools {
     width: 100%;
+    justify-content: space-between;
   }
 
   .search-box {
     flex: 1;
-
     width: auto;
   }
-
 }
 
+/* =====================================================
+   RESPONSIVE: MOBILE
+===================================================== */
 
-/* =========================================================
-   RESPONSIVE - MOBILE
-========================================================= */
-
-@media (max-width: 768px) {
-
+@media (max-width: 576px) {
   .cmrc-page {
-    padding: 14px;
+    padding: 12px;
+    border-radius: 10px;
   }
 
   .page-header {
     align-items: flex-start;
-
-    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 18px;
   }
 
-  .page-header .btn {
-    width: 100%;
+  .page-title {
+    font-size: 21px;
+    letter-spacing: -0.3px;
+  }
+
+  .page-subtitle {
+    margin-top: 5px;
+    font-size: 12px;
+  }
+
+  .page-header > .btn {
+    min-height: 36px;
+    padding: 7px 9px;
+    font-size: 11px;
   }
 
   .summary-card {
-    min-height: 95px;
-
+    min-height: 110px;
+    gap: 12px;
     padding: 16px;
+    border-radius: 11px;
+  }
+
+  .summary-icon {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+    border-radius: 10px;
+    font-size: 19px;
+  }
+
+  .summary-label {
+    margin-bottom: 5px;
+    font-size: 10px;
   }
 
   .summary-content h3 {
     font-size: 20px;
   }
 
+  .summary-content p {
+    margin-top: 5px;
+    font-size: 11px;
+  }
+
+  .table-card,
+  .form-card {
+    margin-bottom: 16px;
+    border-radius: 11px;
+  }
+
+  .table-card-header,
   .form-card-header {
+    gap: 14px;
     padding: 16px;
+  }
+
+  .table-card-header h4,
+  .form-card-header h4 {
+    font-size: 15px;
+  }
+
+  .table-card-header p,
+  .form-card-header p {
+    font-size: 12px;
   }
 
   .form-card-body {
     padding: 16px;
   }
 
-  .table-card-header {
-    padding: 16px;
-  }
-
   .table-tools {
-    flex-direction: column;
-
     align-items: stretch;
+    flex-direction: column;
+    gap: 9px;
   }
 
   .search-box {
     width: 100%;
+    min-width: 0;
   }
 
   .record-count {
@@ -781,66 +759,35 @@
   }
 
   .form-actions {
-    flex-direction: column-reverse;
-
     align-items: stretch;
+    flex-direction: column-reverse;
   }
 
   .form-actions .btn {
     width: 100%;
   }
 
-}
-
-
-/* =========================================================
-   RESPONSIVE - SMALL MOBILE
-========================================================= */
-
-@media (max-width: 480px) {
-
-  .page-title {
-    font-size: 21px;
-  }
-
-  .page-subtitle {
-    font-size: 12px;
-  }
-
-  .summary-card {
-    gap: 12px;
-
-    padding: 14px;
-  }
-
-  .summary-icon {
-    width: 44px;
-    height: 44px;
-
-    min-width: 44px;
-
-    font-size: 20px;
-  }
-
-  .summary-content h3 {
-    font-size: 18px;
+  .cmrc-page .form-control,
+  .cmrc-page .form-select {
+    min-height: 42px;
+    font-size: 13px;
   }
 
   .amount-in-words {
-    font-size: 11px;
+    font-size: 12px;
   }
+}
 
-  .form-card-header h4,
-  .table-card-header h4 {
-    font-size: 16px;
+/* =====================================================
+   ACCESSIBILITY
+===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .cmrc-page *,
+  .cmrc-page *::before,
+  .cmrc-page *::after {
+    transition: none !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
-
-  .status-badge {
-    min-width: 68px;
-
-    padding: 4px 8px;
-
-    font-size: 10px;
-  }
-
 }

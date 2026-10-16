@@ -770,40 +770,30 @@ loadCmrcList(): void {
   // =========================================================
 
   getEmptyLoan(): any {
-
-    return {
-
-      cmrcId: null,
-      voAlfId: null,
-      groupId: null,
-      womanId: null,
-
-      cmrcName: '',
-      voAlfName: '',
-      groupName: '',
-      womanName: '',
-      villageName: '',
-
-      sanctionedAmount: 0,
-      processingFee: 0,
-      totalAmount: 0,
-      loanAmount: 0,
-
-      loanPurpose: '',
-      loanGivenDate: this.getTodayDate(),
-
-      repaymentPeriodMonths: 12,
-
-      interestRate: 0,
-      interestType: 'FLAT',
-
-      monthlyEmi: 0,
-
-      loanStatus: 'ACTIVE'
-
-    };
-
-  }
+  return {
+    cmrcId: null,
+    voAlfId: null,
+    groupId: null,
+    womanId: null,
+    cmrcName: '',
+    voAlfName: '',
+    groupName: '',
+    womanName: '',
+    villageName: '',
+    sanctionedAmount: 0,
+    processingFee: 0,
+    totalAmount: 0,
+    loanAmount: 0,
+    loanPurpose: '',
+    loanGivenDate: this.getTodayDate(),
+    repaymentPeriodMonths: 12,
+    interestRate: 0,
+    interestType: 'FLAT',
+    monthlyEmi: 0,
+    loanStatus: 'ACTIVE',
+    paymentMode: 'CASH'
+  };
+}
 
 
   getTodayDate(): string {
@@ -1015,7 +1005,8 @@ loadCmrcList(): void {
       Number(loan.id);
 
     this.newLoan = {
-      ...loan
+      ...loan,
+       paymentMode: loan.paymentMode || 'CASH'
     };
 
     this.calculateDisbursedAmount();
@@ -1209,18 +1200,30 @@ loadCmrcList(): void {
 
  
 saveLoan(): void {
+  // Normalize and validate disbursement mode
+  this.newLoan.paymentMode = String(
+    this.newLoan.paymentMode || 'CASH'
+  ).trim().toUpperCase();
+
+  if (!['CASH', 'BANK'].includes(this.newLoan.paymentMode)) {
+    alert('Please select Cash or Bank as the disbursement mode.');
+    return;
+  }
+
   this.calculateDisbursedAmount();
   this.calculateEmi();
 
-  // Keep display values synchronized
-  this.newLoan.cmrcName =
-    this.getCmrcNameById(this.newLoan.cmrcId);
+  this.newLoan.cmrcName = this.getCmrcNameById(
+    this.newLoan.cmrcId
+  );
 
-  this.newLoan.voAlfName =
-    this.getVoAlfNameById(this.newLoan.voAlfId);
+  this.newLoan.voAlfName = this.getVoAlfNameById(
+    this.newLoan.voAlfId
+  );
 
-  this.newLoan.villageName =
-    this.getVillageNameByVoAlfId(this.newLoan.voAlfId);
+  this.newLoan.villageName = this.getVillageNameByVoAlfId(
+    this.newLoan.voAlfId
+  );
 
   const group = this.groupList.find(
     item => Number(item.id) === Number(this.newLoan.groupId)
@@ -1234,16 +1237,13 @@ saveLoan(): void {
 
   this.newLoan.womanName = woman?.womanName || '';
 
-  // =======================================================
-  // UPDATE LOAN
-  // =======================================================
-
+  // UPDATE existing loan
   if (this.isEditMode && this.editingLoanId) {
     this.loanService.update(
       this.editingLoanId,
       this.newLoan
     ).subscribe({
-      next: (response) => {
+      next: response => {
         if ('requestType' in response) {
           alert(
             `Loan ${response.requestType.toLowerCase()} approval request submitted successfully.`
@@ -1255,8 +1255,8 @@ saveLoan(): void {
         this.closeForm();
         this.loadAllLoans();
       },
-      error: (error: any) => {
-        console.error('Error updating loan:', error);
+      error: error => {
+        console.error('Failed to update loan:', error);
 
         alert(
           error?.error?.message ||
@@ -1268,14 +1268,10 @@ saveLoan(): void {
     return;
   }
 
-  // =======================================================
-  // CREATE LOAN
-  // =======================================================
-
+  // CREATE new loan
   this.loanService.create(this.newLoan).subscribe({
-    next: (response) => {
-
-      // USER response: approval request
+    next: response => {
+      // USER approval request
       if ('requestType' in response) {
         const request: LoanApprovalRequest = response;
 
@@ -1289,24 +1285,25 @@ saveLoan(): void {
           );
         }
 
-        // Do not generate schedules for a pending request.
         this.closeForm();
         this.loadAllLoans();
         return;
       }
 
-      // ADMIN response: actual created loan
+      // ADMIN direct creation
       const createdLoan: Loan = response;
       const loanId = Number(createdLoan.id);
 
       if (!loanId) {
-        alert('Loan was created, but the Loan ID was not returned.');
+        alert(
+          'Loan was created, but the Loan ID was not returned.'
+        );
+
         this.closeForm();
         this.loadAllLoans();
         return;
       }
 
-      // Upload images and generate schedules for direct creation.
       if (this.selectedImageFiles.length > 0) {
         this.uploadLoanImages(
           loanId,
@@ -1317,12 +1314,12 @@ saveLoan(): void {
       }
 
       alert('Loan created successfully.');
+
       this.closeForm();
       this.loadAllLoans();
     },
-
-    error: (error: any) => {
-      console.error('Error creating loan:', error);
+    error: error => {
+      console.error('Failed to create loan:', error);
 
       alert(
         error?.error?.message ||
@@ -1331,7 +1328,6 @@ saveLoan(): void {
     }
   });
 }
-
 
   // =========================================================
   // GENERATE CL + REPAYMENT

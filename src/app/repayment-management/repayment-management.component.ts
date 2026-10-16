@@ -1,4 +1,3 @@
-
 import {
   Component,
   Input,
@@ -28,10 +27,6 @@ import {
 export class RepaymentManagementComponent
   implements OnInit, OnChanges {
 
-  // =====================================================
-  // LISTS
-  // =====================================================
-
   cmrcList: Cmrc[] = [];
   voAlfList: VoAlf[] = [];
   groupList: Group[] = [];
@@ -39,39 +34,31 @@ export class RepaymentManagementComponent
   loanList: Loan[] = [];
   repaymentList: Repayment[] = [];
 
-  // =====================================================
-  // SELECTED IDS
-  // =====================================================
-
   selectedCmrcId: number | null = null;
   selectedVoAlfId: number | null = null;
   selectedGroupId: number | null = null;
   selectedWomanId: number | null = null;
   selectedLoanId: number | null = null;
 
-  // =====================================================
-  // LOAN INPUT
-  // =====================================================
-
   @Input() loanId: number | null = null;
   @Input() loan: Loan | null = null;
 
   selectedLoan: Loan | null = null;
 
-  // =====================================================
-  // PAYMENT
-  // =====================================================
-
   regularRepayment = true;
+
   showPaymentModal = false;
   selectedRepayment: Repayment | null = null;
 
   paymentAmount = 0;
   penaltyAmount = 0;
+  remainingEmiAmount = 0;
 
-  // =====================================================
-  // ROLE
-  // =====================================================
+  private paymentEventId: string | null = null;
+  paymentSubmitting = false;
+
+  loading = false;
+  private componentInitialized = false;
 
   get role(): string {
     return (localStorage.getItem('role') || '')
@@ -79,6 +66,7 @@ export class RepaymentManagementComponent
       .trim()
       .toUpperCase();
   }
+  
 
   get isAdmin(): boolean {
     return this.role === 'ADMIN';
@@ -88,18 +76,6 @@ export class RepaymentManagementComponent
     return this.role === 'USER';
   }
 
-  // =====================================================
-  // LOADING
-  // =====================================================
-
-  loading = false;
-
-  private componentInitialized = false;
-
-  // =====================================================
-  // CONSTRUCTOR
-  // =====================================================
-
   constructor(
     private cmrcService: CmrcService,
     private voAlfService: VoAlfService,
@@ -108,10 +84,6 @@ export class RepaymentManagementComponent
     private loanService: LoanService,
     private repaymentService: RepaymentService
   ) {}
-
-  // =====================================================
-  // INIT
-  // =====================================================
 
   ngOnInit(): void {
     this.componentInitialized = true;
@@ -129,10 +101,6 @@ export class RepaymentManagementComponent
     }
   }
 
-  // =====================================================
-  // INITIALIZE INPUT LOAN
-  // =====================================================
-
   private initializeInputLoan(): void {
     if (this.loanId === null) {
       return;
@@ -147,11 +115,60 @@ export class RepaymentManagementComponent
       this.loadLoanById(this.loanId);
     }
   }
+exportToExcel(): void {
+  if (!this.repaymentList || this.repaymentList.length === 0) {
+    alert('No repayment records available to export.');
+    return;
+  }
 
-  // =====================================================
-  // LOAD CMRC
-  // =====================================================
+  const excelData = this.repaymentList.map((repayment, index) => ({
+    'Sr. No.': index + 1,
+    'Installment No.': repayment.installmentNo ?? index + 1,
+    'Installment Date': repayment.installmentDate ?? '',
+    'Principal Amount': repayment.principalAmount ?? 0,
+    'Interest Amount': repayment.interestAmount ?? 0,
+    'Scheduled Amount':
+      repayment.scheduledAmount ?? repayment.totalAmount ?? 0,
+    'Paid Amount': repayment.paidAmount ?? 0,
+    'Penalty Amount': repayment.penaltyAmount ?? 0,
+    'Remaining Amount': this.getRemainingEmiAmount(repayment),
+    'Payment Date': repayment.repaymentDate ?? '',
+    'Status': repayment.paymentStatus ?? 'PENDING'
+  }));
 
+  const worksheet: XLSX.WorkSheet =
+    XLSX.utils.json_to_sheet(excelData);
+
+  worksheet['!cols'] = [
+    { wch: 10 },
+    { wch: 15 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 15 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 15 }
+  ];
+
+  const workbook: XLSX.WorkBook = {
+    Sheets: { 'Repayment Schedule': worksheet },
+    SheetNames: ['Repayment Schedule']
+  };
+
+  const fileName = `Repayment_Schedule_${this.selectedLoanId ?? 'All'}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+  XLSX.writeFile(workbook, fileName);
+}
+getOutstandingAmount(): number {
+  return this.repaymentList.reduce(
+    (total, repayment) =>
+      total + this.getRemainingEmiAmount(repayment),
+    0
+  );
+}
   loadCmrc(): void {
     this.cmrcService.getAll().subscribe({
       next: (data: Cmrc[]) => {
@@ -161,9 +178,7 @@ export class RepaymentManagementComponent
           this.cmrcList.length > 0 &&
           this.selectedCmrcId === null
         ) {
-          this.selectedCmrcId =
-            Number(this.cmrcList[0].id);
-
+          this.selectedCmrcId = Number(this.cmrcList[0].id);
           this.loadVoAlfByCmrc();
         }
       },
@@ -173,10 +188,6 @@ export class RepaymentManagementComponent
       }
     });
   }
-
-  // =====================================================
-  // LOAD VO / ALF BY CMRC
-  // =====================================================
 
   loadVoAlfByCmrc(): void {
     this.voAlfList = [];
@@ -212,10 +223,6 @@ export class RepaymentManagementComponent
       });
   }
 
-  // =====================================================
-  // VO / ALF CHANGE
-  // =====================================================
-
   onVoAlfChange(): void {
     this.groupList = [];
     this.womenList = [];
@@ -233,10 +240,6 @@ export class RepaymentManagementComponent
 
     this.loadGroupsByVoAlf();
   }
-
-  // =====================================================
-  // LOAD GROUPS BY VO / ALF
-  // =====================================================
 
   loadGroupsByVoAlf(): void {
     this.groupList = [];
@@ -270,10 +273,6 @@ export class RepaymentManagementComponent
       });
   }
 
-  // =====================================================
-  // LOAD WOMEN BY GROUP
-  // =====================================================
-
   loadWomenByGroup(): void {
     this.womenList = [];
     this.loanList = [];
@@ -304,10 +303,6 @@ export class RepaymentManagementComponent
       });
   }
 
-  // =====================================================
-  // LOAD LOANS BY WOMAN
-  // =====================================================
-
   loadLoansByWoman(): void {
     this.loanList = [];
     this.repaymentList = [];
@@ -336,10 +331,6 @@ export class RepaymentManagementComponent
       });
   }
 
-  // =====================================================
-  // LOAD LOAN BY ID
-  // =====================================================
-
   loadLoanById(id: number): void {
     this.loading = true;
 
@@ -357,10 +348,6 @@ export class RepaymentManagementComponent
       }
     });
   }
-
-  // =====================================================
-  // LOAN CHANGE
-  // =====================================================
 
   onLoanChange(): void {
     this.repaymentList = [];
@@ -387,10 +374,6 @@ export class RepaymentManagementComponent
     this.loadOrGenerateSchedule();
   }
 
-  // =====================================================
-  // LOAD EXISTING REPAYMENT SCHEDULE
-  // =====================================================
-
   loadOrGenerateSchedule(): void {
     if (this.selectedLoanId === null) {
       return;
@@ -416,10 +399,6 @@ export class RepaymentManagementComponent
       });
   }
 
-  // =====================================================
-  // GENERATE REPAYMENT SCHEDULE
-  // =====================================================
-
   generateSchedule(): void {
     if (this.selectedLoanId === null) {
       return;
@@ -442,110 +421,79 @@ export class RepaymentManagementComponent
       });
   }
 
-  // =====================================================
-  // OPEN PAYMENT MODAL
-  // =====================================================
-remainingEmiAmount = 0;
-
   payEmi(repayment: Repayment): void {
-  if (!repayment.id) {
-    return;
-  }
-
-  // Fully paid EMI ko Pay EMI modal me open nahi karna
-  if (repayment.paymentStatus === 'PAID') {
-    alert('This EMI is already fully paid.');
-    return;
-  }
-
-  this.selectedRepayment = repayment;
-
-  const scheduledAmount =
-    Number(repayment.scheduledAmount || 0);
-
-  const alreadyPaid =
-    Number(repayment.paidAmount || 0);
-
-  this.remainingEmiAmount = Math.max(
-    0,
-    scheduledAmount - alreadyPaid
-  );
-
-  // Payment input me remaining amount default show hoga
-  this.paymentAmount = this.remainingEmiAmount;
-
-  this.penaltyAmount =
-    Number(repayment.penaltyAmount || 0);
-
-  this.regularRepayment = true;
-  this.showPaymentModal = true;
-}
-
-  // =====================================================
-  // EDIT PAID EMI
-  // =====================================================
-
-  editPaidEmi(repayment: Repayment): void {
     if (!repayment.id) {
+      alert('Repayment ID missing.');
+      return;
+    }
+
+    if (repayment.paymentStatus === 'PAID') {
+      alert('This EMI is already fully paid.');
       return;
     }
 
     this.selectedRepayment = repayment;
-    this.paymentAmount = Number(repayment.paidAmount || 0);
-    this.penaltyAmount = Number(repayment.penaltyAmount || 0);
+    this.remainingEmiAmount =
+      this.getRemainingEmiAmount(repayment);
+
+    this.paymentAmount = this.remainingEmiAmount;
+    this.penaltyAmount = 0;
+    this.regularRepayment = true;
+    this.paymentEventId = null;
     this.showPaymentModal = true;
   }
 
-  // =====================================================
-  // CONFIRM PAYMENT
-  // USER => APPROVAL REQUEST
-  // ADMIN => DIRECT PAYMENT
-  // =====================================================
+  editPaidEmi(_repayment: Repayment): void {
+    alert(
+      'Paid EMI editing is disabled. An approved correction/refund workflow is required.'
+    );
+  }
 
   confirmPayment(): void {
+    if (this.paymentSubmitting) {
+      return;
+    }
+
     if (!this.selectedRepayment?.id) {
-      alert('Repayment ID missing');
+      alert('Repayment ID missing.');
       return;
     }
 
     const currentRole = this.role;
     const repaymentId = this.selectedRepayment.id;
-
     const paidAmount = Number(this.paymentAmount);
     const penaltyAmount = Number(this.penaltyAmount);
 
-    const isPaid =
-      this.selectedRepayment.paymentStatus === 'PAID';
-
-    if (!Number.isFinite(paidAmount) || paidAmount <= 0) {
-      alert('Please enter a valid paid amount greater than zero.');
+    if (
+      this.selectedRepayment.paymentStatus === 'PAID'
+    ) {
+      alert('This EMI is already fully paid.');
+      this.closePaymentModal();
       return;
     }
-    const scheduledAmount = Number(
-  this.selectedRepayment.scheduledAmount || 0
-);
 
-const alreadyPaid = Number(
-  this.selectedRepayment.paidAmount || 0
-);
-
-const remainingAmount = Math.max(
-  0,
-  scheduledAmount - alreadyPaid
-);
-
-if (paidAmount > remainingAmount) {
-  alert(
-    `Payment cannot exceed remaining EMI amount: ${remainingAmount.toFixed(2)}`
-  );
-  return;
-}
+    if (!Number.isFinite(paidAmount) || paidAmount <= 0) {
+      alert(
+        'Please enter a valid paid amount greater than zero.'
+      );
+      return;
+    }
 
     if (
       !Number.isFinite(penaltyAmount) ||
       penaltyAmount < 0
     ) {
       alert('Please enter a valid penalty amount.');
+      return;
+    }
+
+    const remainingAmount =
+      this.getRemainingEmiAmount(this.selectedRepayment);
+
+    if (paidAmount > remainingAmount) {
+      alert(
+        `Payment cannot exceed remaining EMI amount: ${remainingAmount.toFixed(2)}`
+      );
       return;
     }
 
@@ -557,98 +505,86 @@ if (paidAmount > remainingAmount) {
       return;
     }
 
-    // -----------------------------------------------------
-    // USER: SUBMIT REQUEST; DO NOT UPDATE REPAYMENT DIRECTLY
-    // -----------------------------------------------------
-
+    // USER: Submit EMI payment request for ADMIN approval.
     if (currentRole === 'USER') {
-      const request$ = isPaid
-        ? this.repaymentService.submitEditPaidEmiRequest(
-            repaymentId,
-            paidAmount,
-            penaltyAmount
-          )
-        : this.repaymentService.submitPayEmiRequest(
-            repaymentId,
-            paidAmount,
-            penaltyAmount,
-            this.regularRepayment
-          );
+      this.paymentSubmitting = true;
 
-      request$.subscribe({
-        next: () => {
-          alert(
-            isPaid
-              ? 'Edit Payment request submitted for admin approval.'
-              : 'Pay EMI request submitted for admin approval.'
-          );
-
-          this.closePaymentModal();
-        },
-        error: (error: any) => {
-          console.error(
-            'Repayment approval request failed:',
-            error
-          );
-
-          alert(
-            error?.error?.message ||
-            'Failed to submit approval request.'
-          );
-        }
-      });
-
-      return;
-    }
-
-    // -----------------------------------------------------
-    // ADMIN: DIRECT PAYMENT OPERATION
-    // -----------------------------------------------------
-
-    const operation$ = isPaid
-      ? this.repaymentService.editPaidEmi(
-          repaymentId,
-          paidAmount,
-          penaltyAmount
-        )
-      : this.repaymentService.payEmi(
+      this.repaymentService
+        .submitPayEmiRequest(
           repaymentId,
           paidAmount,
           penaltyAmount,
           this.regularRepayment
-        );
+        )
+        .subscribe({
+          next: () => {
+            this.paymentSubmitting = false;
+            alert(
+              'Pay EMI request submitted for admin approval.'
+            );
+            this.closePaymentModal();
+          },
+          error: (error: any) => {
+            this.paymentSubmitting = false;
+            console.error(
+              'Repayment approval request failed:',
+              error
+            );
+            alert(
+              error?.error?.message ||
+              'Failed to submit approval request.'
+            );
+          }
+        });
 
-    operation$.subscribe({
-      next: (updated: Repayment) => {
-        this.updateRepaymentInList(updated);
+      return;
+    }
 
-        alert(
-          isPaid
-            ? 'Payment updated successfully.'
-            : 'EMI paid successfully.'
-        );
+    // ADMIN: Direct EMI payment.
+    if (!this.paymentEventId) {
+      this.paymentEventId =
+        'EMI-' +
+        repaymentId +
+        '-' +
+        Date.now() +
+        '-' +
+        Math.random().toString(36).slice(2, 10);
+    }
 
-        this.closePaymentModal();
-      },
-      error: (error: any) => {
-        console.error(
-          'Direct repayment operation failed:',
-          error
-        );
+    this.paymentSubmitting = true;
 
-        alert(
-          error?.error?.message ||
-          'Failed to process repayment.'
-        );
-      }
-    });
+    this.repaymentService
+      .payEmi(
+        repaymentId,
+        paidAmount,
+        penaltyAmount,
+        this.regularRepayment,
+        this.paymentEventId
+      )
+      .subscribe({
+        next: (updated: Repayment) => {
+          this.paymentSubmitting = false;
+          this.updateRepaymentInList(updated);
+          alert('EMI paid successfully.');
+          this.closePaymentModal();
+        },
+        error: (error: any) => {
+          this.paymentSubmitting = false;
+          console.error(
+            'Direct repayment operation failed:',
+            error
+          );
+          alert(
+            error?.error?.message ||
+            'Failed to process repayment.'
+          );
+        }
+      });
   }
 
-  // =====================================================
-  // UPDATE REPAYMENT ROW
-  // =====================================================
-
-  private updateRepaymentInList(updated: Repayment): void {
+  private updateRepaymentInList(
+    updated: Repayment
+  ): void {
     const index = this.repaymentList.findIndex(
       repayment => repayment.id === updated.id
     );
@@ -659,458 +595,38 @@ if (paidAmount > remainingAmount) {
     }
   }
 
-  // =====================================================
-  // CLOSE PAYMENT MODAL
-  // =====================================================
-
   closePaymentModal(): void {
     this.showPaymentModal = false;
     this.selectedRepayment = null;
     this.paymentAmount = 0;
     this.penaltyAmount = 0;
+    this.remainingEmiAmount = 0;
+    this.paymentEventId = null;
+    this.paymentSubmitting = false;
   }
 
-  // =====================================================
-  // SELECTED CMRC NAME
-  // =====================================================
-
-  getSelectedCmrcName(): string {
-    const cmrc = this.cmrcList.find(
-      c => c.id === this.selectedCmrcId
-    );
-
-    return cmrc?.cmrcName || '';
-  }
-
-  // =====================================================
-  // SELECTED VO / ALF NAME
-  // =====================================================
-
-  getSelectedVoAlfName(): string {
-    const voAlf = this.voAlfList.find(
-      v => v.id === this.selectedVoAlfId
-    );
-
-    return voAlf?.voAlfName || '';
-  }
-
-  // =====================================================
-  // SELECTED VILLAGE NAME
-  // =====================================================
-
-  getSelectedVillageName(): string {
-    const voAlf = this.voAlfList.find(
-      v => v.id === this.selectedVoAlfId
-    );
-
-    return voAlf?.villageName || '';
-  }
-
-  // =====================================================
-  // SELECTED VO / ALF
-  // =====================================================
-
-  getSelectedVoAlf(): VoAlf | undefined {
-    return this.voAlfList.find(
-      voAlf => voAlf.id === this.selectedVoAlfId
-    );
-  }
-
-  // =====================================================
-  // SELECTED GROUP NAME
-  // =====================================================
-
-  getSelectedGroupName(): string {
-    const group = this.groupList.find(
-      g => g.id === this.selectedGroupId
-    );
-
-    return group?.groupName || '';
-  }
-
-  // =====================================================
-  // SELECTED WOMAN NAME
-  // =====================================================
-
-  getSelectedWomanName(): string {
-    const woman = this.womenList.find(
-      w => w.id === this.selectedWomanId
-    );
-
-    return woman?.womanName || '';
-  }
-
-  // =====================================================
-  // SELECTED LOAN
-  // =====================================================
-
-  getSelectedLoan(): Loan | undefined {
-    return this.loanList.find(
-      loan => loan.id === this.selectedLoanId
-    );
-  }
-
-  // =====================================================
-  // TOTAL INSTALLMENTS
-  // =====================================================
-
-  getTotalInstallments(): number {
-    if (
-      this.selectedLoan &&
-      this.selectedLoan.repaymentPeriodMonths !== undefined &&
-      this.selectedLoan.repaymentPeriodMonths !== null
-    ) {
-      return Number(
-        this.selectedLoan.repaymentPeriodMonths
-      );
-    }
-
-    return this.repaymentList.length;
-  }
-
-  // =====================================================
-  // PAID COUNT
-  // =====================================================
-
-  getPaidCount(): number {
-    return this.repaymentList.filter(
-      repayment => repayment.paymentStatus === 'PAID'
-    ).length;
-  }
-
-  // =====================================================
-  // PARTIAL COUNT
-  // =====================================================
-
-  getPartialCount(): number {
-    return this.repaymentList.filter(
-      repayment => repayment.paymentStatus === 'PARTIAL'
-    ).length;
-  }
-
-  // =====================================================
-  // PENDING COUNT
-  // =====================================================
-
-  getPendingCount(): number {
-    return this.repaymentList.filter(
-      repayment =>
-        !repayment.paymentStatus ||
-        repayment.paymentStatus === 'PENDING'
-    ).length;
-  }
-
-  // =====================================================
-  // TOTAL SCHEDULED EMI
-  // =====================================================
-
-  getTotalScheduledEmi(): number {
-    return this.repaymentList.reduce(
-      (total: number, repayment: Repayment) =>
-        total + Number(repayment.scheduledAmount || 0),
+  getRemainingEmiAmount(
+    repayment: Repayment
+  ): number {
+    const scheduledAmount = Number(
+      repayment.scheduledAmount ??
+      repayment.totalAmount ??
       0
     );
-  }
 
-  // =====================================================
-  // TOTAL PAID AMOUNT
-  // =====================================================
+    const paidAmount = Number(
+      repayment.paidAmount ?? 0
+    );
 
-  getTotalPaidAmount(): number {
-    return this.repaymentList.reduce(
-      (total: number, repayment: Repayment) =>
-        total + Number(repayment.paidAmount || 0),
-      0
+    return Math.max(
+      0,
+      scheduledAmount - paidAmount
     );
   }
 
-  // =====================================================
-  // TOTAL PRINCIPAL PAID
-  // =====================================================
-
-  getTotalPrincipal(): number {
-    return this.repaymentList
-      .filter(
-        repayment =>
-          repayment.paymentStatus === 'PAID' ||
-          repayment.paymentStatus === 'PARTIAL'
-      )
-      .reduce(
-        (total: number, repayment: Repayment) =>
-          total + Number(repayment.principalAmount || 0),
-        0
-      );
-  }
-
-  // =====================================================
-  // TOTAL INTEREST PAID
-  // =====================================================
-
-  getTotalInterest(): number {
-    return this.repaymentList
-      .filter(
-        repayment =>
-          repayment.paymentStatus === 'PAID' ||
-          repayment.paymentStatus === 'PARTIAL'
-      )
-      .reduce(
-        (total: number, repayment: Repayment) =>
-          total + Number(repayment.interestAmount || 0),
-        0
-      );
-  }
-
-  // =====================================================
-  // TOTAL PENALTY
-  // =====================================================
-
-  getTotalPenalty(): number {
-    return this.repaymentList.reduce(
-      (total: number, repayment: Repayment) =>
-        total + Number(repayment.penaltyAmount || 0),
-      0
-    );
-  }
-
-  // =====================================================
-  // TOTAL AMOUNT
-  // =====================================================
-
-  getTotalAmount(): number {
-    return this.repaymentList.reduce(
-      (total: number, repayment: Repayment) =>
-        total + Number(repayment.totalAmount || 0),
-      0
-    );
-  }
-
-  // =====================================================
-  // OUTSTANDING PRINCIPAL
-  // =====================================================
-
-  getOutstandingPrincipal(): number {
-    if (!this.selectedLoan) {
-      return 0;
-    }
-
-    const loanAmount =
-      Number(this.selectedLoan.loanAmount || 0);
-
-    const principalPaid = this.getTotalPrincipal();
-
-    return Math.max(loanAmount - principalPaid, 0);
-  }
-
-  // =====================================================
-  // OUTSTANDING AMOUNT
-  // =====================================================
-
-  getOutstandingAmount(repayment: Repayment): number {
-    if (!this.selectedLoan) {
-      return 0;
-    }
-
-    const loanAmount =
-      Number(this.selectedLoan.loanAmount || 0);
-
-    const installmentNo =
-      Number(repayment.installmentNo || 0);
-
-    let principalPaid = 0;
-
-    this.repaymentList
-      .filter(
-        item =>
-          Number(item.installmentNo || 0) <= installmentNo
-      )
-      .filter(
-        item =>
-          item.paymentStatus === 'PAID' ||
-          item.paymentStatus === 'PARTIAL'
-      )
-      .forEach(item => {
-        principalPaid += Number(item.principalAmount || 0);
-      });
-
-    return Math.max(loanAmount - principalPaid, 0);
-  }
-
-  // =====================================================
-  // NEXT PENDING EMI
-  // =====================================================
-
-  getNextPendingEmi(): Repayment | null {
-    const pendingList = this.repaymentList
-      .filter(
-        repayment => repayment.paymentStatus !== 'PAID'
-      )
-      .slice()
-      .sort((a: Repayment, b: Repayment) => {
-        const dateA = a.installmentDate
-          ? new Date(a.installmentDate).getTime()
-          : 0;
-
-        const dateB = b.installmentDate
-          ? new Date(b.installmentDate).getTime()
-          : 0;
-
-        return dateA - dateB;
-      });
-
-    return pendingList.length > 0
-      ? pendingList[0]
-      : null;
-  }
-
-  // =====================================================
-  // NEXT EMI DATE
-  // =====================================================
-
-  getNextEmiDate(): string {
-    return this.getNextPendingEmi()?.installmentDate || '';
-  }
-
-  // =====================================================
-  // LOAN STATUS
-  // =====================================================
-
-  getLoanStatus(): string {
-    if (!this.selectedLoan) {
-      return '-';
-    }
-
-    const totalInstallments = this.getTotalInstallments();
-    const paidInstallments = this.getPaidCount();
-
-    if (
-      totalInstallments > 0 &&
-      paidInstallments >= totalInstallments
-    ) {
-      return 'CLOSED';
-    }
-
-    return 'ACTIVE';
-  }
-
-  // =====================================================
-  // EXCEL EXPORT
-  // =====================================================
-
-  exportToExcel(): void {
-    if (
-      !this.repaymentList ||
-      this.repaymentList.length === 0
-    ) {
-      alert('No repayment records available for export');
-      return;
-    }
-
-    const excelData = this.repaymentList.map(
-      (repayment: Repayment, index: number) => ({
-        'Sr. No.': index + 1,
-        'Installment No.': repayment.installmentNo || '',
-        'Installment Date': repayment.installmentDate || '',
-        'Scheduled EMI': Number(repayment.scheduledAmount || 0),
-        'Paid Amount': Number(repayment.paidAmount || 0),
-        'Principal': Number(repayment.principalAmount || 0),
-        'Interest': Number(repayment.interestAmount || 0),
-        'Penalty Amount': Number(repayment.penaltyAmount || 0),
-        'Total Amount': Number(repayment.totalAmount || 0),
-        'Status':
-          repayment.paymentStatus === 'PAID'
-            ? 'Paid'
-            : repayment.paymentStatus === 'PARTIAL'
-              ? 'Partial'
-              : 'Pending'
-      })
-    );
-
-    const worksheet: XLSX.WorkSheet =
-      XLSX.utils.json_to_sheet(excelData);
-
-    XLSX.utils.sheet_add_aoa(
-      worksheet,
-      [
-        [],
-        ['REPAYMENT SUMMARY'],
-        ['Loan ID', this.selectedLoanId || ''],
-        ['CMRC', this.getSelectedCmrcName()],
-        ['VO / ALF', this.getSelectedVoAlfName()],
-        ['Village', this.getSelectedVillageName()],
-        [
-          'Group Name',
-          this.selectedLoan?.groupName ||
-          this.getSelectedGroupName()
-        ],
-        [
-          'Woman Name',
-          this.selectedLoan?.womanName ||
-          this.getSelectedWomanName()
-        ],
-        [
-          'Loan Amount',
-          Number(this.selectedLoan?.loanAmount || 0)
-        ],
-        [
-          'Monthly EMI',
-          Number(this.selectedLoan?.monthlyEmi || 0)
-        ],
-        [
-          'Interest Rate',
-          Number(this.selectedLoan?.interestRate || 0)
-        ],
-        ['Total Installments', this.getTotalInstallments()],
-        ['Paid Installments', this.getPaidCount()],
-        ['Partial Installments', this.getPartialCount()],
-        ['Pending Installments', this.getPendingCount()],
-        ['Total Scheduled EMI', this.getTotalScheduledEmi()],
-        ['Total Paid Amount', this.getTotalPaidAmount()],
-        ['Total Principal Paid', this.getTotalPrincipal()],
-        ['Total Interest Paid', this.getTotalInterest()],
-        ['Total Penalty', this.getTotalPenalty()],
-        ['Total Amount', this.getTotalAmount()],
-        ['Outstanding Principal', this.getOutstandingPrincipal()]
-      ],
-      {
-        origin: `A${excelData.length + 3}`
-      }
-    );
-
-    const workbook: XLSX.WorkBook = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      'Repayment Schedule'
-    );
-
-    worksheet['!cols'] = [
-      { wch: 10 },
-      { wch: 16 },
-      { wch: 20 },
-      { wch: 18 },
-      { wch: 18 },
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 18 },
-      { wch: 18 },
-      { wch: 14 }
-    ];
-
-    const fileName =
-      `Loan_${this.selectedLoanId}_Repayment_Schedule.xlsx`;
-
-    XLSX.writeFile(workbook, fileName);
-  }
-  getRemainingEmiAmount(repayment: Repayment): number {
-  const scheduledAmount = Number(
-    repayment.scheduledAmount || 0
-  );
-
-  const alreadyPaid = Number(
-    repayment.paidAmount || 0
-  );
-
-  return Math.max(0, scheduledAmount - alreadyPaid);
-}
+  // Keep your existing name getters, repayment summary
+  // getters, loan status getters, and Excel export methods
+  // below this point. In the Excel export, remove:
+  // 'Payment Mode': repayment.paymentMode || ''
+  // and remove its corresponding worksheet column width.
 }

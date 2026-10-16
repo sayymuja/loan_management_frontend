@@ -9,47 +9,40 @@ import { Cmrc, CmrcService } from '../services/cmrc.service';
 export class CmrcComponent implements OnInit {
 
   // =====================================================
-  // CMRC LIST
+  // CMRC DATA
   // =====================================================
 
   cmrcList: Cmrc[] = [];
 
-
   // =====================================================
-  // FORM STATE
+  // PAGE STATE
   // =====================================================
 
+  isLoading = false;
+  isSaving = false;
   showForm = false;
   isEditMode = false;
-  isSaving = false;
-  deletingId: number | null = null;
   isAdmin = false;
 
+  errorMessage = '';
+  successMessage = '';
 
   // =====================================================
-  // CURRENT LOGGED-IN USER CMRC
+  // CURRENT LOGGED-IN USER
   // =====================================================
 
   currentUserCmrcId: number | null = null;
   currentUserCmrcName = '';
   currentUserDistrict = '';
   currentUserTaluka = '';
-
+  currentUserAccountNo = '';
+  currentUserAccountOpeningDate = '';
 
   // =====================================================
   // FORM MODEL
   // =====================================================
 
-  newCmrc: Cmrc = {
-    cmrcName: '',
-    district: '',
-    taluka: '',
-    accountNo: '',
-    accountOpeningDate: '',
-    status: 'ACTIVE',
-    totalFund: 0
-  };
-
+  newCmrc: Cmrc = this.emptyCmrc();
 
   // =====================================================
   // SEARCH
@@ -57,811 +50,506 @@ export class CmrcComponent implements OnInit {
 
   searchText = '';
 
-
   // =====================================================
   // AMOUNT IN WORDS
   // =====================================================
 
   amountInWords = '';
 
-
   constructor(
     private cmrcService: CmrcService
   ) {}
 
-
   // =====================================================
-  // INIT
+  // INITIALIZATION
   // =====================================================
 
-ngOnInit(): void {
-  this.loadCurrentUserDetails();
-
-  // Get role from logged-in user object
-  const userData = localStorage.getItem('user');
-
-  if (userData) {
-    try {
-      const user = JSON.parse(userData);
-
-      this.isAdmin =
-        String(user.role || user.userRole || '')
-          .toUpperCase() === 'ADMIN';
-
-    } catch (error) {
-      console.error('Unable to read user role:', error);
-      this.isAdmin = false;
-    }
+  ngOnInit(): void {
+    this.loadCurrentUserDetails();
+    this.loadCmrc();
   }
 
-  this.loadCmrc();
-}
+  // =====================================================
+  // EMPTY CMRC MODEL
+  // =====================================================
 
+  private emptyCmrc(): Cmrc {
+    return {
+      cmrcName: '',
+      district: '',
+      taluka: '',
+      accountNo: '',
+      accountOpeningDate: '',
+      status: 'ACTIVE',
+      totalFund: 0
+    };
+  }
 
   // =====================================================
   // LOAD CURRENT USER DETAILS
   // =====================================================
 
   loadCurrentUserDetails(): void {
+    this.errorMessage = '';
 
-    const userData =
-      localStorage.getItem('user');
+    const userData = localStorage.getItem('user');
 
     if (!userData) {
+      this.currentUserCmrcId = null;
+      this.cmrcList = [];
+      this.errorMessage =
+        'Login details not found. Please login again.';
       return;
     }
 
     try {
-
       const user = JSON.parse(userData);
 
       this.currentUserCmrcId =
-        user.cmrcId || null;
+        user.cmrcId != null && Number.isFinite(Number(user.cmrcId))
+          ? Number(user.cmrcId)
+          : null;
 
-      this.currentUserCmrcName =
-        user.cmrcName || '';
+      this.currentUserCmrcName = user.cmrcName || '';
+      this.currentUserDistrict = user.district || '';
+      this.currentUserTaluka = user.taluka || '';
+      this.currentUserAccountNo = user.accountNo || '';
 
-      this.currentUserDistrict =
-        user.district || '';
+      this.currentUserAccountOpeningDate =
+        user.accountOpeningDate || '';
 
-      this.currentUserTaluka =
-        user.taluka || '';
+      const role = String(
+        user.role || user.userRole || ''
+      ).toUpperCase();
 
+      this.isAdmin = role === 'ADMIN';
 
-      this.newCmrc = {
-        cmrcName:
-          this.currentUserCmrcName,
-
-        district:
-          this.currentUserDistrict,
-
-        taluka:
-          this.currentUserTaluka,
-
-        accountNo: '',
-
-        accountOpeningDate:
-          this.getTodayDate(),
-
-        status: 'ACTIVE',
-
-        totalFund: 0
-      };
+      if (this.currentUserCmrcId == null) {
+        this.errorMessage =
+          'No CMRC is assigned to the logged-in user.';
+      }
 
     } catch (error) {
-
       console.error(
-        'Unable to read logged-in user',
+        'Unable to read login response:',
         error
       );
+
+      this.currentUserCmrcId = null;
+      this.isAdmin = false;
+      this.cmrcList = [];
+
+      this.errorMessage =
+        'Unable to read login details. Please login again.';
     }
   }
 
-
   // =====================================================
-  // LOAD CMRC
+  // LOAD LOGGED-IN USER'S CMRC
   // =====================================================
 
   loadCmrc(): void {
+    if (this.currentUserCmrcId == null) {
+      this.cmrcList = [];
+      this.isLoading = false;
+      return;
+    }
 
-    this.cmrcService
-      .getAll()
-      .subscribe({
+    this.isLoading = true;
+    this.errorMessage = '';
 
-        next: (data: Cmrc[]) => {
+    this.cmrcService.getAll().subscribe({
+      next: (data: Cmrc[]) => {
 
-          this.cmrcList = data || [];
+        const existingCmrc = (data || []).find(
+          (cmrc: Cmrc) =>
+            Number(cmrc.id) ===
+            Number(this.currentUserCmrcId)
+        );
 
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Load CMRC Error:',
-            error
-          );
-
+        if (!existingCmrc) {
           this.cmrcList = [];
+          this.errorMessage =
+            'CMRC record not found for the logged-in user.';
+          this.isLoading = false;
+          return;
         }
 
-      });
+        // API is the source of truth for balance and status.
+        // Login details are used as fallback for profile fields.
+        const loggedInCmrc: Cmrc = {
+          ...existingCmrc,
+
+          cmrcName:
+            existingCmrc.cmrcName ||
+            this.currentUserCmrcName,
+
+          district:
+            existingCmrc.district ||
+            this.currentUserDistrict,
+
+          taluka:
+            existingCmrc.taluka ||
+            this.currentUserTaluka,
+
+          accountNo:
+            existingCmrc.accountNo ||
+            this.currentUserAccountNo,
+
+          accountOpeningDate:
+            existingCmrc.accountOpeningDate ||
+            this.currentUserAccountOpeningDate
+        };
+
+        this.cmrcList = [loggedInCmrc];
+        this.isLoading = false;
+      },
+
+      error: (error) => {
+        console.error('Load CMRC Error:', error);
+
+        this.cmrcList = [];
+        this.isLoading = false;
+
+        if (error.status === 401) {
+          this.errorMessage =
+            'Your session has expired. Please login again.';
+        } else if (error.status === 403) {
+          this.errorMessage =
+            'You are not authorized to view this CMRC.';
+        } else {
+          this.errorMessage =
+            error?.error?.message ||
+            'Unable to load CMRC details. Please try again.';
+        }
+      }
+    });
   }
 
-
   // =====================================================
-  // OPEN ADD BALANCE FORM
+  // REFRESH REPORT
   // =====================================================
 
-  openAddForm(): void {
+  refreshCmrc(): void {
+    if (this.isLoading || this.isSaving) {
+      return;
+    }
 
-    this.isEditMode = false;
-
-    this.showForm = true;
-
-    this.isSaving = false;
-
-    this.amountInWords = '';
-
-
-    /*
-     * IMPORTANT:
-     *
-     * Find the existing CMRC record.
-     * We are NOT creating a new CMRC.
-     */
-
-    const existingCmrc =
-      this.cmrcList.find(
-        (cmrc: Cmrc) =>
-          cmrc.id === this.currentUserCmrcId
-      );
-
-
-    this.newCmrc = {
-
-      id:
-        existingCmrc?.id ||
-        this.currentUserCmrcId ||
-        undefined,
-
-      cmrcName:
-        this.currentUserCmrcName,
-
-      district:
-        this.currentUserDistrict,
-
-      taluka:
-        this.currentUserTaluka,
-
-      accountNo:
-        existingCmrc?.accountNo || '',
-
-      accountOpeningDate:
-        existingCmrc?.accountOpeningDate ||
-        this.getTodayDate(),
-
-      status:
-        existingCmrc?.status ||
-        'ACTIVE',
-
-      /*
-       * This field contains ONLY the new amount
-       * entered by the user.
-       */
-      totalFund: 0
-    };
+    this.successMessage = '';
+    this.loadCmrc();
   }
-
 
   // =====================================================
   // OPEN EDIT FORM
   // =====================================================
 
   openEditForm(cmrc: Cmrc): void {
+    if (!this.isAdmin) {
+      this.errorMessage =
+        'Only ADMIN can edit CMRC balance and status.';
+      return;
+    }
+
+    if (
+      cmrc.id == null ||
+      Number(cmrc.id) !== Number(this.currentUserCmrcId)
+    ) {
+      this.errorMessage =
+        'You are not authorized to edit this CMRC.';
+      return;
+    }
+
+    this.errorMessage = '';
+    this.successMessage = '';
 
     this.isEditMode = true;
-
     this.showForm = true;
-
     this.isSaving = false;
 
-
     this.newCmrc = {
-
       ...cmrc,
-
-      cmrcName:
-        this.currentUserCmrcName,
-
-      district:
-        this.currentUserDistrict,
-
-      taluka:
-        this.currentUserTaluka
-
+      totalFund: Number(cmrc.totalFund || 0)
     };
-
 
     this.updateAmountInWords();
   }
-
 
   // =====================================================
   // CLOSE FORM
   // =====================================================
 
   closeForm(): void {
-
     if (this.isSaving) {
       return;
     }
 
     this.showForm = false;
-
     this.isEditMode = false;
-
     this.amountInWords = '';
+    this.newCmrc = this.emptyCmrc();
   }
 
-
   // =====================================================
-  // SAVE CMRC / ADD BALANCE
+  // SAVE CMRC BALANCE AND STATUS
   // =====================================================
 
   saveCmrc(): void {
-
     if (this.isSaving) {
       return;
     }
 
-
-    // =================================================
-    // ADD BALANCE TO EXISTING CMRC
-    // =================================================
-
-    if (!this.isEditMode) {
-
-      const amount =
-        Number(this.newCmrc.totalFund || 0);
-
-
-      // -----------------------------------------------
-      // Validate amount
-      // -----------------------------------------------
-
-      if (amount <= 0) {
-
-        alert(
-          'Please enter a balance amount greater than 0.'
-        );
-
-        return;
-      }
-
-
-      // -----------------------------------------------
-      // Existing CMRC ID
-      // -----------------------------------------------
-
-      const cmrcId =
-        this.newCmrc.id ||
-        this.currentUserCmrcId;
-
-
-      if (!cmrcId) {
-
-        alert(
-          'Existing CMRC ID is missing.'
-        );
-
-        return;
-      }
-
-
-      // -----------------------------------------------
-      // Find existing CMRC
-      // -----------------------------------------------
-
-      const existingCmrc =
-        this.cmrcList.find(
-          (cmrc: Cmrc) =>
-            cmrc.id === cmrcId
-        );
-
-
-      if (!existingCmrc) {
-
-        alert(
-          'Existing CMRC record was not found.'
-        );
-
-        return;
-      }
-
-
-      // -----------------------------------------------
-      // Calculate NEW balance
-      // -----------------------------------------------
-
-      const existingBalance =
-        Number(
-          existingCmrc.totalFund || 0
-        );
-
-
-      const updatedBalance =
-        existingBalance + amount;
-
-
-      // -----------------------------------------------
-      // Prepare existing CMRC update
-      // -----------------------------------------------
-
-      const updatedCmrc: Cmrc = {
-
-        ...existingCmrc,
-
-        id: cmrcId,
-
-        cmrcName:
-          this.currentUserCmrcName,
-
-        district:
-          this.currentUserDistrict,
-
-        taluka:
-          this.currentUserTaluka,
-
-        /*
-         * IMPORTANT:
-         *
-         * Existing balance + new amount
-         */
-        totalFund:
-          updatedBalance
-      };
-
-
-      console.log(
-        'Existing CMRC ID:',
-        cmrcId
-      );
-
-      console.log(
-        'Existing Balance:',
-        existingBalance
-      );
-
-      console.log(
-        'Amount Added:',
-        amount
-      );
-
-      console.log(
-        'Updated Balance:',
-        updatedBalance
-      );
-
-      console.log(
-        'PUT CMRC Payload:',
-        updatedCmrc
-      );
-
-
-      this.isSaving = true;
-
-
-      // -----------------------------------------------
-      // UPDATE EXISTING CMRC
-      // -----------------------------------------------
-
-      this.cmrcService
-        .update(
-          cmrcId,
-          updatedCmrc
-        )
-        .subscribe({
-
-          next: (response: Cmrc) => {
-
-            console.log(
-              'Existing CMRC Updated:',
-              response
-            );
-
-
-            alert(
-              'Balance added successfully.'
-            );
-
-
-            this.isSaving = false;
-
-            this.showForm = false;
-
-            this.isEditMode = false;
-
-            this.amountInWords = '';
-
-
-            // -----------------------------------------
-            // Refresh from database
-            // -----------------------------------------
-
-            this.loadCmrc();
-          },
-
-
-          error: (error) => {
-
-            console.error(
-              'Add Balance / Update CMRC Error:',
-              error
-            );
-
-
-            this.isSaving = false;
-
-
-            if (error.status === 403) {
-
-              alert(
-                'Access denied for this CMRC.'
-              );
-
-            } else if (error.status === 401) {
-
-              alert(
-                'Session expired. Please login again.'
-              );
-
-            } else {
-
-              alert(
-                error?.error?.message ||
-                error?.error ||
-                'Unable to update CMRC balance.'
-              );
-            }
-
-          }
-
-        });
-
-
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    if (!this.isAdmin) {
+      this.errorMessage =
+        'Only ADMIN can update CMRC balance and status.';
       return;
     }
 
+    const cmrcId = this.newCmrc.id;
 
-    // =================================================
-    // EDIT EXISTING CMRC DETAILS
-    // =================================================
-
-    if (!this.newCmrc.id) {
-
-      alert(
-        'CMRC ID is missing.'
-      );
-
+    if (cmrcId == null) {
+      this.errorMessage = 'CMRC ID is missing.';
       return;
     }
 
+    if (
+      Number(cmrcId) !== Number(this.currentUserCmrcId)
+    ) {
+      this.errorMessage =
+        'You are not authorized to update this CMRC.';
+      return;
+    }
+
+    const existingCmrc = this.cmrcList.find(
+      (cmrc: Cmrc) =>
+        Number(cmrc.id) === Number(cmrcId)
+    );
+
+    if (!existingCmrc) {
+      this.errorMessage =
+        'Existing CMRC record was not found.';
+      return;
+    }
+
+    const balance = Number(this.newCmrc.totalFund);
+
+    if (!Number.isFinite(balance) || balance < 0) {
+      this.errorMessage =
+        'Enter a valid balance greater than or equal to zero.';
+      return;
+    }
+
+    const status = String(
+      this.newCmrc.status || ''
+    ).toUpperCase();
+
+    if (
+      status !== 'ACTIVE' &&
+      status !== 'INACTIVE'
+    ) {
+      this.errorMessage =
+        'Please select a valid CMRC status.';
+      return;
+    }
+
+    // Preserve the existing profile fields.
+    // Only balance and status are editable here.
+    const updatedCmrc: Cmrc = {
+      ...existingCmrc,
+      totalFund: balance,
+      status
+    };
 
     this.isSaving = true;
 
+    this.cmrcService.update(
+      cmrcId,
+      updatedCmrc
+    ).subscribe({
+      next: (response: Cmrc) => {
 
-    this.cmrcService
-      .update(
-        this.newCmrc.id,
-        this.newCmrc
-      )
-      .subscribe({
+        const savedCmrc: Cmrc = {
+          ...existingCmrc,
+          ...(response || {}),
 
-        next: (response: Cmrc) => {
+          id: cmrcId,
+          totalFund: balance,
+          status,
 
-          console.log(
-            'CMRC Updated:',
-            response
-          );
+          cmrcName:
+            existingCmrc.cmrcName ||
+            this.currentUserCmrcName,
 
+          district:
+            existingCmrc.district ||
+            this.currentUserDistrict,
 
-          alert(
-            'CMRC updated successfully.'
-          );
+          taluka:
+            existingCmrc.taluka ||
+            this.currentUserTaluka,
 
+          accountNo:
+            existingCmrc.accountNo ||
+            this.currentUserAccountNo,
 
-          this.isSaving = false;
+          accountOpeningDate:
+            existingCmrc.accountOpeningDate ||
+            this.currentUserAccountOpeningDate
+        };
 
-          this.showForm = false;
+        this.cmrcList = [savedCmrc];
 
-          this.isEditMode = false;
+        this.isSaving = false;
+        this.showForm = false;
+        this.isEditMode = false;
+        this.amountInWords = '';
+        this.newCmrc = this.emptyCmrc();
 
-          this.amountInWords = '';
+        this.successMessage =
+          'CMRC balance and status updated successfully.';
 
+        // Reload persisted data from the backend.
+        this.loadCmrc();
+      },
 
-          this.loadCmrc();
-        },
+      error: (error) => {
+        console.error('Update CMRC Error:', error);
 
+        this.isSaving = false;
 
-        error: (error) => {
-
-          console.error(
-            'Update CMRC Error:',
-            error
-          );
-
-
-          this.isSaving = false;
-
-
-          if (error.status === 403) {
-
-            alert(
-              'Access denied for this CMRC.'
-            );
-
-          } else if (error.status === 401) {
-
-            alert(
-              'Session expired. Please login again.'
-            );
-
-          } else {
-
-            alert(
-              error?.error?.message ||
-              error?.error ||
-              'Unable to update CMRC.'
-            );
-          }
-
+        if (error.status === 403) {
+          this.errorMessage =
+            'Access denied. You cannot update this CMRC.';
+        } else if (error.status === 401) {
+          this.errorMessage =
+            'Your session has expired. Please login again.';
+        } else {
+          this.errorMessage =
+            error?.error?.message ||
+            (typeof error?.error === 'string'
+              ? error.error
+              : '') ||
+            'Unable to update CMRC balance and status.';
         }
-
-      });
+      }
+    });
   }
 
-
   // =====================================================
-  // DELETE CMRC
-  // =====================================================
-
-  deleteCmrc(id?: number): void {
-
-    if (!id) {
-      return;
-    }
-
-
-    const confirmed =
-      confirm(
-        'Are you sure you want to delete this CMRC?'
-      );
-
-
-    if (!confirmed) {
-      return;
-    }
-
-
-    this.deletingId = id;
-
-
-    this.cmrcService
-      .delete(id)
-      .subscribe({
-
-        next: () => {
-
-          alert(
-            'CMRC deleted successfully.'
-          );
-
-          this.deletingId = null;
-
-          this.loadCmrc();
-        },
-
-
-        error: (error) => {
-
-          console.error(
-            'Delete CMRC Error:',
-            error
-          );
-
-          this.deletingId = null;
-
-
-          if (error.status === 403) {
-
-            alert(
-              'Access denied for this CMRC.'
-            );
-
-          } else {
-
-            alert(
-              error?.error?.message ||
-              error?.error ||
-              'Unable to delete CMRC.'
-            );
-          }
-
-        }
-
-      });
-  }
-
-
-  // =====================================================
-  // FILTERED CMRC
+  // FILTERED CMRC LIST
   // =====================================================
 
   get filteredCmrcList(): Cmrc[] {
-
-    const search =
-      this.searchText
-        .trim()
-        .toLowerCase();
-
+    const search = this.searchText
+      .trim()
+      .toLowerCase();
 
     if (!search) {
       return this.cmrcList;
     }
 
-
-    return this.cmrcList.filter(
-      (cmrc: Cmrc) =>
-
-        (cmrc.cmrcName || '')
-          .toLowerCase()
-          .includes(search)
-
-        ||
-
-        (cmrc.accountNo || '')
-          .toLowerCase()
-          .includes(search)
-
-        ||
-
-        (cmrc.district || '')
-          .toLowerCase()
-          .includes(search)
-
-        ||
-
-        (cmrc.taluka || '')
-          .toLowerCase()
-          .includes(search)
-
-        ||
-
-        (cmrc.status || '')
-          .toLowerCase()
-          .includes(search)
+    return this.cmrcList.filter((cmrc: Cmrc) =>
+      (cmrc.cmrcName || '').toLowerCase().includes(search) ||
+      (cmrc.accountNo || '').toLowerCase().includes(search) ||
+      (cmrc.district || '').toLowerCase().includes(search) ||
+      (cmrc.taluka || '').toLowerCase().includes(search) ||
+      (cmrc.status || '').toLowerCase().includes(search)
     );
   }
-
 
   // =====================================================
   // TOTAL CMRC BALANCE
   // =====================================================
 
   get totalCmrcAmount(): number {
-
     return this.cmrcList.reduce(
-      (
-        total: number,
-        cmrc: Cmrc
-      ) =>
-        total +
-        Number(cmrc.totalFund || 0),
+      (total: number, cmrc: Cmrc) =>
+        total + Number(cmrc.totalFund || 0),
       0
     );
   }
 
+  // =====================================================
+  // FORMATTED BALANCE
+  // =====================================================
+
+  formatCurrency(amount: number | null | undefined): string {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(Number(amount || 0));
+  }
 
   // =====================================================
-  // AMOUNT CHANGE
+  // UPDATE AMOUNT IN WORDS
   // =====================================================
 
   updateAmountInWords(): void {
+    const amount = Number(
+      this.newCmrc.totalFund || 0
+    );
 
-    const amount =
-      Number(this.newCmrc.totalFund || 0);
-
-
-    if (amount <= 0) {
-
+    if (!Number.isFinite(amount) || amount <= 0) {
       this.amountInWords = '';
-
       return;
     }
 
-
-    this.amountInWords =
-      this.numberToWords(amount);
+    this.amountInWords = this.numberToWords(amount);
   }
-
 
   // =====================================================
   // NUMBER TO WORDS
   // =====================================================
 
   numberToWords(num: number): string {
-
-    if (!Number.isFinite(num)) {
+    if (!Number.isFinite(num) || num < 0) {
       return '';
     }
-
 
     if (num === 0) {
       return 'Zero Rupees Only';
     }
 
-
-    const integerPart =
-      Math.floor(num);
-
-
-    const decimalPart =
-      Math.round(
-        (num - integerPart) * 100
-      );
-
+    const integerPart = Math.floor(num);
+    const decimalPart = Math.round(
+      (num - integerPart) * 100
+    );
 
     let result = '';
 
-
     if (integerPart > 0) {
-
-      result +=
-        this.convertIndianNumber(
-          integerPart
-        );
-
-      result +=
-        integerPart === 1
-          ? ' Rupee'
-          : ' Rupees';
+      result += this.convertIndianNumber(integerPart);
+      result += integerPart === 1
+        ? ' Rupee'
+        : ' Rupees';
     }
 
-
     if (decimalPart > 0) {
-
       if (result) {
         result += ' and ';
       }
 
-      result +=
-        this.convertIndianNumber(
-          decimalPart
-        );
-
-      result +=
-        decimalPart === 1
-          ? ' Paisa'
-          : ' Paise';
+      result += this.convertIndianNumber(decimalPart);
+      result += decimalPart === 1
+        ? ' Paisa'
+        : ' Paise';
     }
-
 
     return result + ' Only';
   }
-
 
   // =====================================================
   // INDIAN NUMBER CONVERSION
   // =====================================================
 
-  private convertIndianNumber(
-    num: number
-  ): string {
-
+  private convertIndianNumber(num: number): string {
     if (num === 0) {
       return 'Zero';
     }
-
 
     const ones = [
       '',
@@ -886,7 +574,6 @@ ngOnInit(): void {
       'Nineteen'
     ];
 
-
     const tens = [
       '',
       '',
@@ -900,62 +587,44 @@ ngOnInit(): void {
       'Ninety'
     ];
 
+    const convertBelowThousand = (
+      n: number
+    ): string => {
+      let words = '';
 
-    const convertBelowThousand =
-      (n: number): string => {
+      if (n >= 100) {
+        words +=
+          ones[Math.floor(n / 100)] +
+          ' Hundred';
 
-        let words = '';
+        n %= 100;
 
-
-        if (n >= 100) {
-
-          words +=
-            ones[Math.floor(n / 100)] +
-            ' Hundred';
-
-          n %= 100;
-
-
-          if (n > 0) {
-            words += ' ';
-          }
+        if (n > 0) {
+          words += ' ';
         }
+      }
 
+      if (n >= 20) {
+        words += tens[Math.floor(n / 10)];
+        n %= 10;
 
-        if (n >= 20) {
-
-          words +=
-            tens[Math.floor(n / 10)];
-
-          n %= 10;
-
-
-          if (n > 0) {
-            words +=
-              ' ' + ones[n];
-          }
-
-        } else if (n > 0) {
-
-          words += ones[n];
+        if (n > 0) {
+          words += ' ' + ones[n];
         }
+      } else if (n > 0) {
+        words += ones[n];
+      }
 
-
-        return words;
-      };
-
+      return words;
+    };
 
     let result = '';
 
-
-    // Crore
     if (num >= 10000000) {
-
       result +=
         this.convertIndianNumber(
           Math.floor(num / 10000000)
-        ) +
-        ' Crore';
+        ) + ' Crore';
 
       num %= 10000000;
 
@@ -964,15 +633,11 @@ ngOnInit(): void {
       }
     }
 
-
-    // Lakh
     if (num >= 100000) {
-
       result +=
         this.convertIndianNumber(
           Math.floor(num / 100000)
-        ) +
-        ' Lakh';
+        ) + ' Lakh';
 
       num %= 100000;
 
@@ -981,15 +646,11 @@ ngOnInit(): void {
       }
     }
 
-
-    // Thousand
     if (num >= 1000) {
-
       result +=
         this.convertIndianNumber(
           Math.floor(num / 1000)
-        ) +
-        ' Thousand';
+        ) + ' Thousand';
 
       num %= 1000;
 
@@ -998,43 +659,10 @@ ngOnInit(): void {
       }
     }
 
-
-    // Below thousand
     if (num > 0) {
-
-      result +=
-        convertBelowThousand(num);
+      result += convertBelowThousand(num);
     }
-
 
     return result;
   }
-
-
-  // =====================================================
-  // TODAY DATE
-  // =====================================================
-
-  private getTodayDate(): string {
-
-    const today =
-      new Date();
-
-    const year =
-      today.getFullYear();
-
-    const month =
-      String(
-        today.getMonth() + 1
-      ).padStart(2, '0');
-
-    const day =
-      String(
-        today.getDate()
-      ).padStart(2, '0');
-
-
-    return `${year}-${month}-${day}`;
-  }
-
 }

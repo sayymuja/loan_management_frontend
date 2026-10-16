@@ -1012,7 +1012,31 @@
                   | number:'1.0-0'
                 }}
               </span>
+              
             </div>
+            
+<!-- Disbursement Mode -->
+<div class="form-group">
+  <label for="paymentMode">
+    Disbursement Mode <span class="required">*</span>
+  </label>
+
+  <select
+    id="paymentMode"
+    class="form-select"
+    [(ngModel)]="newLoan.paymentMode"
+    name="paymentMode"
+    required
+  >
+    <option value="CASH">Cash</option>
+    <option value="BANK">Bank</option>
+  </select>
+
+  <small class="text-muted">
+    Select the VO / ALF account from which the loan will be disbursed.
+  </small>
+</div>
+
 
             <div class="detail-item">
               <label>Loan Purpose</label>

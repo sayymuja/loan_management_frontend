@@ -1,11 +1,7 @@
 <div class="container mt-5">
-
   <div class="row justify-content-center">
-
     <div class="col-md-5">
-
       <div class="card shadow">
-
         <div class="card-body p-4">
 
           <h2 class="text-center mb-4">
@@ -13,184 +9,158 @@
           </h2>
 
           <!-- Success Message -->
-          <div
-            *ngIf="message"
-            class="alert alert-success">
+          <div *ngIf="message" class="alert alert-success">
             {{ message }}
           </div>
 
           <!-- Error Message -->
-          <div
-            *ngIf="errorMessage"
-            class="alert alert-danger">
+          <div *ngIf="errorMessage" class="alert alert-danger">
             {{ errorMessage }}
           </div>
 
-          <form (ngSubmit)="signup()">
+          <form (ngSubmit)="signup()" #signupForm="ngForm">
 
             <!-- Name -->
             <div class="mb-3">
-
-              <label class="form-label">
-                Name
-              </label>
-
+              <label for="name" class="form-label">Name</label>
               <input
                 type="text"
+                id="name"
                 class="form-control"
                 name="name"
                 [(ngModel)]="name"
                 placeholder="Enter your name"
                 required>
-
             </div>
-
 
             <!-- Email -->
             <div class="mb-3">
-
-              <label class="form-label">
-                Email
-              </label>
-
+              <label for="email" class="form-label">Email</label>
               <input
                 type="email"
+                id="email"
                 class="form-control"
                 name="email"
                 [(ngModel)]="email"
                 placeholder="Enter your email"
                 required>
-
             </div>
-
 
             <!-- CMRC Name -->
             <div class="mb-3">
-
-              <label class="form-label">
-                CMRC Name
-              </label>
-
+              <label for="cmrcName" class="form-label">CMRC Name</label>
               <input
                 type="text"
+                id="cmrcName"
                 class="form-control"
                 name="cmrcName"
                 [(ngModel)]="cmrcName"
                 placeholder="Enter CMRC name"
                 required>
-
             </div>
 
+            <!-- Account Number -->
+            <div class="mb-3">
+              <label for="accountNo" class="form-label">
+                Account Number
+              </label>
+              <input
+                type="text"
+                id="accountNo"
+                class="form-control"
+                name="accountNo"
+                [(ngModel)]="accountNo"
+                placeholder="Enter account number"
+                required>
+            </div>
+
+            <!-- Account Opening Date -->
+            <div class="mb-3">
+              <label for="accountOpeningDate" class="form-label">
+                Account Opening Date
+              </label>
+              <input
+                type="date"
+                id="accountOpeningDate"
+                class="form-control"
+                name="accountOpeningDate"
+                [(ngModel)]="accountOpeningDate"
+                required>
+            </div>
 
             <!-- District -->
             <div class="mb-3">
-
-              <label class="form-label">
-                District
-              </label>
-
+              <label for="district" class="form-label">District</label>
               <select
+                id="district"
                 class="form-select"
                 name="district"
                 [(ngModel)]="district"
                 (change)="onDistrictChange()"
                 required>
 
-                <option value="">
-                  Select District
-                </option>
+                <option value="">Select District</option>
 
                 <option
                   *ngFor="let districtName of districts"
                   [value]="districtName">
-
                   {{ districtName }}
-
                 </option>
-
               </select>
-
             </div>
-
 
             <!-- Taluka -->
             <div class="mb-3">
-
-              <label class="form-label">
-                Taluka
-              </label>
-
+              <label for="taluka" class="form-label">Taluka</label>
               <select
+                id="taluka"
                 class="form-select"
                 name="taluka"
                 [(ngModel)]="taluka"
                 [disabled]="!district"
                 required>
 
-                <option value="">
-                  Select Taluka
-                </option>
+                <option value="">Select Taluka</option>
 
                 <option
                   *ngFor="let talukaName of selectedTalukas"
                   [value]="talukaName">
-
                   {{ talukaName }}
-
                 </option>
-
               </select>
-
             </div>
-
 
             <!-- Password -->
             <div class="mb-3">
-
-              <label class="form-label">
-                Password
-              </label>
-
+              <label for="password" class="form-label">Password</label>
               <input
                 type="password"
+                id="password"
                 class="form-control"
                 name="password"
                 [(ngModel)]="password"
                 placeholder="Enter your password"
                 required>
-
             </div>
-
 
             <!-- Signup Button -->
             <button
               type="submit"
-              class="btn btn-primary w-100">
-
+              class="btn btn-primary w-100"
+              [disabled]="signupForm.invalid">
               Sign Up
-
             </button>
 
           </form>
 
-
           <!-- Login Link -->
           <div class="text-center mt-3">
-
             Already have an account?
-
-            <a routerLink="/login">
-              Login
-            </a>
-
+            <a routerLink="/login">Login</a>
           </div>
 
         </div>
-
       </div>
-
     </div>
-
   </div>
-
 </div>

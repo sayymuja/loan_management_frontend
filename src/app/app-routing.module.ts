@@ -23,6 +23,8 @@ import { WomenComponent } from './women/women.component';
 import { AiChatComponent } from './ai-chat/ai-chat.component';
 import { UserManagementComponent } from './super-admin/user-management/user-management.component';
 import { ApprovalRequestsComponent } from './approval-requests/approval-requests.component';
+import { GroupMembersComponent } from './group-members/group-members.component';
+import { LoanRepaymentComponent } from './loan-repayment/loan-repayment.component';
 
 const routes: Routes = [
 
@@ -52,6 +54,17 @@ const routes: Routes = [
     component: VoAlfComponent,
     canActivate: [AuthGuard]
   },
+  {
+  path: 'group-members',
+  component: GroupMembersComponent,
+  canActivate: [AuthGuard]
+},
+{
+  path: 'loan-repayment',
+  component: LoanRepaymentComponent,
+    canActivate: [AuthGuard]
+
+},
   {
     path: 'fund-management',
     component: FundManagementComponent,

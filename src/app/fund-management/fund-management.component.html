@@ -1,486 +1,596 @@
-<div class="page-header d-flex justify-content-between align-items-center">
-  <div>
-    <h2>Fund Management</h2>
-    <p>CMRC wise VO / ALF fund details</p>
-  </div>
+<div class="fund-page">
 
-  <button
-    class="btn btn-primary"
-    (click)="openAddForm()"
-    [disabled]="!selectedVoAlfId">
-
-    <i class="bi bi-plus-lg"></i>
-    Add Fund
-
-  </button>
-</div>
-
-<!-- Selection -->
-<div class="card mb-4">
-  <div class="card-header">
-    <h5 class="mb-0">Select VO / ALF</h5>
-  </div>
-
-  <div class="card-body">
-
-    <div class="row g-3">
-
-      <!-- CMRC -->
-      <div class="col-md-6">
-
-        <label class="form-label">
-          CMRC
-        </label>
-
-        <select
-          class="form-select"
-          [(ngModel)]="selectedCmrcId"
-          (change)="loadVoAlfByCmrc()">
-
-          <option [ngValue]="null">
-            -- Select CMRC --
-          </option>
-
-          <option
-            *ngFor="let cmrc of cmrcList"
-            [ngValue]="cmrc.id">
-
-            {{ cmrc.cmrcName }}
-
-          </option>
-
-        </select>
-
+  <header class="page-header">
+    <div class="header-brand">
+      <div class="header-icon">
+        <i class="bi bi-wallet2"></i>
       </div>
-
-
-      <!-- VO / ALF -->
-      <div class="col-md-6">
-
-        <label class="form-label">
-          VO / ALF
-        </label>
-
-        <select
-          class="form-select"
-          [(ngModel)]="selectedVoAlfId"
-          (change)="loadFund()"
-          [disabled]="voAlfList.length === 0">
-
-          <option [ngValue]="null">
-            -- Select VO / ALF --
-          </option>
-
-          <option
-            *ngFor="let voAlf of voAlfList"
-            [ngValue]="voAlf.id">
-
-            {{ voAlf.voAlfName }}
-
-          </option>
-
-        </select>
-
+      <div>
+        <h2>Fund Management</h2>
+        <p>Manage receipts, payments and VO / ALF balance</p>
       </div>
-
-    </div>
-
-  </div>
-</div>
-
-
-<!-- Selected Information -->
- <!-- Fund Form -->
-<div class="card mb-4" *ngIf="showForm">
-
-  <div class="card-header d-flex justify-content-between align-items-center">
-
-    <div>
-      <h5 class="mb-0">
-        {{ isEditMode ? 'Edit Fund' : 'Add Fund' }}
-      </h5>
-
-      <small class="text-muted">
-        {{ getSelectedVoAlfName() }}
-      </small>
-      <h3 class="text-muted">
-        ₹ {{ getSelectedVoAlfRecievedFund() | number:'1.2-2' }}
-      </h3>
     </div>
 
     <button
       type="button"
-      class="btn-close"
-      (click)="closeForm()">
+      class="btn-refresh"
+      (click)="loadFundData()"
+      [disabled]="isLoading || selectedVoAlfId === null">
+      <i class="bi bi-arrow-clockwise"></i>
+      Refresh
     </button>
+  </header>
 
-  </div>
-
-  <div class="card-body">
-
-    <!-- Allocation Fund -->
-    <h6 class="section-title mb-3">
-      <i class="bi bi-cash-stack"></i>
-      Allocation Fund
-    </h6>
-
-    <div class="row g-3 mb-4">
-
-      <div class="col-md-3">
-        <label class="form-label">Group Count</label>
-        <input
-          type="number"
-          class="form-control"
-          [(ngModel)]="newFund.allocationGroupCount">
+  <section class="panel selection-panel">
+    <div class="panel-heading">
+      <div class="heading-icon">
+        <i class="bi bi-building"></i>
       </div>
-
-      <div class="col-md-3">
-        <label class="form-label">Women Count</label>
-        <input
-          type="number"
-          class="form-control"
-          [(ngModel)]="newFund.allocationWomenCount">
+      <div>
+        <h3>Organization Details</h3>
+        <p>Select the CMRC and VO / ALF account</p>
       </div>
-
-      <div class="col-md-3">
-        <label class="form-label">Group Amount</label>
-        <input
-          type="number"
-          class="form-control"
-          [(ngModel)]="newFund.allocationGroupAmount">
-      </div>
-
-      <div class="col-md-3">
-        <label class="form-label">Women Amount</label>
-        <input
-          type="number"
-          class="form-control"
-          [(ngModel)]="newFund.allocationWomenAmount">
-      </div>
-
     </div>
 
-
-    <!-- Repayment -->
-    <h6 class="section-title mb-3">
-      <i class="bi bi-wallet2"></i>
-      Repayment Received Fund
-    </h6>
-
-    <div class="row g-3 mb-4">
-
-      <div class="col-md-3">
-        <label class="form-label">Group Count</label>
-        <input
-          type="number"
+    <div class="selection-grid">
+      <div class="form-group">
+        <label for="cmrcSelect">CMRC</label>
+        <select
+          id="cmrcSelect"
           class="form-control"
-          [(ngModel)]="newFund.repaymentGroupCount">
+          [(ngModel)]="selectedCmrcId"
+          (ngModelChange)="onCmrcChange()">
+          <option [ngValue]="null">Select CMRC</option>
+          <option *ngFor="let cmrc of cmrcList" [ngValue]="cmrc.id">
+            {{ cmrc.cmrcName }}
+          </option>
+        </select>
       </div>
 
-      <div class="col-md-3">
-        <label class="form-label">Women Count</label>
-        <input
-          type="number"
+      <div class="form-group">
+        <label for="voAlfSelect">VO / ALF</label>
+        <select
+          id="voAlfSelect"
           class="form-control"
-          [(ngModel)]="newFund.repaymentWomenCount">
+          [(ngModel)]="selectedVoAlfId"
+          (ngModelChange)="onVoAlfChange()"
+          [disabled]="!voAlfList.length">
+          <option [ngValue]="null">Select VO / ALF</option>
+          <option *ngFor="let vo of voAlfList" [ngValue]="vo.id">
+            {{ vo.voAlfName }} — {{ vo.villageName }}
+          </option>
+        </select>
       </div>
 
-      <div class="col-md-3">
-        <label class="form-label">Group Amount</label>
-        <input
-          type="number"
-          class="form-control"
-          [(ngModel)]="newFund.repaymentGroupAmount">
+      <div class="organization-summary" *ngIf="selectedVoAlf">
+        <span class="summary-label">Selected Account</span>
+        <strong>{{ selectedVoAlf.voAlfName }}</strong>
+        <span>{{ selectedVoAlf.villageName }}</span>
+        <small *ngIf="selectedVoAlf.accountNo">
+          Account No: {{ selectedVoAlf.accountNo }}
+        </small>
       </div>
-
-      <div class="col-md-3">
-        <label class="form-label">Women Amount</label>
-        <input
-          type="number"
-          class="form-control"
-          [(ngModel)]="newFund.repaymentWomenAmount">
-      </div>
-
     </div>
+  </section>
 
-
-    <!-- Loan Distributed -->
-    <!-- Loan Distributed -->
-<h6 class="section-title mb-3">
-  <i class="bi bi-currency-rupee"></i>
-  Loan Distributed
-</h6>
-
-<div class="row g-3 mb-4">
-
-  <!-- Financial Year -->
-  <div class="col-md-3">
-    <label class="form-label">Financial Year</label>
-
-    <input
-      type="text"
-      class="form-control"
-      [(ngModel)]="newFund.loanFinancialYear"
-      placeholder="e.g. 2025-26">
+  <div class="loading-panel" *ngIf="isLoading">
+    <span class="loading-spinner"></span>
+    <span>Loading fund information...</span>
   </div>
 
-  <!-- Group Count -->
-  <div class="col-md-3">
-    <label class="form-label">Group Count</label>
-
-    <input
-      type="number"
-      class="form-control"
-      [(ngModel)]="newFund.loanGroupCount">
+  <div class="empty-state" *ngIf="!isLoading && cmrcList.length === 0">
+    <div class="empty-icon">
+      <i class="bi bi-building"></i>
+    </div>
+    <h3>No CMRC Available</h3>
+    <p>No CMRC records are available for your account.</p>
   </div>
 
-  <!-- Women Count -->
-  <div class="col-md-3">
-    <label class="form-label">Women Count</label>
-
-    <input
-      type="number"
-      class="form-control"
-      [(ngModel)]="newFund.loanWomenCount">
+  <div
+    class="empty-state"
+    *ngIf="!isLoading && selectedCmrcId !== null && voAlfList.length === 0">
+    <div class="empty-icon">
+      <i class="bi bi-inbox"></i>
+    </div>
+    <h3>No VO / ALF Found</h3>
+    <p>No VO / ALF records are available for the selected CMRC.</p>
   </div>
 
-  <!-- Group Amount -->
-  <div class="col-md-3">
-    <label class="form-label">Group Amount</label>
+  <ng-container *ngIf="selectedVoAlfId !== null">
 
-    <input
-      type="number"
-      class="form-control"
-      [(ngModel)]="newFund.loanGroupAmount">
-  </div>
+    <section class="balance-grid">
+      <article class="balance-card total-card">
+        <div class="balance-top">
+          <div>
+            <span class="balance-label">Available Balance</span>
+            <h3>₹ {{ totalBalance | number:'1.2-2' }}</h3>
+          </div>
+          <div class="balance-icon">
+            <i class="bi bi-wallet2"></i>
+          </div>
+        </div>
 
-  <!-- Women Amount -->
-  <div class="col-md-3">
-    <label class="form-label">Women Amount</label>
+        <div class="balance-footer">
+          <i class="bi bi-calculator"></i>
+          Total available VO / ALF funds
+        </div>
+      </article>
+    </section>
 
-    <input
-      type="number"
-      class="form-control"
-      [(ngModel)]="newFund.loanWomenAmount">
-  </div>
+    <section class="panel management-panel">
 
-</div>
+      <nav class="tab-navigation">
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 'OVERVIEW'"
+          (click)="openOverview()">
+          <i class="bi bi-grid-1x2"></i>
+          <span>Overview</span>
+        </button>
 
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 'RECEIPT'"
+          (click)="openReceipt()">
+          <i class="bi bi-box-arrow-in-down"></i>
+          <span>New Receipt</span>
+        </button>
 
-    <!-- Current Interest -->
-    <h6 class="section-title mb-3">
-      <i class="bi bi-percent"></i>
-      Current Interest Received
-    </h6>
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 'PAYMENT'"
+          (click)="openPayment()">
+          <i class="bi bi-box-arrow-up"></i>
+          <span>New Payment / Transfer</span>
+        </button>
+      </nav>
 
-    <div class="row g-3 mb-4">
+      <!-- OVERVIEW -->
+      <div class="tab-content" *ngIf="activeTab === 'OVERVIEW'">
 
-      <div class="col-md-4">
-        <label class="form-label">Ultra Poor</label>
-        <input
-          type="number"
-          class="form-control"
-          [(ngModel)]="newFund.currentInterestUltraPoor">
+        <div class="content-header">
+          <div>
+            <h3>Transaction History</h3>
+            <p>Review receipts, payments, transfers and approvals.</p>
+          </div>
+          <span class="record-count">
+            {{ filteredTransactions.length }} records
+          </span>
+        </div>
+
+        <div class="transaction-filters">
+
+          <div class="form-group">
+            <label for="filterType">Transaction Type</label>
+            <select
+              id="filterType"
+              class="form-control"
+              [(ngModel)]="filterType">
+              <option value="ALL">All Types</option>
+              <option value="RECEIPT">Receipt</option>
+              <option value="PAYMENT">Payment / Transfer</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="filterStatus">Approval Status</label>
+            <select
+              id="filterStatus"
+              class="form-control"
+              [(ngModel)]="filterStatus">
+              <option value="ALL">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+          </div>
+
+          <div class="form-group search-group">
+            <label for="searchText">Search Transactions</label>
+            <div class="search-input">
+              <i class="bi bi-search"></i>
+              <input
+                id="searchText"
+                type="text"
+                class="form-control"
+                [(ngModel)]="searchText"
+                placeholder="Search category, remark or ID">
+            </div>
+          </div>
+
+        </div>
+
+        <div class="table-wrapper">
+          <table class="transaction-table">
+            <thead>
+              <tr>
+                <th>Sr.</th>
+                <th>Date</th>
+                <th>Transaction ID</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th class="text-right">Amount</th>
+                <th>Reference</th>
+                <th>Remark</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let transaction of filteredTransactions; let i = index">
+                <td>{{ i + 1 }}</td>
+
+                <td class="date-cell">
+                  {{ transaction.transactionDate | date:'dd-MM-yyyy' }}
+                </td>
+
+                <td>
+                  <span class="transaction-id">
+                    #{{ transaction.id || '—' }}
+                  </span>
+                </td>
+
+                <td>
+                  <span
+                    class="type-badge"
+                    [class.receipt-badge]="transaction.transactionType === 'RECEIPT'"
+                    [class.payment-badge]="transaction.transactionType === 'PAYMENT'">
+                    <i
+                      class="bi"
+                      [ngClass]="transaction.transactionType === 'RECEIPT'
+                        ? 'bi-arrow-down-left'
+                        : 'bi-arrow-up-right'">
+                    </i>
+                    {{ transaction.transactionType }}
+                  </span>
+                </td>
+
+                <td>{{ getCategoryLabel(transaction.category) }}</td>
+
+                <td
+                  class="amount-cell"
+                  [class.receipt-amount]="transaction.transactionType === 'RECEIPT'"
+                  [class.payment-amount]="transaction.transactionType === 'PAYMENT'">
+                  {{ transaction.transactionType === 'RECEIPT' ? '+' : '−' }}
+                  ₹ {{ transaction.amount | number:'1.2-2' }}
+                </td>
+
+                <td>
+                  <ng-container *ngIf="transaction.referenceType; else noReference">
+                    {{ transaction.referenceType }}
+                    <span *ngIf="transaction.referenceId">
+                      #{{ transaction.referenceId }}
+                    </span>
+                  </ng-container>
+                  <ng-template #noReference>—</ng-template>
+                </td>
+
+                <td class="remark-cell">
+                  {{ transaction.remark || '—' }}
+                </td>
+
+                <td>
+                  <span
+                    class="status-badge"
+                    [ngClass]="getStatusClass(transaction.approvalStatus)">
+                    {{ transaction.approvalStatus || 'N/A' }}
+                  </span>
+                </td>
+              </tr>
+
+              <tr *ngIf="filteredTransactions.length === 0">
+                <td colspan="9">
+                  <div class="table-empty">
+                    <i class="bi bi-search"></i>
+                    <strong>No transactions found</strong>
+                    <span>Try changing the filters or search text.</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <span>
+            Showing {{ filteredTransactions.length }} of
+            {{ transactions.length }} transactions
+          </span>
+        </div>
       </div>
 
-      <div class="col-md-4">
-        <label class="form-label">
-          Debt Trapped Women
-        </label>
-        <input
-          type="number"
-          class="form-control"
-          [(ngModel)]="newFund.currentInterestDebtTrappedWomen">
+      <!-- RECEIPT -->
+      <div class="tab-content" *ngIf="activeTab === 'RECEIPT'">
+
+        <div class="content-header">
+          <div>
+            <h3>
+              <i class="bi bi-box-arrow-in-down receipt-title-icon"></i>
+              Record Receipt
+            </h3>
+            <p>Record money received by the selected VO / ALF.</p>
+          </div>
+          <span class="form-type-badge receipt-form-badge">MONEY IN</span>
+        </div>
+
+        <div class="notice notice-info">
+          <i class="bi bi-info-circle"></i>
+          <span>
+            Fund Received from CMRC increases the VO / ALF balance and
+            decreases the CMRC balance after approval. Loan repayments,
+            interest and other income increase only the VO / ALF balance.
+          </span>
+        </div>
+
+        <form
+          #receiptForm="ngForm"
+          class="transaction-form"
+          (ngSubmit)="saveTransaction()">
+
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label for="receiptCategory">
+                Receipt Category <span class="required">*</span>
+              </label>
+              <select
+                id="receiptCategory"
+                name="receiptCategory"
+                class="form-control"
+                [(ngModel)]="transactionForm.category"
+                required>
+                <option
+                  *ngFor="let category of receiptCategories"
+                  [ngValue]="category.value">
+                  {{ category.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="receiptAmount">
+                Receipt Amount (₹) <span class="required">*</span>
+              </label>
+              <div class="amount-input">
+                <span>₹</span>
+                <input
+                  id="receiptAmount"
+                  name="receiptAmount"
+                  type="number"
+                  class="form-control"
+                  [(ngModel)]="transactionForm.amount"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="receiptDate">
+                Receipt Date <span class="required">*</span>
+              </label>
+              <input
+                id="receiptDate"
+                name="receiptDate"
+                type="date"
+                class="form-control"
+                [(ngModel)]="transactionForm.transactionDate"
+                required>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="receiptRemark">Remark / Description</label>
+              <textarea
+                id="receiptRemark"
+                name="receiptRemark"
+                class="form-control"
+                [(ngModel)]="transactionForm.remark"
+                rows="3"
+                maxlength="500"
+                placeholder="Enter receipt details or reference information">
+              </textarea>
+            </div>
+
+          </div>
+
+          <div class="form-summary receipt-summary">
+            <div>
+              <span>Transaction</span>
+              <strong>Receipt / Money In</strong>
+            </div>
+            <div>
+              <span>Amount</span>
+              <strong>
+                ₹ {{ (transactionForm.amount || 0) | number:'1.2-2' }}
+              </strong>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn-secondary"
+              (click)="openOverview()"
+              [disabled]="isSaving">
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="btn-primary btn-receipt"
+              [disabled]="isSaving || !receiptForm.valid">
+              <i
+                class="bi"
+                [ngClass]="isSaving ? 'bi-arrow-repeat' : 'bi-check-circle'">
+              </i>
+              {{ isSaving ? 'Submitting...' : 'Submit Receipt' }}
+            </button>
+          </div>
+        </form>
       </div>
 
-      <div class="col-md-4">
-        <label class="form-label">Total Interest</label>
-        <input
-          type="number"
-          class="form-control"
-          [(ngModel)]="newFund.currentInterestTotal">
+      <!-- PAYMENT AND TRANSFER -->
+      <div class="tab-content" *ngIf="activeTab === 'PAYMENT'">
+
+        <div class="content-header">
+          <div>
+            <h3>
+              <i class="bi bi-box-arrow-up payment-title-icon"></i>
+              Record Payment / Transfer
+            </h3>
+            <p>Record VO / ALF expenses or return funds to CMRC.</p>
+          </div>
+          <span class="form-type-badge payment-form-badge">MONEY OUT</span>
+        </div>
+
+        <div
+          class="notice notice-warning"
+          *ngIf="!isTransferToCmrc">
+          <i class="bi bi-exclamation-triangle"></i>
+          <span>
+            Record genuine expenses here. Loan disbursements and EMI
+            repayments should normally be recorded through their respective
+            modules to avoid duplicate entries.
+          </span>
+        </div>
+
+        <div
+          class="notice notice-info"
+          *ngIf="isTransferToCmrc">
+          <i class="bi bi-arrow-left-right"></i>
+          <span>
+            This is a transfer back to CMRC. After approval, the VO / ALF
+            balance decreases and the selected CMRC balance increases.
+            This is not an ordinary expense.
+          </span>
+        </div>
+
+        <form
+          #paymentForm="ngForm"
+          class="transaction-form"
+          (ngSubmit)="saveTransaction()">
+
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label for="paymentCategory">
+                Payment Category <span class="required">*</span>
+              </label>
+              <select
+                id="paymentCategory"
+                name="paymentCategory"
+                class="form-control"
+                [(ngModel)]="transactionForm.category"
+                required>
+                <option
+                  *ngFor="let category of paymentCategories"
+                  [ngValue]="category.value">
+                  {{ category.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="paymentAmount">
+                {{ isTransferToCmrc ? 'Transfer Amount (₹)' : 'Payment Amount (₹)' }}
+                <span class="required">*</span>
+              </label>
+              <div class="amount-input">
+                <span>₹</span>
+                <input
+                  id="paymentAmount"
+                  name="paymentAmount"
+                  type="number"
+                  class="form-control"
+                  [(ngModel)]="transactionForm.amount"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  required>
+              </div>
+              <small *ngIf="isTransferToCmrc">
+                Available VO / ALF balance: ₹ {{ totalBalance | number:'1.2-2' }}
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label for="paymentDate">
+                {{ isTransferToCmrc ? 'Transfer Date' : 'Payment Date' }}
+                <span class="required">*</span>
+              </label>
+              <input
+                id="paymentDate"
+                name="paymentDate"
+                type="date"
+                class="form-control"
+                [(ngModel)]="transactionForm.transactionDate"
+                required>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="paymentRemark">Remark / Description</label>
+              <textarea
+                id="paymentRemark"
+                name="paymentRemark"
+                class="form-control"
+                [(ngModel)]="transactionForm.remark"
+                rows="3"
+                maxlength="500"
+                [placeholder]="isTransferToCmrc
+                  ? 'Enter CMRC transfer reference or details'
+                  : 'Enter expense details, bill number or payment reference'">
+              </textarea>
+            </div>
+
+          </div>
+
+          <div class="form-summary payment-summary">
+            <div>
+              <span>Transaction</span>
+              <strong>
+                {{ isTransferToCmrc ? 'Transfer to CMRC' : 'Payment / Money Out' }}
+              </strong>
+            </div>
+            <div>
+              <span>Amount</span>
+              <strong>
+                ₹ {{ (transactionForm.amount || 0) | number:'1.2-2' }}
+              </strong>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn-secondary"
+              (click)="openOverview()"
+              [disabled]="isSaving">
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="btn-primary btn-payment"
+              [disabled]="isSaving || !paymentForm.valid">
+              <i
+                class="bi"
+                [ngClass]="isSaving ? 'bi-arrow-repeat' : 'bi-check-circle'">
+              </i>
+              {{
+                isSaving
+                  ? 'Submitting...'
+                  : (isTransferToCmrc ? 'Submit CMRC Transfer' : 'Submit Payment')
+              }}
+            </button>
+          </div>
+        </form>
       </div>
 
-    </div>
-
-
-    <!-- Buttons -->
-    <div class="mt-3">
-
-      <button
-        class="btn btn-primary me-2"
-        (click)="saveFund()">
-
-        <i class="bi bi-check-lg"></i>
-
-        {{ isEditMode ? 'Update' : 'Save' }}
-
-      </button>
-
-      <button
-        class="btn btn-secondary"
-        (click)="closeForm()">
-
-        Cancel
-
-      </button>
-
-    </div>
-
-  </div>
-
-</div>
-<div
-  class="card mb-4"
-  *ngIf="selectedVoAlfId">
-
-  <div class="card-body">
-
-    <div class="row">
-
-      <div class="col-md-6">
-        <small class="text-muted">CMRC</small>
-        <h5>{{ getSelectedCmrcName() }}</h5>
-      </div>
-
-      <div class="col-md-6">
-        <small class="text-muted">VO / ALF</small>
-        <h5>{{ getSelectedVoAlfName() }} (₹ {{ getSelectedVoAlfRecievedFund() | number:'1.2-2' }})</h5>
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-
-<!-- Fund Data -->
-<div class="card">
-
-  <div class="card-header">
-    <h5 class="mb-0">
-      Fund Details
-    </h5>
-  </div>
-
-  <div class="card-body">
-
-    <div
-      *ngIf="fundList.length === 0"
-      class="text-center text-muted py-4">
-
-      No fund record found for this VO / ALF.
-
-    </div>
-
-
-    <div
-      class="table-responsive"
-      *ngIf="fundList.length > 0">
-
-      <table class="table table-hover align-middle">
-
-        <thead>
-
-          <tr>
-            <th>Fund Type</th>
-            <th>Group Count</th>
-            <th>Women Count</th>
-            <th>Group Amount</th>
-            <th>Women Amount</th>
-          </tr>
-
-        </thead>
-
-        <tbody>
-
-          <!-- Allocation -->
-
-          <tr>
-
-            <td>
-              <strong>Allocation Fund</strong>
-            </td>
-
-            <td>
-              {{ fundList[0].allocationGroupCount || 0 }}
-            </td>
-
-            <td>
-              {{ fundList[0].allocationWomenCount || 0 }}
-            </td>
-
-            <td>
-              ₹ {{ fundList[0].allocationGroupAmount || 0 | number:'1.2-2' }}
-            </td>
-
-            <td>
-              ₹ {{ fundList[0].allocationWomenAmount || 0 | number:'1.2-2' }}
-            </td>
-
-          </tr>
-
-
-          <!-- Repayment -->
-
-          <tr>
-
-            <td>
-              <strong>Repayment Received</strong>
-            </td>
-
-            <td>
-              {{ fundList[0].repaymentGroupCount || 0 }}
-            </td>
-
-            <td>
-              {{ fundList[0].repaymentWomenCount || 0 }}
-            </td>
-
-            <td>
-              ₹ {{ fundList[0].repaymentGroupAmount || 0 | number:'1.2-2' }}
-            </td>
-
-            <td>
-              ₹ {{ fundList[0].repaymentWomenAmount || 0 | number:'1.2-2' }}
-            </td>
-
-          </tr>
-
-
-          <!-- Loan Distributed -->
-
-          <tr>
-
-            <td>
-              <strong>Loan Distributed</strong>
-            </td>
-
-            <td>
-              {{ fundList[0].loanGroupCount || 0 }}
-            </td>
-
-            <td>
-              {{ fundList[0].loanWomenCount || 0 }}
-            </td>
-
-            <td>
-              ₹ {{ fundList[0].loanGroupAmount || 0 | number:'1.2-2' }}
-            </td>
-
-            <td>
-              ₹ {{ fundList[0].loanWomenAmount || 0 | number:'1.2-2' }}
-            </td>
-
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-  </div>
+    </section>
+  </ng-container>
 
 </div>

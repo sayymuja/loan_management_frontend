@@ -31,6 +31,8 @@ import { GroupComponent } from './group/group.component';
 import { AiChatComponent } from './ai-chat/ai-chat.component';
 import { UserManagementComponent } from './super-admin/user-management/user-management.component';
 import { ApprovalRequestsComponent } from './approval-requests/approval-requests.component';
+import { GroupMembersComponent } from './group-members/group-members.component';
+import { LoanRepaymentComponent } from './loan-repayment/loan-repayment.component';
 
 @NgModule({
   declarations: [
@@ -55,7 +57,9 @@ import { ApprovalRequestsComponent } from './approval-requests/approval-requests
     GroupComponent,
     AiChatComponent,
     UserManagementComponent,
-    ApprovalRequestsComponent
+    ApprovalRequestsComponent,
+    GroupMembersComponent,
+    LoanRepaymentComponent
 
   ],
   imports: [
