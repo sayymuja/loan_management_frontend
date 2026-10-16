@@ -4,6 +4,10 @@
   color: #1f2937;
 }
 
+/* ==========================================
+   PAGE HEADER
+   ========================================== */
+
 .audit-page {
   padding: 24px;
   background: #f5f7fb;
@@ -53,6 +57,10 @@
   flex-wrap: wrap;
 }
 
+/* ==========================================
+   FILTER SECTION
+   ========================================== */
+
 .filter-card,
 .table-card {
   background: #fff;
@@ -84,6 +92,10 @@
   gap: 16px;
 }
 
+.filter-field {
+  min-width: 0;
+}
+
 .filter-field label {
   display: block;
   color: #475569;
@@ -92,12 +104,25 @@
   margin-bottom: 7px;
 }
 
-.filter-field .form-select {
+.filter-field .form-select,
+.filter-field .form-control {
+  width: 100%;
   min-height: 42px;
   border-color: #dce3ed;
   border-radius: 8px;
   font-size: 13px;
+  color: #334155;
 }
+
+.filter-field .form-select:focus,
+.filter-field .form-control:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* ==========================================
+   SUMMARY CARDS
+   ========================================== */
 
 .summary-grid {
   display: grid;
@@ -162,6 +187,10 @@
   margin-bottom: 8px;
 }
 
+/* ==========================================
+   REPORT METADATA
+   ========================================== */
+
 .report-meta {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -205,6 +234,10 @@
   color: #92400e;
 }
 
+/* ==========================================
+   TABLE SECTIONS
+   ========================================== */
+
 .table-card {
   overflow: hidden;
 }
@@ -225,6 +258,8 @@
 
 .table-responsive {
   width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .audit-table {
@@ -299,6 +334,10 @@
   margin: 4px 0;
 }
 
+/* ==========================================
+   AUDIT NOTE
+   ========================================== */
+
 .audit-note {
   display: flex;
   gap: 12px;
@@ -313,6 +352,7 @@
 
 .audit-note > i {
   font-size: 20px;
+  flex-shrink: 0;
 }
 
 .audit-note strong {
@@ -325,6 +365,10 @@
   font-size: 12px;
   line-height: 1.7;
 }
+
+/* ==========================================
+   LOADING
+   ========================================== */
 
 .loading-panel {
   background: #fff;
@@ -340,6 +384,368 @@
   font-size: 13px;
 }
 
+/* ==========================================
+   DETAILED AUDIT HIERARCHY
+   Organization -> Group -> Woman -> Loan -> EMI
+   ========================================== */
+
+.hierarchy-card {
+  overflow: hidden;
+}
+
+.hierarchy-list {
+  padding: 0 20px 20px;
+}
+
+/* Organization / VO-ALF */
+
+.hierarchy-organization {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #2563eb;
+  border-radius: 10px;
+}
+
+.hierarchy-organization > div:first-child {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.hierarchy-organization > div:first-child > strong {
+  color: #172554;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.hierarchy-finance {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 120px;
+}
+
+.hierarchy-finance > span,
+.group-summary-grid span,
+.loan-metrics span {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.hierarchy-finance > strong {
+  color: #172554;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+/* Group */
+
+.group-details {
+  margin: 10px 0;
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.group-details > summary,
+.woman-details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.group-details > summary::-webkit-details-marker,
+.woman-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.group-details > summary::after,
+.woman-details > summary::after {
+  content: "+";
+  color: #64748b;
+  font-size: 19px;
+  font-weight: 700;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.group-details[open] > summary::after,
+.woman-details[open] > summary::after {
+  content: "\2212";
+}
+
+.group-details > summary {
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.group-details > summary > span:first-child,
+.woman-details > summary > span:first-child {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  min-width: 0;
+}
+
+.group-details > summary > span:first-child > i {
+  font-size: 17px;
+}
+
+.summary-amount {
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.hierarchy-content {
+  padding: 14px;
+}
+
+/* Group financial summary */
+
+.group-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.group-summary-grid > div,
+.loan-metrics > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #edf0f5;
+  border-radius: 8px;
+}
+
+.group-summary-grid strong,
+.loan-metrics strong {
+  color: #172554;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+/* Woman */
+
+.woman-details {
+  margin: 10px 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.woman-details > summary {
+  background: #fff;
+}
+
+.woman-details > summary > span:first-child > i {
+  color: #2563eb;
+  font-size: 16px;
+}
+
+.woman-information {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  padding: 12px 15px;
+  background: #f8fafc;
+  border-top: 1px solid #edf0f5;
+  color: #475569;
+  font-size: 12px;
+}
+
+.woman-information > span {
+  overflow-wrap: anywhere;
+}
+
+/* Loan */
+
+.loan-details {
+  margin: 12px;
+  padding: 15px;
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.loan-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.loan-heading > div > strong {
+  color: #172554;
+  font-size: 14px;
+}
+
+.loan-heading > div > p {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.loan-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* EMI / installments */
+
+.emi-table-wrapper {
+  width: 100%;
+  border: 1px solid #edf0f5;
+  border-radius: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.emi-table {
+  min-width: 1050px;
+  margin: 0;
+}
+
+.emi-table thead th {
+  font-size: 10px;
+  padding: 11px 10px;
+  background: #f8fafc;
+  white-space: nowrap;
+}
+
+.emi-table tbody td {
+  font-size: 11px;
+  padding: 11px 10px;
+  white-space: nowrap;
+}
+
+/* Status labels used by the detail tables */
+
+.payment-status,
+.approval-status {
+  display: inline-block;
+  max-width: 100%;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 750;
+  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+
+.status-paid,
+.status-approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-partial {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-unpaid,
+.status-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ==========================================
+   FUND TRANSACTION HISTORY
+   ========================================== */
+
+.transaction-type {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.transaction-receipt {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.transaction-payment {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.transaction-reference {
+  color: #64748b;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.transaction-remark {
+  min-width: 140px;
+  max-width: 260px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.table-card .audit-table td {
+  overflow-wrap: anywhere;
+}
+
+/* Empty state inside detailed hierarchy */
+
+.hierarchy-list .empty-state {
+  background: #fafcff;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+/* ==========================================
+   TABLE ACTIONS / BUTTONS
+   ========================================== */
+
+.header-actions .btn {
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 650;
+  padding: 9px 14px;
+}
+
+.header-actions .btn:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.25);
+  outline-offset: 2px;
+}
+
+/* ==========================================
+   RESPONSIVE: TABLET
+   ========================================== */
+
 @media (max-width: 1100px) {
   .filter-grid,
   .summary-grid,
@@ -348,13 +754,50 @@
   }
 }
 
+@media (max-width: 900px) {
+  .group-summary-grid,
+  .loan-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hierarchy-organization {
+    align-items: flex-start;
+  }
+
+  .hierarchy-finance {
+    flex: 1 1 140px;
+  }
+
+  .audit-table {
+    min-width: 760px;
+  }
+
+  .emi-table {
+    min-width: 1050px;
+  }
+}
+
+/* ==========================================
+   RESPONSIVE: MOBILE
+   ========================================== */
+
 @media (max-width: 650px) {
   .audit-page {
     padding: 12px;
   }
 
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
   .page-header h2 {
     font-size: 21px;
+  }
+
+  .page-header p {
+    line-height: 1.6;
   }
 
   .filter-card {
@@ -372,6 +815,14 @@
     grid-template-columns: 1fr;
   }
 
+  .summary-card {
+    padding: 16px;
+  }
+
+  .secondary-grid .summary-card {
+    padding: 15px 16px;
+  }
+
   .header-actions {
     width: 100%;
   }
@@ -383,15 +834,100 @@
   .table-heading {
     padding: 16px;
   }
+
+  .record-count {
+    font-size: 10px;
+  }
+
+  .report-meta {
+    padding: 15px;
+  }
+
+  .audit-note {
+    padding: 14px;
+  }
+
+  .hierarchy-list {
+    padding: 0 10px 12px;
+  }
+
+  .hierarchy-organization {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .hierarchy-finance {
+    flex: 1 1 100%;
+  }
+
+  .hierarchy-content {
+    padding: 8px;
+  }
+
+  .group-details > summary,
+  .woman-details > summary {
+    padding: 12px;
+    flex-wrap: wrap;
+  }
+
+  .summary-amount {
+    text-align: left;
+    flex: 1 1 100%;
+  }
+
+  .group-summary-grid,
+  .loan-metrics {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .group-summary-grid > div,
+  .loan-metrics > div {
+    padding: 10px;
+  }
+
+  .loan-details {
+    margin: 8px 0;
+    padding: 10px;
+  }
+
+  .loan-heading {
+    flex-direction: column;
+  }
+
+  .woman-information {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .emi-table {
+    min-width: 1050px;
+  }
+}
+
+/* ==========================================
+   PRINT / SAVE AS PDF
+   ========================================== */
+
+@page {
+  size: landscape;
+  margin: 12mm;
 }
 
 @media print {
+  :host {
+    color: #111827;
+  }
+
   body {
     background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .audit-page {
     padding: 0;
+    min-height: auto;
     background: #fff;
   }
 
@@ -407,24 +943,56 @@
     margin-bottom: 12px;
   }
 
-  .summary-card,
-  .table-card,
-  .report-meta {
+  .page-header h2 {
+    font-size: 20px;
+  }
+
+  .summary-grid {
+    gap: 8px;
+  }
+
+  .summary-card {
+    padding: 10px;
     box-shadow: none;
     break-inside: avoid;
   }
 
-  .table-card {
-    overflow: visible;
+  .summary-card strong {
+    font-size: 14px;
+  }
+
+  .table-card,
+  .report-meta {
+    box-shadow: none;
     break-inside: auto;
   }
 
-  .table-responsive {
+  .table-card {
     overflow: visible;
   }
 
+  .table-responsive,
+  .emi-table-wrapper {
+    overflow: visible !important;
+  }
+
   .audit-table {
-    font-size: 9px;
+    width: 100%;
+    min-width: 0 !important;
+    font-size: 8px;
+  }
+
+  .audit-table thead th {
+    font-size: 8px;
+    padding: 6px 5px;
+    white-space: normal;
+  }
+
+  .audit-table tbody td,
+  .audit-table tfoot th {
+    font-size: 8px;
+    padding: 6px 5px;
+    overflow-wrap: anywhere;
   }
 
   .audit-table thead {
@@ -437,5 +1005,77 @@
 
   .audit-note {
     break-inside: avoid;
+  }
+
+  .hierarchy-list {
+    padding: 0;
+  }
+
+  .hierarchy-organization,
+  .group-details,
+  .woman-details,
+  .loan-details {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+
+  .hierarchy-organization {
+    padding: 10px;
+  }
+
+  .group-details > summary,
+  .woman-details > summary {
+    padding: 8px;
+  }
+
+  .group-details > summary::after,
+  .woman-details > summary::after {
+    display: none;
+  }
+
+  /*
+   * Print the hierarchy's nested content even when
+   * its details section is collapsed on screen.
+   */
+  .group-details:not([open]) > .hierarchy-content,
+  .woman-details:not([open]) > .woman-information,
+  .woman-details:not([open]) > .loan-details {
+    display: block !important;
+  }
+
+  .hierarchy-content {
+    padding: 8px;
+  }
+
+  .group-summary-grid,
+  .loan-metrics {
+    gap: 5px;
+  }
+
+  .group-summary-grid > div,
+  .loan-metrics > div {
+    padding: 6px;
+  }
+
+  .emi-table {
+    width: 100%;
+    min-width: 0 !important;
+    font-size: 7px;
+  }
+
+  .emi-table thead th,
+  .emi-table tbody td {
+    font-size: 7px;
+    padding: 4px 3px;
+    white-space: normal;
+  }
+
+  .transaction-remark {
+    min-width: 0;
+    max-width: none;
+  }
+
+  .audit-note p {
+    font-size: 10px;
   }
 }

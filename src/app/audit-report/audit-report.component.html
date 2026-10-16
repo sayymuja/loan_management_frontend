@@ -25,6 +25,7 @@
         <h5>Report Filters</h5>
         <p>Choose the reporting period and organization.</p>
       </div>
+
       <button type="button" class="btn btn-primary"
               (click)="loadReport()" [disabled]="loading">
         <i class="bi bi-arrow-clockwise"></i>
@@ -90,19 +91,23 @@
   </div>
 
   <ng-container *ngIf="!loading && report as data">
+
     <section class="report-meta">
       <div>
         <span class="meta-label">Reporting Period</span>
         <strong>{{ data.periodLabel }}</strong>
       </div>
+
       <div>
         <span class="meta-label">Report Generated</span>
         <strong>{{ data.generatedAt | date:'dd MMM yyyy, hh:mm a' }}</strong>
       </div>
+
       <div>
         <span class="meta-label">Organizations</span>
         <strong>{{ reportLines.length }} VO / ALF records</strong>
       </div>
+
       <div>
         <span class="meta-label">Reconciliation</span>
         <span class="status-pill"
@@ -117,6 +122,7 @@
       {{ data.message }}
     </div>
 
+    <!-- Financial Summary -->
     <section class="summary-grid">
       <article class="summary-card opening">
         <span>Opening Balance</span>
@@ -148,20 +154,24 @@
         <span>Loan Disbursement</span>
         <strong>{{ formatCurrency(totalDisbursement) }}</strong>
       </article>
+
       <article class="summary-card">
         <span>Principal Recovered</span>
         <strong>{{ formatCurrency(totalPrincipalRecovered) }}</strong>
       </article>
+
       <article class="summary-card">
         <span>Interest Received</span>
         <strong>{{ formatCurrency(totalInterest) }}</strong>
       </article>
+
       <article class="summary-card">
         <span>Penalty Received</span>
         <strong>{{ formatCurrency(totalPenalty) }}</strong>
       </article>
     </section>
 
+    <!-- Financial Statement -->
     <section class="table-card">
       <div class="table-heading">
         <div>
@@ -187,6 +197,7 @@
               <th>Audit Status</th>
             </tr>
           </thead>
+
           <tbody>
             <tr *ngFor="let line of reportLines; let i = index">
               <td>{{ i + 1 }}</td>
@@ -213,6 +224,7 @@
               </td>
             </tr>
           </tbody>
+
           <tfoot *ngIf="reportLines.length">
             <tr>
               <th colspan="5">TOTAL</th>
@@ -227,6 +239,7 @@
       </div>
     </section>
 
+    <!-- Recovery Summary -->
     <section class="table-card">
       <div class="table-heading">
         <div>
@@ -248,6 +261,7 @@
               <th class="text-end">Penalty Received</th>
             </tr>
           </thead>
+
           <tbody>
             <tr *ngFor="let line of reportLines">
               <td>{{ line.cmrcName }}</td>
@@ -258,6 +272,7 @@
               <td class="text-end">{{ formatCurrency(line.interestReceived) }}</td>
               <td class="text-end">{{ formatCurrency(line.penaltyReceived) }}</td>
             </tr>
+
             <tr *ngIf="!reportLines.length">
               <td colspan="7" class="empty-state">No records available.</td>
             </tr>
@@ -266,6 +281,223 @@
       </div>
     </section>
 
+    <!-- Detailed hierarchy -->
+    <section class="table-card hierarchy-card">
+      <div class="table-heading">
+        <div>
+          <h5>Detailed Audit Hierarchy</h5>
+          <p>Expand each group to inspect women, loans and EMI schedules.</p>
+        </div>
+      </div>
+
+      <div *ngIf="reportLines.length; else noHierarchy" class="hierarchy-list">
+
+        <ng-container *ngFor="let line of reportLines">
+
+          <div class="hierarchy-organization">
+            <div>
+              <strong>{{ line.voAlfName }}</strong>
+              <div class="sub-text">
+                {{ line.cmrcName }} · {{ line.villageName }}
+              </div>
+            </div>
+
+            <div class="hierarchy-finance">
+              <span>Disbursed</span>
+              <strong>{{ formatCurrency(line.loanDisbursement) }}</strong>
+            </div>
+
+            <div class="hierarchy-finance">
+              <span>Principal Recovered</span>
+              <strong>{{ formatCurrency(line.principalRecovered) }}</strong>
+            </div>
+          </div>
+
+          <div *ngIf="!line.groups?.length" class="empty-state">
+            No group or loan details returned for this VO / ALF.
+          </div>
+
+          <details class="group-details"
+                   *ngFor="let group of line.groups">
+            <summary>
+              <span>
+                <i class="bi bi-people"></i>
+                <strong>{{ group.groupName || 'Unnamed Group' }}</strong>
+                <small>{{ group.villageName || line.villageName }}</small>
+              </span>
+
+              <span class="summary-amount">
+                Outstanding:
+                {{ formatCurrency(group.totalOutstanding) }}
+              </span>
+            </summary>
+
+            <div class="hierarchy-content">
+
+              <div class="group-summary-grid">
+                <div>
+                  <span>Loan Disbursement</span>
+                  <strong>{{ formatCurrency(group.totalLoanDisbursement) }}</strong>
+                </div>
+                <div>
+                  <span>Principal Recovered</span>
+                  <strong>{{ formatCurrency(group.totalPrincipalRecovered) }}</strong>
+                </div>
+                <div>
+                  <span>Interest</span>
+                  <strong>{{ formatCurrency(group.totalInterestReceived) }}</strong>
+                </div>
+                <div>
+                  <span>Penalty</span>
+                  <strong>{{ formatCurrency(group.totalPenaltyReceived) }}</strong>
+                </div>
+              </div>
+
+              <div *ngIf="!group.women?.length" class="empty-state">
+                No women or loans found in this group.
+              </div>
+
+              <details class="woman-details"
+                       *ngFor="let woman of group.women">
+                <summary>
+                  <span>
+                    <i class="bi bi-person"></i>
+                    <strong>{{ woman.womanName || 'Unnamed Woman' }}</strong>
+                    <small>ID: {{ woman.womanId || '—' }}</small>
+                  </span>
+
+                  <span class="summary-amount">
+                    {{ formatCurrency(woman.totalOutstanding) }} outstanding
+                  </span>
+                </summary>
+
+                <div class="woman-information">
+                  <span>Husband: {{ woman.husbandName || '—' }}</span>
+                  <span>Mobile: {{ woman.mobileNo || '—' }}</span>
+                  <span>Status: {{ woman.status || '—' }}</span>
+                  <span>Loan Amount: {{ formatCurrency(woman.totalLoanAmount) }}</span>
+                </div>
+
+                <div *ngIf="!woman.loans?.length" class="empty-state">
+                  No loan records found.
+                </div>
+
+                <div class="loan-details"
+                     *ngFor="let loan of woman.loans">
+
+                  <div class="loan-heading">
+                    <div>
+                      <strong>Loan #{{ loan.loanId }}</strong>
+                      <div class="sub-text">
+                        {{ loan.loanPurpose || 'Purpose not specified' }}
+                        · {{ loan.loanGivenDate || 'Date unavailable' }}
+                      </div>
+                    </div>
+
+                    <span class="status-pill"
+                          [class.status-ok]="loan.loanStatus === 'CLOSED'"
+                          [class.status-warning]="loan.loanStatus !== 'CLOSED'">
+                      {{ loan.loanStatus || 'Unknown' }}
+                    </span>
+                  </div>
+
+                  <div class="loan-metrics">
+                    <div>
+                      <span>Sanctioned</span>
+                      <strong>{{ formatCurrency(loan.sanctionedAmount) }}</strong>
+                    </div>
+                    <div>
+                      <span>Disbursed</span>
+                      <strong>{{ formatCurrency(loan.disbursedAmount) }}</strong>
+                    </div>
+                    <div>
+                      <span>Scheduled</span>
+                      <strong>{{ formatCurrency(loan.scheduledAmount) }}</strong>
+                    </div>
+                    <div>
+                      <span>Total Paid</span>
+                      <strong>{{ formatCurrency(loan.totalPaid) }}</strong>
+                    </div>
+                    <div>
+                      <span>Principal Recovered</span>
+                      <strong>{{ formatCurrency(loan.principalRecovered) }}</strong>
+                    </div>
+                    <div>
+                      <span>Interest</span>
+                      <strong>{{ formatCurrency(loan.interestReceived) }}</strong>
+                    </div>
+                    <div>
+                      <span>Penalty</span>
+                      <strong>{{ formatCurrency(loan.penaltyReceived) }}</strong>
+                    </div>
+                    <div>
+                      <span>Outstanding</span>
+                      <strong>{{ formatCurrency(loan.outstandingAmount) }}</strong>
+                    </div>
+                  </div>
+
+                  <div class="table-responsive emi-table-wrapper">
+                    <table class="table audit-table emi-table">
+                      <thead>
+                        <tr>
+                          <th>EMI No.</th>
+                          <th>Due Date</th>
+                          <th>Paid Date</th>
+                          <th class="text-end">Scheduled</th>
+                          <th class="text-end">Paid</th>
+                          <th class="text-end">Remaining</th>
+                          <th class="text-end">Principal</th>
+                          <th class="text-end">Interest</th>
+                          <th class="text-end">Penalty</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        <tr *ngFor="let emi of loan.installments">
+                          <td>{{ emi.installmentNo ?? '—' }}</td>
+                          <td>{{ emi.installmentDate || '—' }}</td>
+                          <td>{{ emi.repaymentDate || '—' }}</td>
+                          <td class="text-end">{{ formatCurrency(emi.scheduledAmount) }}</td>
+                          <td class="text-end">{{ formatCurrency(emi.paidAmount) }}</td>
+                          <td class="text-end">{{ formatCurrency(emi.remainingAmount) }}</td>
+                          <td class="text-end">{{ formatCurrency(emi.principalAmount) }}</td>
+                          <td class="text-end">{{ formatCurrency(emi.interestAmount) }}</td>
+                          <td class="text-end">{{ formatCurrency(emi.penaltyAmount) }}</td>
+                          <td>
+                            <span class="status-pill"
+                                  [class.status-ok]="emi.paymentStatus === 'PAID'"
+                                  [class.status-warning]="emi.paymentStatus !== 'PAID'">
+                              {{ emi.paymentStatus || 'Unknown' }}
+                            </span>
+                          </td>
+                        </tr>
+
+                        <tr *ngIf="!loan.installments?.length">
+                          <td colspan="10" class="empty-state">
+                            No installment records found.
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                </div>
+              </details>
+            </div>
+          </details>
+
+        </ng-container>
+      </div>
+
+      <ng-template #noHierarchy>
+        <div class="empty-state">
+          No hierarchy records found for the selected filters.
+        </div>
+      </ng-template>
+    </section>
+
+    <!-- Balance verification -->
     <section class="table-card">
       <div class="table-heading">
         <div>
@@ -285,26 +517,97 @@
               <th>Exceptions</th>
             </tr>
           </thead>
+
           <tbody>
             <tr *ngFor="let line of reportLines">
               <td>
                 <strong>{{ line.voAlfName }}</strong>
-                <div class="sub-text">{{ line.cmrcName }} · {{ line.villageName }}</div>
+                <div class="sub-text">
+                  {{ line.cmrcName }} · {{ line.villageName }}
+                </div>
               </td>
-              <td class="text-end">{{ formatCurrency(line.currentVoAlfBalance) }}</td>
-              <td class="text-end">{{ formatCurrency(line.fundAccountBalance) }}</td>
-              <td class="text-end">{{ line.pendingApprovals || 0 }}</td>
+
+              <td class="text-end">
+                {{ formatCurrency(line.currentVoAlfBalance) }}
+              </td>
+
+              <td class="text-end">
+                {{ formatCurrency(line.fundAccountBalance) }}
+              </td>
+
+              <td class="text-end">
+                {{ line.pendingApprovals || 0 }}
+              </td>
+
               <td>
                 <ul class="exception-list" *ngIf="line.exceptions?.length">
-                  <li *ngFor="let exception of line.exceptions">{{ exception }}</li>
+                  <li *ngFor="let exception of line.exceptions">
+                    {{ exception }}
+                  </li>
                 </ul>
+
                 <span class="text-success" *ngIf="!line.exceptions?.length">
                   No reported exceptions
                 </span>
               </td>
             </tr>
+
             <tr *ngIf="!reportLines.length">
               <td colspan="5" class="empty-state">No records available.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Period transaction history -->
+    <section class="table-card">
+      <div class="table-heading">
+        <div>
+          <h5>Fund Transaction History</h5>
+          <p>Transactions returned by the backend for the selected period.</p>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table audit-table">
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>VO / ALF</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Category</th>
+              <th class="text-end">Amount</th>
+              <th>Reference</th>
+              <th>Approval</th>
+              <th>Remark</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <ng-container *ngFor="let line of reportLines">
+              <tr *ngFor="let tx of line.transactions">
+                <td>{{ tx.transactionId ?? '—' }}</td>
+                <td>{{ line.voAlfName }}</td>
+                <td>{{ tx.transactionDate || '—' }}</td>
+                <td>{{ tx.transactionType || '—' }}</td>
+                <td>{{ tx.category || '—' }}</td>
+                <td class="text-end">{{ formatCurrency(tx.amount) }}</td>
+                <td>
+                  {{ tx.referenceType || '—' }}
+                  {{ tx.referenceId ? '#' + tx.referenceId : '' }}
+                </td>
+                <td>{{ tx.approvalStatus || '—' }}</td>
+                <td>{{ tx.remark || '—' }}</td>
+              </tr>
+            </ng-container>
+
+            <tr *ngIf="!reportLines.length ||
+                       !reportLines.some">
+              <td colspan="9" class="empty-state">
+                No transactions found.
+              </td>
             </tr>
           </tbody>
         </table>
@@ -323,5 +626,6 @@
         </p>
       </div>
     </section>
+
   </ng-container>
 </div>
