@@ -33,6 +33,7 @@ import { UserManagementComponent } from './super-admin/user-management/user-mana
 import { ApprovalRequestsComponent } from './approval-requests/approval-requests.component';
 import { GroupMembersComponent } from './group-members/group-members.component';
 import { LoanRepaymentComponent } from './loan-repayment/loan-repayment.component';
+import { AuditReportComponent } from './audit-report/audit-report.component';
 
 @NgModule({
   declarations: [
@@ -59,7 +60,8 @@ import { LoanRepaymentComponent } from './loan-repayment/loan-repayment.componen
     UserManagementComponent,
     ApprovalRequestsComponent,
     GroupMembersComponent,
-    LoanRepaymentComponent
+    LoanRepaymentComponent,
+    AuditReportComponent
 
   ],
   imports: [

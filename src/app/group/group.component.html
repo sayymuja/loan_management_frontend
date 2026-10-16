@@ -1,634 +1,552 @@
 <div class="group-page">
 
-  <!-- =====================================================
-       PAGE HEADER
-  ====================================================== -->
-  <div
-    class="page-header d-flex justify-content-between align-items-center mb-4">
-
-    <div>
-      <h4>Group Management</h4>
-
-      <p class="text-muted mb-0">
+  <!-- PAGE HEADER -->
+  <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="page-heading">
+      <h2 class="page-title">Group Management</h2>
+      <p class="page-subtitle mb-0">
         Manage groups under CMRC → VO / ALF → Village
       </p>
     </div>
 
-    <!-- ADD GROUP -->
-    <button
-      type="button"
-      class="btn btn-primary"
-      [disabled]="selectedVoAlfId == null"
-      (click)="openAddForm()">
-
-      <i class="bi bi-plus-lg me-1"></i>
-      Add Group
-
-    </button>
-
-  </div>
-
-
-  <!-- =====================================================
-       TOTAL GROUP
-  ====================================================== -->
-  <div class="row g-3 mb-4">
-
-    <div class="col-xl-3 col-md-6">
-
-      <div class="summary-card">
-
-        <div class="summary-icon blue">
-          <i class="bi bi-diagram-2-fill"></i>
-        </div>
-
-        <div>
-          <span>Total Groups</span>
-
-          <h3>
-            {{ totalGroups }}
-          </h3>
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =====================================================
-       FILTER
-       CMRC → VO / ALF
-  ====================================================== -->
-  <div class="card filter-card mb-4">
-
-    <div class="card-body">
-
-      <div class="row g-3 align-items-end">
-
-        <!-- =================================================
-             CMRC
-        ================================================== -->
-        <div class="col-md-4">
-
-          <label class="form-label fw-semibold">
-            CMRC
-          </label>
-
-          <select
-            class="form-select"
-            [(ngModel)]="selectedCmrcId"
-            (change)="onCmrcChange()">
-
-            <option [ngValue]="null">
-              -- Select CMRC --
-            </option>
-
-            <option
-              *ngFor="let cmrc of cmrcList"
-              [ngValue]="cmrc.id">
-
-              {{ cmrc.cmrcName }}
-
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <!-- =================================================
-             VO / ALF
-        ================================================== -->
-        <div class="col-md-4">
-
-          <label class="form-label fw-semibold">
-            VO / ALF
-          </label>
-
-          <select
-            class="form-select"
-            [(ngModel)]="selectedVoAlfId"
-            [disabled]="selectedCmrcId == null"
-            (change)="onVoAlfChange()">
-
-            <option [ngValue]="null">
-              -- Select VO / ALF --
-            </option>
-
-            <option
-              *ngFor="let voAlf of voAlfList"
-              [ngValue]="voAlf.id">
-
-              {{ voAlf.voAlfName }}
-
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <!-- =================================================
-             VILLAGE AUTOMATIC
-        ================================================== -->
-        <div class="col-md-4">
-
-          <label class="form-label fw-semibold">
-            Village
-          </label>
-
-          <input
-            type="text"
-            class="form-control"
-            [value]="selectedVoAlfVillageName"
-            readonly>
-
-        </div>
-
-      </div>
-
-
-      <!-- =================================================
-           SELECTED HIERARCHY
-      ================================================== -->
-      <div
-        class="selected-hierarchy mt-4"
-        *ngIf="selectedCmrcId != null">
-
-        <!-- CMRC -->
-        <div class="hierarchy-item">
-
-          <i class="bi bi-building"></i>
-
-          <span>
-            <strong>CMRC:</strong>
-            {{ selectedCmrcName }}
-          </span>
-
-        </div>
-
-
-        <!-- ARROW -->
-        <div
-          class="hierarchy-arrow"
-          *ngIf="selectedVoAlfId != null">
-
-          <i class="bi bi-chevron-right"></i>
-
-        </div>
-
-
-        <!-- VO / ALF -->
-        <div
-          class="hierarchy-item"
-          *ngIf="selectedVoAlfId != null">
-
-          <i class="bi bi-people-fill"></i>
-
-          <span>
-            <strong>VO / ALF:</strong>
-            {{ selectedVoAlfName }}
-          </span>
-
-        </div>
-
-
-        <!-- ARROW -->
-        <div
-          class="hierarchy-arrow"
-          *ngIf="selectedVoAlfId != null">
-
-          <i class="bi bi-chevron-right"></i>
-
-        </div>
-
-
-        <!-- VILLAGE -->
-        <div
-          class="hierarchy-item"
-          *ngIf="selectedVoAlfId != null">
-
-          <i class="bi bi-geo-alt-fill"></i>
-
-          <span>
-            <strong>Village:</strong>
-            {{ selectedVoAlfVillageName }}
-          </span>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =====================================================
-       ADD / EDIT GROUP
-  ====================================================== -->
-  <div
-    class="card form-card mb-4"
-    *ngIf="showForm">
-
-    <!-- HEADER -->
-    <div
-      class="card-header d-flex justify-content-between align-items-center">
-
-      <div>
-
-        <h5 class="mb-1">
-
-          {{
-            isEditMode
-              ? 'Edit Group'
-              : 'Add Group'
-          }}
-
-        </h5>
-
-        <small class="text-muted">
-
-          {{
-            isEditMode
-              ? 'Update group information'
-              : 'Create new group'
-          }}
-
-        </small>
-
-      </div>
-
+    <!-- HEADER ACTIONS -->
+    <div class="header-actions d-flex align-items-center gap-2 flex-wrap">
       <button
         type="button"
-        class="btn-close"
-        aria-label="Close"
-        (click)="closeForm()">
+        class="btn btn-outline-primary"
+        (click)="loadGroups()"
+        [disabled]="isLoading">
+        <i class="bi bi-arrow-clockwise me-1"></i>
+        Refresh
       </button>
 
+      <!-- ADD GROUP: Always visible -->
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="openAddForm()">
+        <i class="bi bi-plus-lg me-1"></i>
+        Add Group
+      </button>
+    </div>
+  </div>
+
+  <!-- ALERT MESSAGES -->
+  <div
+    *ngIf="successMessage"
+    class="alert alert-success alert-dismissible fade show mt-3"
+    role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    {{ successMessage }}
+
+    <button
+      type="button"
+      class="btn-close"
+      aria-label="Close"
+      (click)="successMessage = ''">
+    </button>
+  </div>
+
+  <div
+    *ngIf="errorMessage"
+    class="alert alert-danger alert-dismissible fade show mt-3"
+    role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ errorMessage }}
+
+    <button
+      type="button"
+      class="btn-close"
+      aria-label="Close"
+      (click)="errorMessage = ''">
+    </button>
+  </div>
+
+  <!-- FILTER SECTION -->
+  <div class="filter-card section-card mt-4">
+    <div class="section-heading">
+      <div class="section-icon">
+        <i class="bi bi-funnel"></i>
+      </div>
+
+      <div>
+        <h5 class="section-title">Filters</h5>
+        <p class="section-subtitle mb-0">
+          Select the organization to view its groups
+        </p>
+      </div>
     </div>
 
+    <div class="row g-3 mt-1">
 
-    <!-- BODY -->
-    <div class="card-body">
+      <!-- CMRC FILTER -->
+      <div class="col-12 col-md-6 col-xl-3">
+        <label for="groupCmrcFilter" class="form-label">
+          CMRC
+        </label>
 
-      <div class="row g-3">
+        <select
+          id="groupCmrcFilter"
+          class="form-select"
+          [(ngModel)]="selectedCmrcId"
+          (ngModelChange)="onCmrcChange()">
 
-        <!-- =================================================
-             CMRC
-        ================================================== -->
-        <div class="col-md-4">
+          <option [ngValue]="null">Select CMRC</option>
 
-          <label class="form-label fw-semibold">
+          <option
+            *ngFor="let cmrc of cmrcList"
+            [ngValue]="cmrc.id">
+            {{ cmrc.cmrcName }}
+          </option>
+        </select>
+      </div>
+
+      <!-- VO / ALF FILTER -->
+      <div class="col-12 col-md-6 col-xl-3">
+        <label for="groupVoAlfFilter" class="form-label">
+          VO / ALF
+        </label>
+
+        <select
+          id="groupVoAlfFilter"
+          class="form-select"
+          [(ngModel)]="selectedVoAlfId"
+          (ngModelChange)="onVoAlfChange()"
+          [disabled]="!selectedCmrcId">
+
+          <option [ngValue]="null">Select VO / ALF</option>
+
+          <option
+            *ngFor="let voAlf of voAlfList"
+            [ngValue]="voAlf.id">
+            {{ voAlf.voAlfName }}
+          </option>
+        </select>
+      </div>
+
+      <!-- VILLAGE: AUTO POPULATED -->
+      <div class="col-12 col-md-6 col-xl-3">
+        <label for="groupVillageFilter" class="form-label">
+          Village
+        </label>
+
+        <input
+          id="groupVillageFilter"
+          type="text"
+          class="form-control"
+          [value]="selectedVoAlfVillageName || ''"
+          placeholder="Auto-filled from VO / ALF"
+          readonly>
+      </div>
+
+      <!-- CLEAR FILTERS -->
+      <div class="col-12 col-md-6 col-xl-3 d-flex align-items-end">
+        <button
+          type="button"
+          class="btn btn-outline-secondary w-100"
+          (click)="clearSearch(); onCmrcChange()">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>
+          Reset Filters
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div class="row g-3 mt-2">
+
+    <div class="col-12 col-sm-6 col-xl-4">
+      <div class="summary-card">
+        <div class="summary-icon total-icon">
+          <i class="bi bi-people-fill"></i>
+        </div>
+
+        <div class="summary-content">
+          <p class="summary-label">Total Groups</p>
+          <h3 class="summary-value">{{ totalGroups }}</h3>
+          <span class="summary-description">
+            Groups in the selected organization
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-4">
+      <div class="summary-card">
+        <div class="summary-icon village-icon">
+          <i class="bi bi-geo-alt-fill"></i>
+        </div>
+
+        <div class="summary-content">
+          <p class="summary-label">Selected Village</p>
+          <h3 class="summary-value summary-text">
+            {{ selectedVoAlfVillageName || 'Not selected' }}
+          </h3>
+          <span class="summary-description">
+            Village linked to the selected VO / ALF
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-4">
+      <div class="summary-card">
+        <div class="summary-icon organization-icon">
+          <i class="bi bi-diagram-3-fill"></i>
+        </div>
+
+        <div class="summary-content">
+          <p class="summary-label">Selected VO / ALF</p>
+          <h3 class="summary-value summary-text">
+            {{ selectedVoAlfName || 'Not selected' }}
+          </h3>
+          <span class="summary-description">
+            Parent organization for group records
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ADD / EDIT GROUP FORM -->
+  <div
+    class="section-card form-card mt-4"
+    *ngIf="showForm">
+
+    <div class="section-heading">
+      <div class="section-icon">
+        <i
+          class="bi"
+          [ngClass]="isEditMode ? 'bi-pencil-square' : 'bi-plus-circle'">
+        </i>
+      </div>
+
+      <div>
+        <h5 class="section-title">
+          {{ isEditMode ? 'Edit Group' : 'Add New Group' }}
+        </h5>
+
+        <p class="section-subtitle mb-0">
+          {{
+            isEditMode
+              ? 'Update the group information'
+              : 'Create a group under the selected VO / ALF'
+          }}
+        </p>
+      </div>
+    </div>
+
+    <form
+      #groupForm="ngForm"
+      (ngSubmit)="saveGroup()">
+
+      <div class="row g-3 mt-1">
+
+        <!-- CMRC NAME -->
+        <div class="col-12 col-md-6">
+          <label class="form-label">
             CMRC
           </label>
 
           <input
             type="text"
             class="form-control"
-            [value]="selectedCmrcName"
+            [value]="selectedCmrcName || ''"
+            placeholder="Select CMRC from filters"
             readonly>
-
         </div>
 
-
-        <!-- =================================================
-             VO / ALF
-        ================================================== -->
-        <div class="col-md-4">
-
-          <label class="form-label fw-semibold">
+        <!-- VO / ALF NAME -->
+        <div class="col-12 col-md-6">
+          <label class="form-label">
             VO / ALF
           </label>
 
           <input
             type="text"
             class="form-control"
-            [value]="selectedVoAlfName"
+            [value]="selectedVoAlfName || ''"
+            placeholder="Select VO / ALF from filters"
             readonly>
-
         </div>
 
-
-        <!-- =================================================
-             VILLAGE
-        ================================================== -->
-        <div class="col-md-4">
-
-          <label class="form-label fw-semibold">
+        <!-- VILLAGE -->
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="groupVillage">
             Village
           </label>
 
           <input
+            id="groupVillage"
             type="text"
             class="form-control"
-            [value]="selectedVoAlfVillageName"
+            [value]="selectedVoAlfVillageName || ''"
+            placeholder="Automatically populated"
             readonly>
-
         </div>
 
-
-        <!-- =================================================
-             GROUP NAME
-        ================================================== -->
-        <div class="col-md-6">
-
-          <label class="form-label fw-semibold">
-
-            Group Name
-
-            <span class="text-danger">
-              *
-            </span>
-
+        <!-- GROUP NAME -->
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="groupName">
+            Group Name <span class="text-danger">*</span>
           </label>
 
           <input
+            id="groupName"
             type="text"
             class="form-control"
-            placeholder="Enter group name"
+            name="groupName"
             [(ngModel)]="newGroup.groupName"
-            name="groupName">
+            #groupName="ngModel"
+            placeholder="Enter group name"
+            maxlength="100"
+            required
+            autocomplete="off">
 
+          <div
+            class="text-danger small mt-1"
+            *ngIf="groupName.invalid && (groupName.dirty || groupName.touched)">
+            Group name is required.
+          </div>
         </div>
 
       </div>
 
+      <!-- FORM ACTIONS -->
+      <div class="form-actions d-flex justify-content-end gap-2 flex-wrap mt-4">
 
-      <!-- =================================================
-           ACTION BUTTONS
-      ================================================== -->
-      <div class="d-flex justify-content-end gap-2 mt-4">
-
-        <!-- CANCEL -->
         <button
           type="button"
-          class="btn btn-light"
-          [disabled]="isSaving"
-          (click)="closeForm()">
-
-          <i class="bi bi-x-circle me-1"></i>
+          class="btn btn-outline-secondary"
+          (click)="cancelForm()"
+          [disabled]="isSaving">
+          <i class="bi bi-x-lg me-1"></i>
           Cancel
-
         </button>
 
-
-        <!-- SAVE / UPDATE -->
         <button
-          type="button"
+          type="submit"
           class="btn btn-primary"
-          [disabled]="isSaving"
-          (click)="saveGroup()">
+          [disabled]="groupForm.invalid || isSaving || !selectedVoAlfId">
 
           <span
             *ngIf="isSaving"
-            class="spinner-border spinner-border-sm me-1">
+            class="spinner-border spinner-border-sm me-2"
+            aria-hidden="true">
           </span>
 
           <i
             *ngIf="!isSaving"
             class="bi me-1"
-            [ngClass]="
-              isEditMode
-                ? 'bi-check-circle'
-                : 'bi-save'
-            ">
+            [ngClass]="isEditMode ? 'bi-check-lg' : 'bi-plus-lg'">
           </i>
 
-          {{
-            isSaving
-              ? 'Saving...'
-              : (
-                  isEditMode
-                    ? 'Update Group'
-                    : 'Save Group'
-                )
-          }}
-
+          {{ isSaving ? 'Saving...' : (isEditMode ? 'Update Group' : 'Save Group') }}
         </button>
 
       </div>
-
-    </div>
-
+    </form>
   </div>
 
+  <!-- GROUP DIRECTORY -->
+  <div class="section-card directory-card mt-4">
 
-  <!-- =====================================================
-       GROUP TABLE
-  ====================================================== -->
-  <div class="card table-card">
+    <div class="directory-header d-flex justify-content-between align-items-center flex-wrap gap-3">
 
-    <!-- TABLE HEADER -->
-    <div
-      class="card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div class="section-heading mb-0">
+        <div class="section-icon">
+          <i class="bi bi-list-ul"></i>
+        </div>
 
-      <div>
-
-        <h5 class="mb-1">
-          Group List
-        </h5>
-
-        <small class="text-muted">
-
-          {{
-            selectedVoAlfId != null
-              ? 'Groups under selected VO / ALF'
-              : selectedCmrcId != null
-                ? 'Groups under selected CMRC'
-                : 'All groups'
-          }}
-
-        </small>
-
+        <div>
+          <h5 class="section-title">Group Directory</h5>
+          <p class="section-subtitle mb-0">
+            Search and manage existing groups
+          </p>
+        </div>
       </div>
 
+      <!-- SEARCH -->
+      <div class="search-box">
+        <i class="bi bi-search"></i>
 
-      <!-- RECORD COUNT -->
-      <span class="record-count">
+        <input
+          type="text"
+          class="form-control"
+          name="groupSearch"
+          [(ngModel)]="searchText"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search groups..."
+          autocomplete="off">
 
-        {{ filteredGroupList.length }}
-
-        Records
-
-      </span>
+        <button
+          *ngIf="searchText"
+          type="button"
+          class="search-clear"
+          aria-label="Clear search"
+          (click)="clearSearch()">
+          <i class="bi bi-x-circle-fill"></i>
+        </button>
+      </div>
 
     </div>
 
+    <!-- LOADING -->
+    <div
+      *ngIf="isLoading"
+      class="loading-state">
+      <div
+        class="spinner-border text-primary"
+        role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
 
-    <!-- =====================================================
-         TABLE
-    ====================================================== -->
-    <div class="card-body p-0">
+      <p class="mb-0 mt-2">Loading groups...</p>
+    </div>
 
-      <div class="table-responsive">
+    <!-- TABLE -->
+    <div
+      class="table-responsive mt-3"
+      *ngIf="!isLoading">
 
-        <table
-          class="table table-hover table-bordered align-middle mb-0">
+      <table class="table group-table align-middle mb-0">
 
-          <!-- HEADER -->
-          <thead class="table-light">
+        <thead>
+          <tr>
+            <th scope="col">Sr. No.</th>
+            <th scope="col">Group Name</th>
+            <th scope="col">Village</th>
+            <th scope="col">VO / ALF</th>
+            <th scope="col">CMRC</th>
+            <th scope="col" class="text-center">Actions</th>
+          </tr>
+        </thead>
 
-            <tr>
+        <tbody>
 
-              <th style="width: 80px;">
-                Sr No
-              </th>
+          <tr *ngFor="let group of filteredGroupList; let i = index">
 
-              <th>
-                Group Name
-              </th>
-
-              <th>
-                Village
-              </th>
-
-              <th>
-                VO / ALF
-              </th>
-
-              <th>
-                CMRC
-              </th>
-
-              <th
-                class="text-center"
-                style="width: 190px;">
-
-                Actions
-
-              </th>
-
-            </tr>
-
-          </thead>
-
-
-          <!-- BODY -->
-          <tbody>
-
-            <!-- =================================================
-                 GROUP RECORDS
-            ================================================== -->
-            <tr
-              *ngFor="
-                let group of filteredGroupList;
-                let i = index
-              ">
-
-              <!-- SR NO -->
-              <td>
+            <td>
+              <span class="serial-number">
                 {{ i + 1 }}
-              </td>
+              </span>
+            </td>
 
-
-              <!-- GROUP -->
-              <td>
-
-                <strong>
-                  {{ group.groupName || '-' }}
-                </strong>
-
-              </td>
-
-
-              <!-- VILLAGE -->
-              <td>
-                {{ group.villageName || '-' }}
-              </td>
-
-
-              <!-- VO / ALF -->
-              <td>
-                {{ group.voAlfName || '-' }}
-              </td>
-
-
-              <!-- CMRC -->
-              <td>
-                {{ group.cmrcName || '-' }}
-              </td>
-
-
-              <!-- ACTIONS -->
-              <td class="text-center">
-
-                <div
-                  class="d-flex justify-content-center gap-2">
-
-                  <!-- EDIT -->
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-primary"
-                    title="Edit Group"
-                    (click)="openEditForm(group)">
-
-                    <i class="bi bi-pencil-square"></i>
-                    Edit
-
-                  </button>
-
-
-                  <!-- DELETE -->
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-danger"
-                    title="Delete Group"
-                    [disabled]="deletingId === group.id"
-                    (click)="deleteGroup(group.id!)">
-
-                    <span
-                      *ngIf="deletingId === group.id"
-                      class="spinner-border spinner-border-sm me-1">
-                    </span>
-
-                    <i
-                      *ngIf="deletingId !== group.id"
-                      class="bi bi-trash">
-                    </i>
-
-                    {{
-                      deletingId === group.id
-                        ? 'Deleting...'
-                        : 'Delete'
-                    }}
-
-                  </button>
-
+            <td>
+              <div class="group-name-cell">
+                <div class="group-row-icon">
+                  <i class="bi bi-people"></i>
                 </div>
 
-              </td>
+                <span class="fw-semibold">
+                  {{ group.groupName }}
+                </span>
+              </div>
+            </td>
 
-            </tr>
+            <td>
+              <span class="table-muted">
+                {{ group.villageName || '-' }}
+              </span>
+            </td>
 
+            <td>
+              <span class="table-muted">
+                {{ group.voAlfName || selectedVoAlfName || '-' }}
+              </span>
+            </td>
 
-            <!-- =================================================
-                 NO GROUPS
-            ================================================== -->
-            <tr
-              *ngIf="filteredGroupList.length === 0">
+            <td>
+              <span class="table-muted">
+                {{ group.cmrcName || selectedCmrcName || '-' }}
+              </span>
+            </td>
 
-              <td
-                colspan="6"
-                class="text-center py-5 text-muted">
+            <td>
+              <div class="table-actions justify-content-center">
 
-                <i
-                  class="bi bi-inbox fs-1 d-block mb-2">
-                </i>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-primary action-btn"
+                  title="Edit Group"
+                  aria-label="Edit Group"
+                  (click)="editGroup(group)">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
 
-                No groups found.
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger action-btn"
+                  title="Delete Group"
+                  aria-label="Delete Group"
+                  [disabled]="deletingId === group.id"
+                  (click)="deleteGroup(group.id!)">
 
-              </td>
+                  <span
+                    *ngIf="deletingId === group.id"
+                    class="spinner-border spinner-border-sm"
+                    aria-hidden="true">
+                  </span>
 
-            </tr>
+                  <i
+                    *ngIf="deletingId !== group.id"
+                    class="bi bi-trash3">
+                  </i>
+                </button>
 
-          </tbody>
+              </div>
+            </td>
 
-        </table>
+          </tr>
 
-      </div>
+          <!-- EMPTY STATE -->
+          <tr *ngIf="filteredGroupList.length === 0">
+            <td colspan="6">
+              <div class="empty-state">
+                <div class="empty-state-icon">
+                  <i class="bi bi-people"></i>
+                </div>
+
+                <h6>No Groups Found</h6>
+
+                <p class="mb-0">
+                  {{
+                    searchText
+                      ? 'Try changing your search keyword.'
+                      : 'Select a CMRC and VO / ALF, or add a new group.'
+                  }}
+                </p>
+
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm mt-3"
+                  (click)="openAddForm()">
+                  <i class="bi bi-plus-lg me-1"></i>
+                  Add Group
+                </button>
+              </div>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- DIRECTORY FOOTER -->
+    <div
+      class="directory-footer d-flex justify-content-between align-items-center flex-wrap gap-2"
+      *ngIf="!isLoading">
+
+      <span class="table-muted">
+        Showing {{ filteredGroupList.length }} of {{ totalGroups }} groups
+      </span>
+
+      <span class="table-muted small">
+        <i class="bi bi-info-circle me-1"></i>
+        Groups are managed under their selected VO / ALF.
+      </span>
 
     </div>
 

@@ -57,14 +57,12 @@ export class FundManagementComponent implements OnInit {
 
   readonly receiptCategories: FundCategory[] = [
     { value: 'FUND_RECEIVED', label: 'Fund Received from CMRC' },
-    { value: 'LOAN_REPAYMENT', label: 'Loan Repayment Received' },
     { value: 'INTEREST_RECEIVED', label: 'Interest Received' },
     { value: 'PENALTY_RECEIVED', label: 'Penalty Received' },
     { value: 'OTHER_INCOME', label: 'Other Receipt / Income' }
   ];
 
   readonly paymentCategories: FundCategory[] = [
-    { value: 'LOAN_DISBURSEMENT', label: 'Loan Disbursement' },
     { value: 'BANK_CHARGES', label: 'Bank Charges' },
     { value: 'SMS_CHARGES', label: 'SMS Charges' },
     { value: 'RECORD_FEES', label: 'Record Fees' },

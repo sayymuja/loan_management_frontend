@@ -25,6 +25,7 @@ import { UserManagementComponent } from './super-admin/user-management/user-mana
 import { ApprovalRequestsComponent } from './approval-requests/approval-requests.component';
 import { GroupMembersComponent } from './group-members/group-members.component';
 import { LoanRepaymentComponent } from './loan-repayment/loan-repayment.component';
+import { AuditReportComponent } from './audit-report/audit-report.component';
 
 const routes: Routes = [
 
@@ -101,6 +102,11 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+  path: 'audit-report',
+  component: AuditReportComponent,
+  canActivate: [AuthGuard]
+},
+  {
     path: 'village',
     component: VillageComponent,
     canActivate: [AuthGuard]
@@ -144,7 +150,8 @@ const routes: Routes = [
   {
     path: '**',
     redirectTo: '/login'
-  }
+  },
+ 
 
 ];
 

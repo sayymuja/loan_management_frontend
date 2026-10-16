@@ -1,0 +1,327 @@
+
+<div class="audit-page">
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">FINANCE &amp; COMPLIANCE</div>
+      <h2>Comprehensive Audit Report</h2>
+      <p>Review receipts, payments, loan recovery and fund reconciliation.</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn btn-outline-secondary"
+              (click)="printReport()" [disabled]="loading || !reportLines.length">
+        <i class="bi bi-printer"></i> Print / PDF
+      </button>
+      <button type="button" class="btn btn-success"
+              (click)="exportExcel()" [disabled]="loading || !reportLines.length">
+        <i class="bi bi-file-earmark-excel"></i> Export Excel
+      </button>
+    </div>
+  </div>
+
+  <section class="filter-card">
+    <div class="filter-heading">
+      <div>
+        <h5>Report Filters</h5>
+        <p>Choose the reporting period and organization.</p>
+      </div>
+      <button type="button" class="btn btn-primary"
+              (click)="loadReport()" [disabled]="loading">
+        <i class="bi bi-arrow-clockwise"></i>
+        {{ loading ? 'Loading...' : 'Generate Report' }}
+      </button>
+    </div>
+
+    <div class="filter-grid">
+      <div class="filter-field">
+        <label for="reportType">Report Type</label>
+        <select id="reportType" class="form-select"
+                [(ngModel)]="reportType"
+                (ngModelChange)="onReportTypeChange()">
+          <option value="MONTHLY">Monthly</option>
+          <option value="YEARLY">Yearly</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label for="financialYear">Financial Year</label>
+        <select id="financialYear" class="form-select"
+                [(ngModel)]="financialYear"
+                (ngModelChange)="onFinancialYearChange()">
+          <option *ngFor="let year of financialYears" [ngValue]="year">
+            {{ year }}-{{ (year + 1).toString().slice(-2) }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-field" *ngIf="reportType === 'MONTHLY'">
+        <label for="month">Month</label>
+        <select id="month" class="form-select"
+                [(ngModel)]="selectedMonth"
+                (ngModelChange)="onMonthChange()">
+          <option *ngFor="let month of months" [ngValue]="month.value">
+            {{ month.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label for="cmrc">CMRC</label>
+        <select id="cmrc" class="form-select"
+                [(ngModel)]="selectedCmrcId"
+                (ngModelChange)="onCmrcChange()">
+          <option value="ALL">All authorized CMRCs</option>
+          <option *ngFor="let cmrc of cmrcOptions" [value]="cmrc.id">
+            {{ cmrc.name }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <div class="alert alert-danger" *ngIf="errorMessage">
+    <i class="bi bi-exclamation-triangle"></i>
+    {{ errorMessage }}
+  </div>
+
+  <div class="loading-panel" *ngIf="loading">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p>Preparing audit report...</p>
+  </div>
+
+  <ng-container *ngIf="!loading && report as data">
+    <section class="report-meta">
+      <div>
+        <span class="meta-label">Reporting Period</span>
+        <strong>{{ data.periodLabel }}</strong>
+      </div>
+      <div>
+        <span class="meta-label">Report Generated</span>
+        <strong>{{ data.generatedAt | date:'dd MMM yyyy, hh:mm a' }}</strong>
+      </div>
+      <div>
+        <span class="meta-label">Organizations</span>
+        <strong>{{ reportLines.length }} VO / ALF records</strong>
+      </div>
+      <div>
+        <span class="meta-label">Reconciliation</span>
+        <span class="status-pill"
+              [class.status-ok]="data.isReconciled"
+              [class.status-warning]="!data.isReconciled">
+          {{ data.isReconciled ? 'Reconciled' : 'Review Required' }}
+        </span>
+      </div>
+    </section>
+
+    <div class="alert alert-warning" *ngIf="data.message">
+      {{ data.message }}
+    </div>
+
+    <section class="summary-grid">
+      <article class="summary-card opening">
+        <span>Opening Balance</span>
+        <strong>{{ formatCurrency(totalOpening) }}</strong>
+        <small>Balance at period start</small>
+      </article>
+
+      <article class="summary-card receipts">
+        <span>Total Receipts</span>
+        <strong>{{ formatCurrency(totalReceipts) }}</strong>
+        <small>Approved and posted receipts</small>
+      </article>
+
+      <article class="summary-card payments">
+        <span>Total Payments</span>
+        <strong>{{ formatCurrency(totalPayments) }}</strong>
+        <small>Approved and posted payments</small>
+      </article>
+
+      <article class="summary-card closing">
+        <span>Closing Balance</span>
+        <strong>{{ formatCurrency(totalClosing) }}</strong>
+        <small>Opening + receipts − payments</small>
+      </article>
+    </section>
+
+    <section class="summary-grid secondary-grid">
+      <article class="summary-card">
+        <span>Loan Disbursement</span>
+        <strong>{{ formatCurrency(totalDisbursement) }}</strong>
+      </article>
+      <article class="summary-card">
+        <span>Principal Recovered</span>
+        <strong>{{ formatCurrency(totalPrincipalRecovered) }}</strong>
+      </article>
+      <article class="summary-card">
+        <span>Interest Received</span>
+        <strong>{{ formatCurrency(totalInterest) }}</strong>
+      </article>
+      <article class="summary-card">
+        <span>Penalty Received</span>
+        <strong>{{ formatCurrency(totalPenalty) }}</strong>
+      </article>
+    </section>
+
+    <section class="table-card">
+      <div class="table-heading">
+        <div>
+          <h5>CMRC / VO-ALF Financial Statement</h5>
+          <p>Opening balance, posted movements and closing balance for the selected period.</p>
+        </div>
+        <span class="record-count">{{ reportLines.length }} records</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table audit-table">
+          <thead>
+            <tr>
+              <th>Sr.</th>
+              <th>CMRC</th>
+              <th>Village</th>
+              <th>VO / ALF</th>
+              <th>Account No.</th>
+              <th class="text-end">Opening</th>
+              <th class="text-end">Receipts</th>
+              <th class="text-end">Payments</th>
+              <th class="text-end">Closing</th>
+              <th>Audit Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let line of reportLines; let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>{{ line.cmrcName }}</td>
+              <td>{{ line.villageName }}</td>
+              <td class="organization-name">{{ line.voAlfName }}</td>
+              <td>{{ line.accountNo || '—' }}</td>
+              <td class="text-end">{{ formatCurrency(line.openingBalance) }}</td>
+              <td class="text-end amount-positive">{{ formatCurrency(line.receipts) }}</td>
+              <td class="text-end amount-negative">{{ formatCurrency(line.payments) }}</td>
+              <td class="text-end closing-amount">{{ formatCurrency(line.closingBalance) }}</td>
+              <td>
+                <span class="status-pill"
+                      [class.status-ok]="!(line.exceptions?.length)"
+                      [class.status-warning]="!!line.exceptions?.length">
+                  {{ line.exceptions?.length ? 'Exception' : 'No Exception' }}
+                </span>
+              </td>
+            </tr>
+
+            <tr *ngIf="!reportLines.length">
+              <td colspan="10" class="empty-state">
+                No records found for the selected filters.
+              </td>
+            </tr>
+          </tbody>
+          <tfoot *ngIf="reportLines.length">
+            <tr>
+              <th colspan="5">TOTAL</th>
+              <th class="text-end">{{ formatCurrency(totalOpening) }}</th>
+              <th class="text-end">{{ formatCurrency(totalReceipts) }}</th>
+              <th class="text-end">{{ formatCurrency(totalPayments) }}</th>
+              <th class="text-end">{{ formatCurrency(totalClosing) }}</th>
+              <th></th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="table-card">
+      <div class="table-heading">
+        <div>
+          <h5>Loan Recovery &amp; Interest Details</h5>
+          <p>Recovery categories are shown separately to avoid double counting.</p>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table audit-table">
+          <thead>
+            <tr>
+              <th>CMRC</th>
+              <th>Village</th>
+              <th>VO / ALF</th>
+              <th class="text-end">Loan Disbursement</th>
+              <th class="text-end">Principal Recovered</th>
+              <th class="text-end">Interest Received</th>
+              <th class="text-end">Penalty Received</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let line of reportLines">
+              <td>{{ line.cmrcName }}</td>
+              <td>{{ line.villageName }}</td>
+              <td>{{ line.voAlfName }}</td>
+              <td class="text-end">{{ formatCurrency(line.loanDisbursement) }}</td>
+              <td class="text-end">{{ formatCurrency(line.principalRecovered) }}</td>
+              <td class="text-end">{{ formatCurrency(line.interestReceived) }}</td>
+              <td class="text-end">{{ formatCurrency(line.penaltyReceived) }}</td>
+            </tr>
+            <tr *ngIf="!reportLines.length">
+              <td colspan="7" class="empty-state">No records available.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="table-card">
+      <div class="table-heading">
+        <div>
+          <h5>Balance Verification &amp; Audit Exceptions</h5>
+          <p>Current balances are verification figures, not substitutes for historical closing balances.</p>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table audit-table">
+          <thead>
+            <tr>
+              <th>VO / ALF</th>
+              <th class="text-end">Current VO / ALF Balance</th>
+              <th class="text-end">Fund Account Balance</th>
+              <th class="text-end">Pending Approvals</th>
+              <th>Exceptions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let line of reportLines">
+              <td>
+                <strong>{{ line.voAlfName }}</strong>
+                <div class="sub-text">{{ line.cmrcName }} · {{ line.villageName }}</div>
+              </td>
+              <td class="text-end">{{ formatCurrency(line.currentVoAlfBalance) }}</td>
+              <td class="text-end">{{ formatCurrency(line.fundAccountBalance) }}</td>
+              <td class="text-end">{{ line.pendingApprovals || 0 }}</td>
+              <td>
+                <ul class="exception-list" *ngIf="line.exceptions?.length">
+                  <li *ngFor="let exception of line.exceptions">{{ exception }}</li>
+                </ul>
+                <span class="text-success" *ngIf="!line.exceptions?.length">
+                  No reported exceptions
+                </span>
+              </td>
+            </tr>
+            <tr *ngIf="!reportLines.length">
+              <td colspan="5" class="empty-state">No records available.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="audit-note">
+      <i class="bi bi-info-circle"></i>
+      <div>
+        <strong>Audit interpretation</strong>
+        <p>
+          Pending transactions are excluded from posted totals. Internal transfers
+          between CMRC and VO / ALF must not be counted twice in consolidated totals.
+          Historical opening balances should be based on verified prior-period closing
+          balances. Missing history or balance mismatches must be reported as exceptions.
+        </p>
+      </div>
+    </section>
+  </ng-container>
+</div>
